@@ -17,6 +17,10 @@ public class DealerTarget {
     @Column(name = "target_id")
     private UUID targetId;
     
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "dealer_id", nullable = true)
+    private Dealer dealer;
+    
     @Column(name = "target_year", nullable = false)
     private Integer targetYear;
     
@@ -43,6 +47,9 @@ public class DealerTarget {
     
     @Column(name = "target_status", length = 50, nullable = false)
     private String targetStatus = "active";
+    
+    @Column(name = "target_scope", length = 50, nullable = false)
+    private String targetScope = "dealer";
     
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
@@ -71,6 +78,14 @@ public class DealerTarget {
     
     public void setTargetId(UUID targetId) {
         this.targetId = targetId;
+    }
+    
+    public Dealer getDealer() {
+        return dealer;
+    }
+    
+    public void setDealer(Dealer dealer) {
+        this.dealer = dealer;
     }
     
     public Integer getTargetYear() {
@@ -143,6 +158,14 @@ public class DealerTarget {
     
     public void setTargetStatus(String targetStatus) {
         this.targetStatus = targetStatus;
+    }
+    
+    public String getTargetScope() {
+        return targetScope;
+    }
+    
+    public void setTargetScope(String targetScope) {
+        this.targetScope = targetScope;
     }
     
     public String getNotes() {

@@ -16,7 +16,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,7 +27,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/auth")
 @CrossOrigin(origins = "*")
-@Tag(name = "Authentication", description = "APIs for user authentication and authorization")
+@Tag(name = "Authentication", description = "APIs xác thực và phân quyền người dùng")
 public class AuthController {
     
     @Autowired
@@ -36,18 +36,45 @@ public class AuthController {
     @Autowired
     private JwtUtil jwtUtil;
     
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    @Autowired
+    private PasswordEncoder passwordEncoder;
     
     @PostMapping("/login")
     @Transactional
-    @Operation(summary = "User login", description = "Authenticate user and return JWT token")
+    @Operation(summary = "Đăng nhập người dùng", description = "Xác thực và trả về token JWT")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Login successful",
-                content = @Content(schema = @Schema(implementation = LoginResponse.class))),
-        @ApiResponse(responseCode = "401", description = "Invalid credentials",
-                content = @Content(schema = @Schema(implementation = Map.class))),
-        @ApiResponse(responseCode = "400", description = "Invalid request data",
-                content = @Content(schema = @Schema(implementation = Map.class)))
+        @ApiResponse(
+            responseCode = "200", 
+            description = "Đăng nhập thành công",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = LoginResponse.class)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "401", 
+            description = "Thông tin đăng nhập không hợp lệ hoặc tài khoản bị vô hiệu hóa",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(example = "{\"error\": \"Invalid username or password\"}")
+            )
+        ),
+        @ApiResponse(
+            responseCode = "400", 
+            description = "Dữ liệu yêu cầu không hợp lệ",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(example = "{\"error\": \"Invalid request data\"}")
+            )
+        ),
+        @ApiResponse(
+            responseCode = "500", 
+            description = "Lỗi máy chủ nội bộ",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(example = "{\"error\": \"Login failed: [chi tiết lỗi]\"}")
+            )
+        )
     })
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest) {
         try {
@@ -84,13 +111,12 @@ public class AuthController {
             String token = jwtUtil.generateToken(user.getUsername(), role, user.getUserId().toString());
             
             // Create login response
-            LoginResponse response = new LoginResponse(
-                token,
-                jwtUtil.getExpirationTime(),
-                user.getUserId().toString(),
-                user.getUsername(),
-                role
-            );
+            LoginResponse response = new LoginResponse();
+            response.setAccessToken(token);
+            response.setExpiresIn(jwtUtil.getExpirationTime());
+            response.setUserId(user.getUserId().toString());
+            response.setUsername(user.getUsername());
+            response.setRole(role);
             
             return ResponseEntity.ok(response);
             
@@ -103,14 +129,32 @@ public class AuthController {
     
     @PostMapping("/register")
     @Transactional
-    @Operation(summary = "User registration", description = "Register a new user account")
+    @Operation(summary = "Đăng ký tài khoản", description = "Tạo tài khoản người dùng mới")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "201", description = "User registered successfully",
-                content = @Content(schema = @Schema(implementation = User.class))),
-        @ApiResponse(responseCode = "400", description = "Invalid request data or user already exists",
-                content = @Content(schema = @Schema(implementation = Map.class))),
-        @ApiResponse(responseCode = "500", description = "Internal server error",
-                content = @Content(schema = @Schema(implementation = Map.class)))
+        @ApiResponse(
+            responseCode = "201", 
+            description = "Đăng ký tài khoản thành công",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(example = "{\"userId\": \"uuid\", \"username\": \"string\", \"email\": \"string\", \"firstName\": \"string\", \"lastName\": \"string\", \"phone\": \"string\", \"address\": \"string\", \"isActive\": true, \"message\": \"User registered successfully\"}")
+            )
+        ),
+        @ApiResponse(
+            responseCode = "400", 
+            description = "Dữ liệu không hợp lệ hoặc tên đăng nhập/email đã tồn tại",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(example = "{\"error\": \"Username already exists\"}")
+            )
+        ),
+        @ApiResponse(
+            responseCode = "500", 
+            description = "Lỗi máy chủ nội bộ",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(example = "{\"error\": \"Registration failed: [chi tiết lỗi]\"}")
+            )
+        )
     })
     public ResponseEntity<?> register(@Valid @RequestBody RegistrationRequest registrationRequest) {
         try {
@@ -143,10 +187,19 @@ public class AuthController {
             // Save user (password will be hashed in UserService.createUser)
             User createdUser = userService.createUser(newUser);
             
-            // Remove password hash from response for security
-            createdUser.setPasswordHash(null);
+            // Create a response map without password hash for security
+            Map<String, Object> response = new HashMap<>();
+            response.put("userId", createdUser.getUserId());
+            response.put("username", createdUser.getUsername());
+            response.put("email", createdUser.getEmail());
+            response.put("firstName", createdUser.getFirstName());
+            response.put("lastName", createdUser.getLastName());
+            response.put("phone", createdUser.getPhone());
+            response.put("address", createdUser.getAddress());
+            response.put("isActive", createdUser.getIsActive());
+            response.put("message", "User registered successfully");
             
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
             
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
@@ -160,7 +213,7 @@ public class AuthController {
     }
     
     @PostMapping("/validate")
-    @Operation(summary = "Validate JWT token", description = "Validate if the provided JWT token is valid")
+    @Operation(summary = "Xác thực token", description = "Kiểm tra tính hợp lệ của token JWT")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Token is valid"),
         @ApiResponse(responseCode = "401", description = "Token is invalid or expired")
@@ -196,7 +249,7 @@ public class AuthController {
     }
     
     @PostMapping("/logout")
-    @Operation(summary = "User logout", description = "Logout user (client-side token removal)")
+    @Operation(summary = "Đăng xuất", description = "Đăng xuất người dùng")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Logout successful")
     })

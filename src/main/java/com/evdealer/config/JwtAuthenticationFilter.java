@@ -5,13 +5,17 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.security.SignatureException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.lang.NonNull;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -26,20 +30,45 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, 
-                                  FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, 
+                                  @NonNull FilterChain filterChain) throws ServletException, IOException {
         
         final String authorizationHeader = request.getHeader("Authorization");
         
         String username = null;
         String jwt = null;
+        boolean invalidToken = false;
         
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            jwt = authorizationHeader.substring(7);
-            try {
-                username = jwtUtil.extractUsername(jwt);
-            } catch (Exception e) {
-                logger.error("JWT token extraction failed", e);
+            final String raw = authorizationHeader.substring(7);
+            final String token = raw == null ? null : raw.trim();
+            if (token != null && !token.isEmpty()) {
+                jwt = token;
+                try {
+                    username = jwtUtil.extractUsername(jwt);
+                } catch (ExpiredJwtException e) {
+                    invalidToken = true;
+                    logger.warn("JWT expired: " + e.getMessage());
+                } catch (MalformedJwtException e) {
+                    invalidToken = true;
+                    logger.warn("JWT malformed: " + e.getMessage());
+                } catch (SignatureException e) {
+                    invalidToken = true;
+                    logger.warn("JWT signature invalid: " + e.getMessage());
+                } catch (IllegalArgumentException e) {
+                    invalidToken = true;
+                    logger.warn("JWT illegal argument: " + e.getMessage());
+                } catch (JwtException e) {
+                    invalidToken = true;
+                    logger.warn("JWT parse error: " + e.getMessage());
+                } catch (Exception e) {
+                    invalidToken = true;
+                    logger.warn("JWT token extraction failed: " + e.getMessage());
+                }
+            } else {
+                // Bearer header nhưng không có token
+                invalidToken = true;
+                logger.warn("Authorization header has Bearer prefix but empty token");
             }
         }
         
@@ -62,6 +91,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 request.setAttribute("userId", userId);
                 request.setAttribute("userRole", role);
             }
+        }
+        
+        // Nếu client gửi Bearer nhưng token không hợp lệ → trả 401 thay vì âm thầm bỏ qua
+        if (invalidToken) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
         }
         
         filterChain.doFilter(request, response);

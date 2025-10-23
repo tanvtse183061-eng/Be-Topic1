@@ -25,6 +25,17 @@ public class InstallmentPlan {
     @JoinColumn(name = "customer_id", nullable = true)
     private Customer customer;
     
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "invoice_id", nullable = true)
+    private DealerInvoice invoice;
+    
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "dealer_id", nullable = true)
+    private Dealer dealer;
+    
+    @Column(name = "plan_type", length = 50, nullable = false)
+    private String planType = "customer";
+    
     @Column(name = "total_amount", nullable = false, precision = 12, scale = 2)
     private BigDecimal totalAmount;
     
@@ -99,6 +110,30 @@ public class InstallmentPlan {
     
     public void setCustomer(Customer customer) {
         this.customer = customer;
+    }
+    
+    public DealerInvoice getInvoice() {
+        return invoice;
+    }
+    
+    public void setInvoice(DealerInvoice invoice) {
+        this.invoice = invoice;
+    }
+    
+    public Dealer getDealer() {
+        return dealer;
+    }
+    
+    public void setDealer(Dealer dealer) {
+        this.dealer = dealer;
+    }
+    
+    public String getPlanType() {
+        return planType;
+    }
+    
+    public void setPlanType(String planType) {
+        this.planType = planType;
     }
     
     public BigDecimal getTotalAmount() {

@@ -1,0 +1,185 @@
+package com.evdealer.entity;
+
+import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+@Entity
+@Table(name = "appointments")
+public class Appointment {
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "appointment_id")
+    private UUID appointmentId;
+    
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "customer_id", nullable = false)
+    private Customer customer;
+    
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "staff_id", nullable = true)
+    private User staff;
+    
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "variant_id", nullable = true)
+    private VehicleVariant variant;
+    
+    @Column(name = "appointment_type", length = 50, nullable = false)
+    private String appointmentType = "consultation";
+    
+    @Column(name = "title", nullable = false, length = 255)
+    private String title;
+    
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+    
+    @Column(name = "appointment_date", nullable = false)
+    private LocalDateTime appointmentDate;
+    
+    @Column(name = "duration_minutes", nullable = false)
+    private Integer durationMinutes = 60;
+    
+    @Column(name = "location", length = 255)
+    private String location;
+    
+    @Column(name = "status", length = 50, nullable = false)
+    private String status = "scheduled";
+    
+    @Column(name = "notes", columnDefinition = "TEXT")
+    private String notes;
+    
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+    
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+    
+    // Constructors
+    public Appointment() {}
+    
+    public Appointment(Customer customer, String title, LocalDateTime appointmentDate) {
+        this.customer = customer;
+        this.title = title;
+        this.appointmentDate = appointmentDate;
+    }
+    
+    // Getters and Setters
+    public UUID getAppointmentId() {
+        return appointmentId;
+    }
+    
+    public void setAppointmentId(UUID appointmentId) {
+        this.appointmentId = appointmentId;
+    }
+    
+    public Customer getCustomer() {
+        return customer;
+    }
+    
+    public void setCustomer(Customer customer) {
+        this.customer = customer;
+    }
+    
+    public User getStaff() {
+        return staff;
+    }
+    
+    public void setStaff(User staff) {
+        this.staff = staff;
+    }
+    
+    public VehicleVariant getVariant() {
+        return variant;
+    }
+    
+    public void setVariant(VehicleVariant variant) {
+        this.variant = variant;
+    }
+    
+    public String getAppointmentType() {
+        return appointmentType;
+    }
+    
+    public void setAppointmentType(String appointmentType) {
+        this.appointmentType = appointmentType;
+    }
+    
+    public String getTitle() {
+        return title;
+    }
+    
+    public void setTitle(String title) {
+        this.title = title;
+    }
+    
+    public String getDescription() {
+        return description;
+    }
+    
+    public void setDescription(String description) {
+        this.description = description;
+    }
+    
+    public LocalDateTime getAppointmentDate() {
+        return appointmentDate;
+    }
+    
+    public void setAppointmentDate(LocalDateTime appointmentDate) {
+        this.appointmentDate = appointmentDate;
+    }
+    
+    public Integer getDurationMinutes() {
+        return durationMinutes;
+    }
+    
+    public void setDurationMinutes(Integer durationMinutes) {
+        this.durationMinutes = durationMinutes;
+    }
+    
+    public String getLocation() {
+        return location;
+    }
+    
+    public void setLocation(String location) {
+        this.location = location;
+    }
+    
+    public String getStatus() {
+        return status;
+    }
+    
+    public void setStatus(String status) {
+        this.status = status;
+    }
+    
+    public String getNotes() {
+        return notes;
+    }
+    
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
+    
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+    
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+    
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+    
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+}
+

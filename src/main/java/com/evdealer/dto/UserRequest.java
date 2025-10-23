@@ -1,0 +1,120 @@
+package com.evdealer.dto;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.util.UUID;
+
+@Schema(description = "User request DTO for user management")
+public class UserRequest {
+    
+    @Schema(description = "First name", example = "John", required = true)
+    private String firstName;
+    
+    @Schema(description = "Last name", example = "Doe", required = true)
+    private String lastName;
+    
+    @Schema(description = "Email address", example = "john.doe@example.com", required = true)
+    private String email;
+    
+    @Schema(description = "Phone number", example = "0123456789")
+    private String phone;
+    
+    @Schema(description = "Password", example = "password123", required = true)
+    private String password;
+    
+    @Schema(description = "Role string", example = "DEALER_STAFF", allowableValues = {"DEALER_STAFF", "DEALER_MANAGER", "EVM_STAFF", "ADMIN"})
+    private String roleString;
+    
+    @Schema(description = "Dealer ID", example = "78fe7eb0-ceb8-4793-a8af-187a3fe26f67")
+    private UUID dealerId;
+    
+    @Schema(description = "Is active", example = "true")
+    private Boolean isActive;
+    
+    @Schema(description = "Notes (not stored in User entity currently)", example = "Sales representative for District 1")
+    private String notes;
+    
+    // Constructors
+    public UserRequest() {}
+    
+    public UserRequest(String firstName, String lastName, String email, String password, String roleString) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.password = password;
+        this.roleString = roleString;
+    }
+    
+    // Getters and Setters
+    public String getFirstName() {
+        return firstName;
+    }
+    
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+    
+    public String getLastName() {
+        return lastName;
+    }
+    
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+    
+    public String getEmail() {
+        return email;
+    }
+    
+    public void setEmail(String email) {
+        this.email = email;
+    }
+    
+    public String getPhone() {
+        return phone;
+    }
+    
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+    
+    public String getPassword() {
+        return password;
+    }
+    
+    public void setPassword(String password) {
+        this.password = password;
+    }
+    
+    public String getRoleString() {
+        return roleString;
+    }
+    
+    public void setRoleString(String roleString) {
+        this.roleString = roleString;
+    }
+    
+    public UUID getDealerId() {
+        return dealerId;
+    }
+    
+    public void setDealerId(UUID dealerId) {
+        this.dealerId = dealerId;
+    }
+    
+    public Boolean getIsActive() {
+        return isActive;
+    }
+    
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
+    }
+    
+    public String getNotes() {
+        return notes;
+    }
+    
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
+}

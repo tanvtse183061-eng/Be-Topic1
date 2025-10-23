@@ -28,6 +28,11 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     @Query("SELECT u FROM User u WHERE u.role.roleName = :roleName")
     List<User> findByRoleName(@Param("roleName") String roleName);
     
+    @Query("SELECT u FROM User u WHERE u.dealer.dealerId = :dealerId")
+    List<User> findByDealerDealerId(@Param("dealerId") UUID dealerId);
+    
+    List<User> findByRoleString(String roleString);
+    
     @Query("SELECT u FROM User u WHERE u.firstName LIKE %:name% OR u.lastName LIKE %:name%")
     List<User> findByNameContaining(@Param("name") String name);
     

@@ -51,6 +51,13 @@ public class User {
     @JoinColumn(name = "role_id", nullable = true)
     private UserRole role;
     
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "dealer_id", nullable = true)
+    private Dealer dealer;
+    
+    @Column(name = "role", length = 50, nullable = false)
+    private String roleString = "DEALER_STAFF";
+    
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
     
@@ -168,6 +175,22 @@ public class User {
     
     public void setRole(UserRole role) {
         this.role = role;
+    }
+    
+    public Dealer getDealer() {
+        return dealer;
+    }
+    
+    public void setDealer(Dealer dealer) {
+        this.dealer = dealer;
+    }
+    
+    public String getRoleString() {
+        return roleString;
+    }
+    
+    public void setRoleString(String roleString) {
+        this.roleString = roleString;
     }
     
     public Boolean getIsActive() {
