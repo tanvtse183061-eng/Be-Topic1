@@ -1,6 +1,8 @@
 package com.evdealer.controller;
 
 import com.evdealer.dto.UserRequest;
+import com.evdealer.dto.UserUpdateRequest;
+import com.evdealer.dto.RoleRequest;
 import com.evdealer.entity.User;
 import com.evdealer.entity.UserRole;
 import com.evdealer.service.UserService;
@@ -12,7 +14,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -166,38 +171,66 @@ public class UserController {
     
     @PostMapping("/dto")
     @Operation(summary = "Tạo người dùng mới từ DTO", description = "Tạo người dùng mới từ UserRequest DTO")
-    public ResponseEntity<User> createUserFromRequest(@RequestBody UserRequest request) {
+    public ResponseEntity<?> createUserFromRequest(@RequestBody UserRequest request) {
         try {
             User createdUser = userService.createUserFromRequest(request);
             // Remove password hash from response for security
             createdUser.setPasswordHash(null);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "User creation failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
     
     @PutMapping("/{userId}")
     @Operation(summary = "Cập nhật người dùng", description = "Cập nhật thông tin người dùng")
-    public ResponseEntity<User> updateUser(@PathVariable UUID userId, @RequestBody User userDetails) {
+    public ResponseEntity<?> updateUser(@PathVariable UUID userId, @RequestBody UserUpdateRequest userUpdateRequest) {
         try {
-            User updatedUser = userService.updateUser(userId, userDetails);
+            // Log incoming data for debugging
+            System.out.println("=== UPDATE USER DEBUG ===");
+            System.out.println("User ID: " + userId);
+            System.out.println("Username: " + userUpdateRequest.getUsername());
+            System.out.println("Email: " + userUpdateRequest.getEmail());
+            System.out.println("Role: " + userUpdateRequest.getRole());
+            System.out.println("Is Active: " + userUpdateRequest.getIsActive());
+            System.out.println("=========================");
+            
+            User updatedUser = userService.updateUser(userId, userUpdateRequest);
             // Remove password hash from response for security
             updatedUser.setPasswordHash(null);
             return ResponseEntity.ok(updatedUser);
         } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+            System.err.println("Error updating user: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("Error updating user: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Unexpected error updating user: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Internal server error: " + e.getMessage());
         }
     }
     
     @DeleteMapping("/{userId}")
     @Operation(summary = "Xóa người dùng", description = "Xóa người dùng")
-    public ResponseEntity<Void> deleteUser(@PathVariable UUID userId) {
+    public ResponseEntity<?> deleteUser(@PathVariable UUID userId) {
         try {
             userService.deleteUser(userId);
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "User deletion failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
     
@@ -237,13 +270,92 @@ public class UserController {
     }
     
     @PostMapping("/roles")
-    @Operation(summary = "Tạo vai trò mới", description = "Tạo vai trò mới")
-    public ResponseEntity<UserRole> createRole(@RequestBody UserRole role) {
+    @Operation(summary = "Tạo vai trò mới", description = "Tạo vai trò mới (permissions sẽ được tự động tạo dựa trên role name)")
+    public ResponseEntity<?> createRole(@RequestBody RoleRequest roleRequest) {
         try {
+            UserRole role = new UserRole();
+            role.setRoleName(roleRequest.getRoleName());
+            role.setDescription(roleRequest.getDescription());
+            // Permissions sẽ được tự động tạo trong service
+            
             UserRole createdRole = userService.createRole(role);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdRole);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body("Error creating role: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Internal server error: " + e.getMessage());
+        }
+    }
+    
+    @PutMapping("/roles/{roleId}")
+    @Operation(summary = "Cập nhật vai trò", description = "Cập nhật thông tin vai trò (permissions sẽ được tự động cập nhật dựa trên role name)")
+    public ResponseEntity<?> updateRole(@PathVariable Integer roleId, @RequestBody RoleRequest roleRequest) {
+        try {
+            // Log incoming data for debugging
+            System.out.println("=== ROLE UPDATE CONTROLLER DEBUG ===");
+            System.out.println("Role ID: " + roleId);
+            System.out.println("Role Name: " + roleRequest.getRoleName());
+            System.out.println("Description: " + roleRequest.getDescription());
+            System.out.println("=====================================");
+            
+            UserRole roleDetails = new UserRole();
+            roleDetails.setRoleName(roleRequest.getRoleName());
+            roleDetails.setDescription(roleRequest.getDescription());
+            // Permissions sẽ được tự động tạo trong service dựa trên role name
+            
+            UserRole updatedRole = userService.updateRole(roleId, roleDetails);
+            return ResponseEntity.ok(updatedRole);
+        } catch (RuntimeException e) {
+            System.err.println("Error updating role: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("Error updating role: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Unexpected error updating role: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Internal server error: " + e.getMessage());
+        }
+    }
+    
+    @DeleteMapping("/roles/{roleId}")
+    @Operation(summary = "Xóa vai trò", description = "Xóa vai trò")
+    public ResponseEntity<?> deleteRole(@PathVariable Integer roleId) {
+        try {
+            userService.deleteRole(roleId);
+            return ResponseEntity.ok().body("Role deleted successfully");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body("Error deleting role: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Internal server error: " + e.getMessage());
+        }
+    }
+    
+    @GetMapping("/roles/test/{roleId}")
+    @Operation(summary = "Test role update", description = "Test role update functionality")
+    public ResponseEntity<?> testRoleUpdate(@PathVariable Integer roleId) {
+        try {
+            // Test getting role first
+            Optional<UserRole> roleOpt = userService.getRoleById(roleId);
+            if (!roleOpt.isPresent()) {
+                return ResponseEntity.notFound().build();
+            }
+            
+            UserRole role = roleOpt.get();
+            System.out.println("=== TEST ROLE DEBUG ===");
+            System.out.println("Role ID: " + role.getRoleId());
+            System.out.println("Role Name: " + role.getRoleName());
+            System.out.println("Description: " + role.getDescription());
+            System.out.println("Permissions: " + role.getPermissions());
+            System.out.println("======================");
+            
+            return ResponseEntity.ok(role);
+        } catch (Exception e) {
+            System.err.println("Error testing role: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error testing role: " + e.getMessage());
         }
     }
     

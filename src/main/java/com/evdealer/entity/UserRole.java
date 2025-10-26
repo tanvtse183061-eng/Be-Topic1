@@ -20,8 +20,8 @@ public class UserRole {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
     
-    @Column(name = "permissions", columnDefinition = "jsonb")
-    private String permissions;
+    @Column(name = "permissions", nullable = false, length = 4000)
+    private String permissions = "{}";
     
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

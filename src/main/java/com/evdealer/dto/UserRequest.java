@@ -13,6 +13,9 @@ public class UserRequest {
     @Schema(description = "Last name", example = "Doe", required = true)
     private String lastName;
     
+    @Schema(description = "Username", example = "johndoe")
+    private String username;
+    
     @Schema(description = "Email address", example = "john.doe@example.com", required = true)
     private String email;
     
@@ -45,6 +48,15 @@ public class UserRequest {
         this.roleString = roleString;
     }
     
+    public UserRequest(String firstName, String lastName, String username, String email, String password, String roleString) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.roleString = roleString;
+    }
+    
     // Getters and Setters
     public String getFirstName() {
         return firstName;
@@ -60,6 +72,14 @@ public class UserRequest {
     
     public void setLastName(String lastName) {
         this.lastName = lastName;
+    }
+    
+    public String getUsername() {
+        return username;
+    }
+    
+    public void setUsername(String username) {
+        this.username = username;
     }
     
     public String getEmail() {

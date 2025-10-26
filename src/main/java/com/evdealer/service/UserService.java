@@ -1,12 +1,14 @@
 package com.evdealer.service;
 
 import com.evdealer.dto.UserRequest;
+import com.evdealer.dto.UserUpdateRequest;
 import com.evdealer.entity.Dealer;
 import com.evdealer.entity.User;
 import com.evdealer.entity.UserRole;
 import com.evdealer.repository.DealerRepository;
 import com.evdealer.repository.UserRepository;
 import com.evdealer.repository.UserRoleRepository;
+import com.evdealer.util.RolePermissionManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -91,10 +93,17 @@ public class UserService {
     }
     
     public User createUserFromRequest(UserRequest request) {
-        // Generate username from email if not provided
-        String username = request.getEmail() != null ? 
-            request.getEmail().split("@")[0] : 
-            (request.getFirstName() + "." + request.getLastName()).toLowerCase();
+        // Use provided username or generate from email/name if not provided
+        String username;
+        if (request.getUsername() != null && !request.getUsername().trim().isEmpty()) {
+            // Use provided username
+            username = request.getUsername().trim();
+        } else {
+            // Generate username from email if not provided
+            username = request.getEmail() != null ? 
+                request.getEmail().split("@")[0] : 
+                (request.getFirstName() + "." + request.getLastName()).toLowerCase();
+        }
         
         // Check for duplicate username
         if (userRepository.existsByUsername(username)) {
@@ -134,35 +143,73 @@ public class UserService {
         return userRepository.save(user);
     }
     
-    public User updateUser(UUID userId, User userDetails) {
+    public User updateUser(UUID userId, UserUpdateRequest userUpdateRequest) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
         
+        // Log incoming data for debugging
+        System.out.println("=== USER SERVICE UPDATE DEBUG ===");
+        System.out.println("Existing user username: " + user.getUsername());
+        System.out.println("New username: " + userUpdateRequest.getUsername());
+        System.out.println("New email: " + userUpdateRequest.getEmail());
+        System.out.println("New role: " + userUpdateRequest.getRole());
+        System.out.println("New is active: " + userUpdateRequest.getIsActive());
+        System.out.println("==================================");
+        
         // Check for duplicate username (excluding current user)
-        if (!user.getUsername().equals(userDetails.getUsername()) && 
-            userRepository.existsByUsername(userDetails.getUsername())) {
-            throw new RuntimeException("Username already exists: " + userDetails.getUsername());
+        if (userUpdateRequest.getUsername() != null && 
+            !user.getUsername().equals(userUpdateRequest.getUsername()) && 
+            userRepository.existsByUsername(userUpdateRequest.getUsername())) {
+            throw new RuntimeException("Username already exists: " + userUpdateRequest.getUsername());
         }
         
         // Check for duplicate email (excluding current user)
-        if (!user.getEmail().equals(userDetails.getEmail()) && 
-            userRepository.existsByEmail(userDetails.getEmail())) {
-            throw new RuntimeException("Email already exists: " + userDetails.getEmail());
+        if (userUpdateRequest.getEmail() != null && 
+            !user.getEmail().equals(userUpdateRequest.getEmail()) && 
+            userRepository.existsByEmail(userUpdateRequest.getEmail())) {
+            throw new RuntimeException("Email already exists: " + userUpdateRequest.getEmail());
         }
         
-        user.setUsername(userDetails.getUsername());
-        user.setEmail(userDetails.getEmail());
-        user.setFirstName(userDetails.getFirstName());
-        user.setLastName(userDetails.getLastName());
-        user.setPhone(userDetails.getPhone());
-        user.setAddress(userDetails.getAddress());
-        user.setDateOfBirth(userDetails.getDateOfBirth());
-        user.setProfileImageUrl(userDetails.getProfileImageUrl());
-        user.setProfileImagePath(userDetails.getProfileImagePath());
-        user.setRole(userDetails.getRole());
-        user.setDealer(userDetails.getDealer());
-        user.setRoleString(userDetails.getRoleString());
-        user.setIsActive(userDetails.getIsActive());
+        // Update fields only if they are not null
+        if (userUpdateRequest.getUsername() != null) {
+            user.setUsername(userUpdateRequest.getUsername());
+        }
+        if (userUpdateRequest.getEmail() != null) {
+            user.setEmail(userUpdateRequest.getEmail());
+        }
+        if (userUpdateRequest.getFirstName() != null) {
+            user.setFirstName(userUpdateRequest.getFirstName());
+        }
+        if (userUpdateRequest.getLastName() != null) {
+            user.setLastName(userUpdateRequest.getLastName());
+        }
+        if (userUpdateRequest.getPhone() != null) {
+            user.setPhone(userUpdateRequest.getPhone());
+        }
+        if (userUpdateRequest.getAddress() != null) {
+            user.setAddress(userUpdateRequest.getAddress());
+        }
+        if (userUpdateRequest.getDateOfBirth() != null) {
+            user.setDateOfBirth(userUpdateRequest.getDateOfBirth());
+        }
+        if (userUpdateRequest.getProfileImageUrl() != null) {
+            user.setProfileImageUrl(userUpdateRequest.getProfileImageUrl());
+        }
+        if (userUpdateRequest.getProfileImagePath() != null) {
+            user.setProfileImagePath(userUpdateRequest.getProfileImagePath());
+        }
+        if (userUpdateRequest.getRole() != null) {
+            user.setRoleString(userUpdateRequest.getRole());
+        }
+        if (userUpdateRequest.getDealerId() != null) {
+            // Find dealer by ID and set it
+            Dealer dealer = dealerRepository.findById(userUpdateRequest.getDealerId())
+                    .orElseThrow(() -> new RuntimeException("Dealer not found with id: " + userUpdateRequest.getDealerId()));
+            user.setDealer(dealer);
+        }
+        if (userUpdateRequest.getIsActive() != null) {
+            user.setIsActive(userUpdateRequest.getIsActive());
+        }
         
         return userRepository.save(user);
     }
@@ -170,7 +217,12 @@ public class UserService {
     public void deleteUser(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
-        userRepository.delete(user);
+        
+        try {
+            userRepository.delete(user);
+        } catch (Exception e) {
+            throw new RuntimeException("Cannot delete user: " + e.getMessage() + ". User may be referenced by other records.");
+        }
     }
     
     public void deactivateUser(UUID userId) {
@@ -196,7 +248,69 @@ public class UserService {
         if (userRoleRepository.existsByRoleName(role.getRoleName())) {
             throw new RuntimeException("Role already exists: " + role.getRoleName());
         }
+        
+        // Auto-set permissions based on role name if not provided
+        if (role.getPermissions() == null || role.getPermissions().trim().isEmpty()) {
+            role.setPermissions(getPermissionsByRoleName(role.getRoleName()));
+        }
+        
         return userRoleRepository.save(role);
+    }
+    
+    public UserRole updateRole(Integer roleId, UserRole roleDetails) {
+        UserRole role = userRoleRepository.findById(roleId)
+                .orElseThrow(() -> new RuntimeException("Role not found with id: " + roleId));
+        
+        // Log incoming data for debugging
+        System.out.println("=== ROLE UPDATE DEBUG ===");
+        System.out.println("Role ID: " + roleId);
+        System.out.println("Existing role name: " + role.getRoleName());
+        System.out.println("New role name: " + roleDetails.getRoleName());
+        System.out.println("New description: " + roleDetails.getDescription());
+        System.out.println("=========================");
+        
+        // Check for duplicate role name (excluding current role)
+        if (roleDetails.getRoleName() != null && 
+            !role.getRoleName().equals(roleDetails.getRoleName()) && 
+            userRoleRepository.existsByRoleName(roleDetails.getRoleName())) {
+            throw new RuntimeException("Role name already exists: " + roleDetails.getRoleName());
+        }
+        
+        // Update fields only if they are not null
+        if (roleDetails.getRoleName() != null) {
+            role.setRoleName(roleDetails.getRoleName());
+            // Auto-set permissions based on role name
+            role.setPermissions(getPermissionsByRoleName(roleDetails.getRoleName()));
+        }
+        if (roleDetails.getDescription() != null) {
+            role.setDescription(roleDetails.getDescription());
+        }
+        
+        return userRoleRepository.save(role);
+    }
+    
+    /**
+     * Tự động tạo permissions dựa trên role name
+     */
+    private String getPermissionsByRoleName(String roleName) {
+        if (roleName == null) {
+            return "{}";
+        }
+        
+        return RolePermissionManager.createPermissionsForRole(roleName);
+    }
+    
+    public void deleteRole(Integer roleId) {
+        UserRole role = userRoleRepository.findById(roleId)
+                .orElseThrow(() -> new RuntimeException("Role not found with id: " + roleId));
+        
+        // Check if role is being used by any users
+        List<User> usersWithRole = userRepository.findByRole(role);
+        if (!usersWithRole.isEmpty()) {
+            throw new RuntimeException("Cannot delete role. It is being used by " + usersWithRole.size() + " user(s)");
+        }
+        
+        userRoleRepository.delete(role);
     }
     
     // Password Management methods

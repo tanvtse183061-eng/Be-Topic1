@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict gUftZhIvOWd0qr0Sse64j5PW8661UwnLD4lt2oBc7j6bJh6cuCOBa5a5aTh5Ml1
+\restrict lsTBATDyo6DILHbdxCCFAKqR2q1DbTiNI6VQ2LJppFfVqdSX0yBXD4L4C2glacW
 
 -- Dumped from database version 18.0
 -- Dumped by pg_dump version 18.0
@@ -101,6 +101,26 @@ CREATE TABLE public.appointments_backup (
 ALTER TABLE public.appointments_backup OWNER TO postgres;
 
 --
+-- Name: customer_debt_report; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.customer_debt_report (
+    customer_id uuid NOT NULL,
+    active_installments bigint,
+    customer_name character varying(255),
+    email character varying(255),
+    last_order_date date,
+    outstanding_balance numeric(38,2),
+    phone character varying(255),
+    total_loan_amount numeric(38,2),
+    total_orders bigint,
+    total_purchases numeric(38,2)
+);
+
+
+ALTER TABLE public.customer_debt_report OWNER TO postgres;
+
+--
 -- Name: customer_feedbacks; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -195,6 +215,27 @@ CREATE TABLE public.dealer_contracts (
 ALTER TABLE public.dealer_contracts OWNER TO postgres;
 
 --
+-- Name: dealer_discount_policies; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.dealer_discount_policies (
+    policy_id uuid NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    description text,
+    discount_amount numeric(12,2),
+    discount_percent numeric(5,2),
+    end_date date NOT NULL,
+    policy_name character varying(255) NOT NULL,
+    start_date date NOT NULL,
+    status character varying(50) NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    variant_id integer NOT NULL
+);
+
+
+ALTER TABLE public.dealer_discount_policies OWNER TO postgres;
+
+--
 -- Name: dealer_discount_policies_backup; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -214,6 +255,30 @@ CREATE TABLE public.dealer_discount_policies_backup (
 
 
 ALTER TABLE public.dealer_discount_policies_backup OWNER TO postgres;
+
+--
+-- Name: dealer_installment_plans; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.dealer_installment_plans (
+    plan_id uuid NOT NULL,
+    contract_number character varying(100),
+    created_at timestamp(6) without time zone NOT NULL,
+    down_payment_amount numeric(15,2) NOT NULL,
+    finance_company character varying(255),
+    first_payment_date date,
+    interest_rate numeric(5,2) NOT NULL,
+    last_payment_date date,
+    loan_amount numeric(15,2) NOT NULL,
+    loan_term_months integer NOT NULL,
+    monthly_payment_amount numeric(12,2) NOT NULL,
+    plan_status character varying(50) NOT NULL,
+    total_amount numeric(15,2) NOT NULL,
+    invoice_id uuid
+);
+
+
+ALTER TABLE public.dealer_installment_plans OWNER TO postgres;
 
 --
 -- Name: dealer_installment_plans_backup; Type: TABLE; Schema: public; Owner: postgres
@@ -238,6 +303,29 @@ CREATE TABLE public.dealer_installment_plans_backup (
 
 
 ALTER TABLE public.dealer_installment_plans_backup OWNER TO postgres;
+
+--
+-- Name: dealer_installment_schedules; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.dealer_installment_schedules (
+    schedule_id uuid NOT NULL,
+    amount numeric(12,2) NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    due_date date NOT NULL,
+    installment_number integer NOT NULL,
+    interest_amount numeric(12,2),
+    late_fee numeric(12,2),
+    notes text,
+    paid_amount numeric(12,2),
+    paid_date date,
+    principal_amount numeric(12,2),
+    status character varying(50) NOT NULL,
+    plan_id uuid NOT NULL
+);
+
+
+ALTER TABLE public.dealer_installment_schedules OWNER TO postgres;
 
 --
 -- Name: dealer_installment_schedules_backup; Type: TABLE; Schema: public; Owner: postgres
@@ -330,6 +418,28 @@ CREATE TABLE public.dealer_payments (
 ALTER TABLE public.dealer_payments OWNER TO postgres;
 
 --
+-- Name: dealer_performance_report; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.dealer_performance_report (
+    target_id uuid NOT NULL,
+    achieved_amount numeric(38,2),
+    achieved_quantity integer,
+    achievement_rate numeric(38,2),
+    notes character varying(255),
+    performance_level character varying(255),
+    target_amount numeric(38,2),
+    target_month integer,
+    target_quantity integer,
+    target_status character varying(255),
+    target_type character varying(255),
+    target_year integer
+);
+
+
+ALTER TABLE public.dealer_performance_report OWNER TO postgres;
+
+--
 -- Name: dealer_targets; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -387,6 +497,31 @@ CREATE TABLE public.dealers (
 
 
 ALTER TABLE public.dealers OWNER TO postgres;
+
+--
+-- Name: delivery_tracking_report; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.delivery_tracking_report (
+    delivery_id uuid NOT NULL,
+    color_name character varying(255),
+    customer_name character varying(255),
+    customer_phone character varying(255),
+    delivered_by character varying(255),
+    delivery_address character varying(255),
+    delivery_confirmation_date timestamp(6) without time zone,
+    delivery_contact_name character varying(255),
+    delivery_contact_phone character varying(255),
+    delivery_date date,
+    delivery_status character varying(255),
+    delivery_time time(6) without time zone,
+    order_number character varying(255),
+    vehicle_info character varying(255),
+    vin character varying(255)
+);
+
+
+ALTER TABLE public.delivery_tracking_report OWNER TO postgres;
 
 --
 -- Name: installment_plans; Type: TABLE; Schema: public; Owner: postgres
@@ -488,6 +623,48 @@ CREATE TABLE public.installment_schedules_backup (
 ALTER TABLE public.installment_schedules_backup OWNER TO postgres;
 
 --
+-- Name: inventory_turnover_report; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.inventory_turnover_report (
+    brand_name character varying(255) NOT NULL,
+    available_count bigint,
+    avg_cost_price numeric(38,2),
+    avg_profit_margin numeric(38,2),
+    avg_selling_price numeric(38,2),
+    color_name character varying(255),
+    first_arrival date,
+    last_arrival date,
+    model_name character varying(255),
+    reserved_count bigint,
+    sold_count bigint,
+    total_inventory bigint,
+    variant_name character varying(255)
+);
+
+
+ALTER TABLE public.inventory_turnover_report OWNER TO postgres;
+
+--
+-- Name: monthly_sales_summary; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.monthly_sales_summary (
+    sales_year numeric(38,2) NOT NULL,
+    avg_order_value numeric(38,2),
+    cash_orders bigint,
+    installment_orders bigint,
+    sales_month numeric(38,2),
+    total_balance numeric(38,2),
+    total_deposits numeric(38,2),
+    total_orders bigint,
+    total_revenue numeric(38,2)
+);
+
+
+ALTER TABLE public.monthly_sales_summary OWNER TO postgres;
+
+--
 -- Name: orders; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -506,7 +683,9 @@ CREATE TABLE public.orders (
     payment_method character varying(50),
     notes text,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    delivery_date date,
+    special_requests text
 );
 
 
@@ -648,6 +827,44 @@ CREATE TABLE public.sales_contracts (
 ALTER TABLE public.sales_contracts OWNER TO postgres;
 
 --
+-- Name: sales_report_by_staff; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.sales_report_by_staff (
+    user_id uuid NOT NULL,
+    avg_order_value numeric(38,2),
+    completed_orders bigint,
+    completed_sales numeric(38,2),
+    role_id integer,
+    role_name character varying(255),
+    staff_name character varying(255),
+    total_orders bigint,
+    total_sales numeric(38,2)
+);
+
+
+ALTER TABLE public.sales_report_by_staff OWNER TO postgres;
+
+--
+-- Name: test_drive_schedules; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.test_drive_schedules (
+    schedule_id uuid NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    notes text,
+    preferred_date date NOT NULL,
+    preferred_time time(6) without time zone NOT NULL,
+    status character varying(50) NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    customer_id uuid,
+    variant_id integer
+);
+
+
+ALTER TABLE public.test_drive_schedules OWNER TO postgres;
+
+--
 -- Name: test_drive_schedules_backup; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -674,9 +891,8 @@ CREATE TABLE public.user_roles (
     role_id integer NOT NULL,
     role_name character varying(50) NOT NULL,
     description text,
-    permissions jsonb,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT chk_user_roles_permissions_valid_json CHECK (((permissions IS NULL) OR (jsonb_typeof(permissions) = 'object'::text)))
+    permissions character varying(4000) DEFAULT '{}'::character varying NOT NULL
 );
 
 
@@ -1023,6 +1239,8 @@ COPY public.appointments (appointment_id, customer_id, staff_id, appointment_typ
 a0bb45f0-e026-4548-ac0e-7e531a611525	23c800a2-5903-4b5e-bb41-c86e0e4a5107	\N	test_drive	Test Drive - Standard Range	\N	2024-03-20 10:00:00	60	\N	pending	\N	2025-10-14 23:14:45.443104	2025-10-14 23:14:45.443104	1
 ab2e7251-dcab-46e1-be82-bf42178dc8af	bc295b71-4784-42bb-8711-573b48d28101	\N	test_drive	Test Drive - VF 5 Standard	\N	2024-03-20 10:00:00	60	\N	pending	\N	2025-10-14 23:15:14.855996	2025-10-14 23:15:14.855996	8
 0bbd5116-4504-4304-8a7d-fec50a78b666	0766234c-d354-476c-a8f9-200cd74f2d9e	\N	test_drive	Test Drive - Model 3 Standard Range	\N	2024-03-25 14:00:00	60	\N	pending	\N	2025-10-14 23:15:14.855996	2025-10-14 23:15:14.855996	3
+1d956e90-14db-4927-a883-8a8bd53994c8	\N	\N	test_drive	Lái thử xe - Test Customer	\N	2024-12-20 03:00:00	60	\N	scheduled	Test appointment\nCustomer: Test Customer (test@example.com, 0123456789), Variant ID: 1	2025-10-26 15:24:30.955333	2025-10-26 15:24:30.955333	\N
+af293c23-38d8-4106-b37b-f7195dcde0ed	\N	\N	delivery	Nhận xe - Test Customer	\N	2024-12-25 07:00:00	60	\N	scheduled	Test delivery appointment\nCustomer: Test Customer (test@example.com, 0123456789), Order ID: 48bbd74e-ce34-4f48-9b26-eb9e0c9de16a, Address: 123 Test Street, Ho Chi Minh City	2025-10-26 15:29:47.056141	2025-10-26 15:29:47.056141	\N
 \.
 
 
@@ -1035,12 +1253,22 @@ COPY public.appointments_backup (appointment_id, customer_id, staff_id, appointm
 
 
 --
+-- Data for Name: customer_debt_report; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.customer_debt_report (customer_id, active_installments, customer_name, email, last_order_date, outstanding_balance, phone, total_loan_amount, total_orders, total_purchases) FROM stdin;
+\.
+
+
+--
 -- Data for Name: customer_feedbacks; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.customer_feedbacks (feedback_id, customer_id, order_id, rating, feedback_type, message, response, status, created_at, updated_at) FROM stdin;
 3512230a-8c44-46d8-b4c1-c10e2199936a	e9c41a60-f600-4188-80fb-55fbc60ae128	1a242971-a5d8-41ae-9681-0b4081c6a5da	5	general	Dịch vụ tốt, giao xe đúng hẹn	\N	resolved	2025-10-14 23:14:45.443104	2025-10-14 23:14:45.443104
 ecba9a9d-180c-41b8-9ca5-d08d413c2c70	23c800a2-5903-4b5e-bb41-c86e0e4a5107	f574227f-d7c9-4145-91bd-a3b2bf409b6a	4	service	Nhân viên tư vấn nhiệt tình	\N	resolved	2025-10-14 23:15:14.855996	2025-10-14 23:15:14.855996
+7ee1382a-090d-4aec-81a1-d2034e4c38e6	\N	\N	5	compliment	I love this car!\n\nCustomer Info: Test Customer (test@example.com, 0123456789), Subject: Great service	\N	pending	2025-10-26 15:24:24.914978	2025-10-26 15:24:24.914978
+68ff9047-6820-4e42-bde1-9371d821d90d	\N	\N	5	compliment	I love this car!\n\nCustomer Info: Test Customer (test@example.com, 0123456789), Variant ID: 1, Subject: Great service	\N	pending	2025-10-26 15:25:21.827458	2025-10-26 15:25:21.827458
 \.
 
 
@@ -1051,6 +1279,8 @@ ecba9a9d-180c-41b8-9ca5-d08d413c2c70	23c800a2-5903-4b5e-bb41-c86e0e4a5107	f57422
 COPY public.customer_payments (payment_id, order_id, customer_id, payment_number, payment_date, amount, payment_type, payment_method, reference_number, status, processed_by, notes, created_at) FROM stdin;
 7f52485c-db0b-4fbf-970d-10cadeeb4472	1a242971-a5d8-41ae-9681-0b4081c6a5da	e9c41a60-f600-4188-80fb-55fbc60ae128	CUST-PAY-2024-001	2024-02-15	236000000.00	down_payment	bank_transfer	\N	completed	bdfccab5-9e07-49c7-bb2a-9b2f69521eeb	\N	2025-10-14 23:14:45.443104
 5427f291-b31a-48dc-855a-79f269cb4ab7	f574227f-d7c9-4145-91bd-a3b2bf409b6a	23c800a2-5903-4b5e-bb41-c86e0e4a5107	CUST-PAY-2024-002	2024-02-16	800000000.00	full_payment	bank_transfer	\N	completed	bdfccab5-9e07-49c7-bb2a-9b2f69521eeb	\N	2025-10-14 23:15:14.855996
+32c9ee85-fd3a-4b07-a9e9-f8145ec12cc9	48bbd74e-ce34-4f48-9b26-eb9e0c9de16a	\N	PAY-1761492535661	2025-10-26	100000000.00	deposit	bank_transfer	\N	pending	\N	Test deposit payment	2025-10-26 15:28:55.667017
+941f3463-4521-4c0f-bca0-552cd2e875ca	48bbd74e-ce34-4f48-9b26-eb9e0c9de16a	\N	PAY-1761492593226	2025-10-26	1000000000.00	full	credit_card	\N	pending	\N	Test full payment	2025-10-26 15:29:53.227518
 \.
 
 
@@ -1070,6 +1300,8 @@ bc295b71-4784-42bb-8711-573b48d28101	Le	Van Nam	nam.le@email.com	+84-903-456-789
 c9d8700b-8fe3-45e7-8eeb-c9ab1c3e44e4	Thi Mai	Tran	mai.tran@email.com	+84-906-789-012	1992-09-25	987 Vo Van Tan Street, District 3	Ho Chi Minh City	Ho Chi Minh	\N	\N	\N	\N	2025-10-14 23:18:22.035186	2025-10-14 23:18:22.035186
 acba6a37-29d9-46f6-8c94-9dfa730d0d89	John	Doe	john.doe@email.com	+84-901-234-567	\N	123 Le Loi Street, District 1	Ho Chi Minh City	Ho Chi Minh	\N	\N	\N	\N	2025-10-15 00:38:33.959218	2025-10-15 00:38:33.959218
 78fe7eb0-ceb8-4793-a8af-187a3fe26f67	Jane	Smith	jane.smith@email.com	+84-902-345-678	\N	456 Nguyen Trai Street, Thanh Xuan District	Hanoi	Hanoi	\N	\N	\N	\N	2025-10-15 00:38:33.959218	2025-10-15 00:38:33.959218
+d048de9b-2536-4c63-96cd-19633fc37bd5	tes	test	test@gmail.ocm	0123456789	\N					\N	\N	Quan tâm đến xe: BYD Atto 3 Extended Atto 3 Extended Range\n\nTin nhắn: ok	2025-10-23 11:09:34.226912	2025-10-23 11:09:34.226912
+857e6f28-99d8-455d-8d19-484d3f8bbc71	test	test	test@gmail.com	0147852369	\N					\N	\N	Quan tâm đến xe: BYD Atto 3 Atto 3 Standard\n\nTin nhắn: 	2025-10-23 11:19:29.851027	2025-10-23 11:19:29.851027
 \.
 
 
@@ -1083,10 +1315,26 @@ f1abe2b8-c6b0-4e1e-b54e-d2f27a349f5d	DC-2024-001	exclusive	2024-01-01	2024-12-31
 
 
 --
+-- Data for Name: dealer_discount_policies; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.dealer_discount_policies (policy_id, created_at, description, discount_amount, discount_percent, end_date, policy_name, start_date, status, updated_at, variant_id) FROM stdin;
+\.
+
+
+--
 -- Data for Name: dealer_discount_policies_backup; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.dealer_discount_policies_backup (policy_id, variant_id, policy_name, description, discount_percent, discount_amount, start_date, end_date, status, created_at, updated_at) FROM stdin;
+\.
+
+
+--
+-- Data for Name: dealer_installment_plans; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.dealer_installment_plans (plan_id, contract_number, created_at, down_payment_amount, finance_company, first_payment_date, interest_rate, last_payment_date, loan_amount, loan_term_months, monthly_payment_amount, plan_status, total_amount, invoice_id) FROM stdin;
 \.
 
 
@@ -1096,6 +1344,14 @@ COPY public.dealer_discount_policies_backup (policy_id, variant_id, policy_name,
 
 COPY public.dealer_installment_plans_backup (plan_id, invoice_id, total_amount, down_payment_amount, loan_amount, interest_rate, loan_term_months, monthly_payment_amount, first_payment_date, last_payment_date, plan_status, finance_company, contract_number, created_at) FROM stdin;
 37516889-d4c8-4118-a715-321e3b53016f	7578326c-b3cb-4c79-99fb-61118f0494e0	2000000000.00	400000000.00	1600000000.00	7.50	24	75000000.00	2024-03-01	2026-02-01	active	EV Finance	EVF-DEALER-2024-001	2025-10-14 23:14:45.443104
+\.
+
+
+--
+-- Data for Name: dealer_installment_schedules; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.dealer_installment_schedules (schedule_id, amount, created_at, due_date, installment_number, interest_amount, late_fee, notes, paid_amount, paid_date, principal_amount, status, plan_id) FROM stdin;
 \.
 
 
@@ -1150,6 +1406,14 @@ d2ebb5b3-79d3-487b-94c7-01c50999c963	a881beab-d069-4816-8b62-aa9971c146ba	DEALER
 
 
 --
+-- Data for Name: dealer_performance_report; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.dealer_performance_report (target_id, achieved_amount, achieved_quantity, achievement_rate, notes, performance_level, target_amount, target_month, target_quantity, target_status, target_type, target_year) FROM stdin;
+\.
+
+
+--
 -- Data for Name: dealer_targets; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -1165,6 +1429,14 @@ ca72dcc3-ea16-4c19-91b1-7b98b9a9e836	2024	2	monthly	6000000000.00	5	1180000000.0
 --
 
 COPY public.dealers (dealer_id, dealer_code, dealer_name, contact_person, email, phone, address, city, province, postal_code, dealer_type, license_number, tax_code, bank_account, bank_name, commission_rate, status, notes, created_at, updated_at) FROM stdin;
+\.
+
+
+--
+-- Data for Name: delivery_tracking_report; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.delivery_tracking_report (delivery_id, color_name, customer_name, customer_phone, delivered_by, delivery_address, delivery_confirmation_date, delivery_contact_name, delivery_contact_phone, delivery_date, delivery_status, delivery_time, order_number, vehicle_info, vin) FROM stdin;
 \.
 
 
@@ -1206,18 +1478,35 @@ COPY public.installment_schedules_backup (schedule_id, plan_id, installment_numb
 
 
 --
+-- Data for Name: inventory_turnover_report; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.inventory_turnover_report (brand_name, available_count, avg_cost_price, avg_profit_margin, avg_selling_price, color_name, first_arrival, last_arrival, model_name, reserved_count, sold_count, total_inventory, variant_name) FROM stdin;
+\.
+
+
+--
+-- Data for Name: monthly_sales_summary; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.monthly_sales_summary (sales_year, avg_order_value, cash_orders, installment_orders, sales_month, total_balance, total_deposits, total_orders, total_revenue) FROM stdin;
+\.
+
+
+--
 -- Data for Name: orders; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.orders (order_id, order_number, quotation_id, customer_id, user_id, inventory_id, order_date, status, total_amount, deposit_amount, balance_amount, payment_method, notes, created_at, updated_at) FROM stdin;
-1a242971-a5d8-41ae-9681-0b4081c6a5da	ORD-2024-001	e13dea70-2661-4527-ab52-13284fa3eff9	e9c41a60-f600-4188-80fb-55fbc60ae128	bdfccab5-9e07-49c7-bb2a-9b2f69521eeb	863a8f02-b9ba-4f21-bbf9-5dd09b481532	2024-02-15	confirmed	1180000000.00	236000000.00	944000000.00	installment	\N	2025-10-14 23:14:45.443104	2025-10-14 23:14:45.443104
-f574227f-d7c9-4145-91bd-a3b2bf409b6a	ORD-2024-002	869777a2-80ac-4996-a9cb-d7707d4d678b	23c800a2-5903-4b5e-bb41-c86e0e4a5107	bdfccab5-9e07-49c7-bb2a-9b2f69521eeb	0b519b1c-e178-4ede-8a42-688362cb3198	2024-02-16	completed	800000000.00	800000000.00	0.00	cash	\N	2025-10-14 23:15:14.855996	2025-10-14 23:15:14.855996
-c6544d05-f1e6-4842-a1cc-3a6af4a873e7	ORD-2024-003	2cf9b2c9-db82-40fc-9629-fcee4ddf0c8d	bc295b71-4784-42bb-8711-573b48d28101	52b27bc0-f457-4f96-bcaf-d20daadf9f56	6d43eb8d-6a31-404e-abdb-9389b86e7c17	2024-02-17	pending	350000000.00	0.00	350000000.00	installment	\N	2025-10-14 23:15:14.855996	2025-10-14 23:15:14.855996
-9d1df0e1-37e3-4e10-8f7d-a372407c96a3	ORD-2024-004	e13dea70-2661-4527-ab52-13284fa3eff9	\N	bdfccab5-9e07-49c7-bb2a-9b2f69521eeb	782dad0d-39d8-42c5-b7b7-961f4ad47372	2024-02-20	confirmed	1800000000.00	360000000.00	1440000000.00	installment	Đơn hàng BMW iX xDrive50 cho Nguyễn Thị Thu	2025-10-14 23:18:22.035186	2025-10-14 23:18:42.729405
-3ce3238d-ad13-45b5-aebc-c85522e8588b	ORD-2024-005	e13dea70-2661-4527-ab52-13284fa3eff9	\N	52b27bc0-f457-4f96-bcaf-d20daadf9f56	863a8f02-b9ba-4f21-bbf9-5dd09b481532	2024-02-22	confirmed	2200000000.00	440000000.00	1760000000.00	installment	Đơn hàng Mercedes EQS 450+ cho Phạm Văn Đức	2025-10-14 23:18:22.035186	2025-10-14 23:18:42.729405
-d9af974c-0dea-434d-8463-4333596eac52	ORD-2024-006	e13dea70-2661-4527-ab52-13284fa3eff9	\N	bdfccab5-9e07-49c7-bb2a-9b2f69521eeb	863a8f02-b9ba-4f21-bbf9-5dd09b481532	2024-02-25	confirmed	1200000000.00	240000000.00	960000000.00	installment	Đơn hàng VinFast VF 5 Plus cho Trần Thị Mai	2025-10-14 23:18:22.035186	2025-10-14 23:18:42.729405
-9d035558-89e5-4a9d-a6d9-1b6462f36ab4	ORD-2024-007	e22ada09-2477-41df-ac3a-85058b3fe516	e9c41a60-f600-4188-80fb-55fbc60ae128	bdfccab5-9e07-49c7-bb2a-9b2f69521eeb	5de1fc37-c8a6-4d87-bbf3-b2b7e3ae64f8	2024-03-01	confirmed	2400000000.00	480000000.00	1920000000.00	installment	Đơn hàng Tesla Model S Plaid	2025-10-14 23:46:18.12036	2025-10-14 23:46:18.12036
-5993dd7a-c68d-4f13-bf12-d97f4fa8b28b	ORD-2024-008	9b82e51f-30a5-4237-9a21-a7223926c08b	23c800a2-5903-4b5e-bb41-c86e0e4a5107	52b27bc0-f457-4f96-bcaf-d20daadf9f56	a23adebe-e700-451e-b1c9-e54cd8ecc242	2024-03-02	confirmed	2650000000.00	530000000.00	2120000000.00	installment	Đơn hàng Tesla Model X Plaid	2025-10-14 23:46:18.12036	2025-10-14 23:46:18.12036
+COPY public.orders (order_id, order_number, quotation_id, customer_id, user_id, inventory_id, order_date, status, total_amount, deposit_amount, balance_amount, payment_method, notes, created_at, updated_at, delivery_date, special_requests) FROM stdin;
+1a242971-a5d8-41ae-9681-0b4081c6a5da	ORD-2024-001	e13dea70-2661-4527-ab52-13284fa3eff9	e9c41a60-f600-4188-80fb-55fbc60ae128	bdfccab5-9e07-49c7-bb2a-9b2f69521eeb	863a8f02-b9ba-4f21-bbf9-5dd09b481532	2024-02-15	confirmed	1180000000.00	236000000.00	944000000.00	installment	\N	2025-10-14 23:14:45.443104	2025-10-14 23:14:45.443104	\N	\N
+f574227f-d7c9-4145-91bd-a3b2bf409b6a	ORD-2024-002	869777a2-80ac-4996-a9cb-d7707d4d678b	23c800a2-5903-4b5e-bb41-c86e0e4a5107	bdfccab5-9e07-49c7-bb2a-9b2f69521eeb	0b519b1c-e178-4ede-8a42-688362cb3198	2024-02-16	completed	800000000.00	800000000.00	0.00	cash	\N	2025-10-14 23:15:14.855996	2025-10-14 23:15:14.855996	\N	\N
+c6544d05-f1e6-4842-a1cc-3a6af4a873e7	ORD-2024-003	2cf9b2c9-db82-40fc-9629-fcee4ddf0c8d	bc295b71-4784-42bb-8711-573b48d28101	52b27bc0-f457-4f96-bcaf-d20daadf9f56	6d43eb8d-6a31-404e-abdb-9389b86e7c17	2024-02-17	pending	350000000.00	0.00	350000000.00	installment	\N	2025-10-14 23:15:14.855996	2025-10-14 23:15:14.855996	\N	\N
+9d1df0e1-37e3-4e10-8f7d-a372407c96a3	ORD-2024-004	e13dea70-2661-4527-ab52-13284fa3eff9	\N	bdfccab5-9e07-49c7-bb2a-9b2f69521eeb	782dad0d-39d8-42c5-b7b7-961f4ad47372	2024-02-20	confirmed	1800000000.00	360000000.00	1440000000.00	installment	Đơn hàng BMW iX xDrive50 cho Nguyễn Thị Thu	2025-10-14 23:18:22.035186	2025-10-14 23:18:42.729405	\N	\N
+3ce3238d-ad13-45b5-aebc-c85522e8588b	ORD-2024-005	e13dea70-2661-4527-ab52-13284fa3eff9	\N	52b27bc0-f457-4f96-bcaf-d20daadf9f56	863a8f02-b9ba-4f21-bbf9-5dd09b481532	2024-02-22	confirmed	2200000000.00	440000000.00	1760000000.00	installment	Đơn hàng Mercedes EQS 450+ cho Phạm Văn Đức	2025-10-14 23:18:22.035186	2025-10-14 23:18:42.729405	\N	\N
+d9af974c-0dea-434d-8463-4333596eac52	ORD-2024-006	e13dea70-2661-4527-ab52-13284fa3eff9	\N	bdfccab5-9e07-49c7-bb2a-9b2f69521eeb	863a8f02-b9ba-4f21-bbf9-5dd09b481532	2024-02-25	confirmed	1200000000.00	240000000.00	960000000.00	installment	Đơn hàng VinFast VF 5 Plus cho Trần Thị Mai	2025-10-14 23:18:22.035186	2025-10-14 23:18:42.729405	\N	\N
+9d035558-89e5-4a9d-a6d9-1b6462f36ab4	ORD-2024-007	e22ada09-2477-41df-ac3a-85058b3fe516	e9c41a60-f600-4188-80fb-55fbc60ae128	bdfccab5-9e07-49c7-bb2a-9b2f69521eeb	5de1fc37-c8a6-4d87-bbf3-b2b7e3ae64f8	2024-03-01	confirmed	2400000000.00	480000000.00	1920000000.00	installment	Đơn hàng Tesla Model S Plaid	2025-10-14 23:46:18.12036	2025-10-14 23:46:18.12036	\N	\N
+5993dd7a-c68d-4f13-bf12-d97f4fa8b28b	ORD-2024-008	9b82e51f-30a5-4237-9a21-a7223926c08b	23c800a2-5903-4b5e-bb41-c86e0e4a5107	52b27bc0-f457-4f96-bcaf-d20daadf9f56	a23adebe-e700-451e-b1c9-e54cd8ecc242	2024-03-02	confirmed	2650000000.00	530000000.00	2120000000.00	installment	Đơn hàng Tesla Model X Plaid	2025-10-14 23:46:18.12036	2025-10-14 23:46:18.12036	\N	\N
+48bbd74e-ce34-4f48-9b26-eb9e0c9de16a	ORD-20251026-2558	e13dea70-2661-4527-ab52-13284fa3eff9	e9c41a60-f600-4188-80fb-55fbc60ae128	bdfccab5-9e07-49c7-bb2a-9b2f69521eeb	863a8f02-b9ba-4f21-bbf9-5dd09b481532	2024-12-20	cancelled	1000000000.00	0.00	\N	\N	Test order from public API\nCancellation reason: Test cancellation	2025-10-26 15:28:20.962993	2025-10-26 22:29:58.595315	\N	\N
 \.
 
 
@@ -1263,6 +1552,8 @@ e22ada09-2477-41df-ac3a-85058b3fe516	QT-2024-007	e9c41a60-f600-4188-80fb-55fbc60
 9b82e51f-30a5-4237-9a21-a7223926c08b	QT-2024-008	23c800a2-5903-4b5e-bb41-c86e0e4a5107	52b27bc0-f457-4f96-bcaf-d20daadf9f56	22	3	2024-03-02	2800000000.00	150000000.00	2650000000.00	7	pending	Báo giá cho Tesla Model X Plaid	2025-10-14 23:46:18.12036	2025-10-20 19:14:35.110954
 9bd78eb4-3700-48e3-8e72-84a09aaa3c9e	QT-2024-010	2d374584-fb65-472d-83a5-c1136f26bc38	52b27bc0-f457-4f96-bcaf-d20daadf9f56	24	\N	2024-03-04	2000000000.00	100000000.00	1900000000.00	7	pending	Báo giá cho BMW iX3 xDrive30	2025-10-14 23:46:18.12036	2025-10-20 19:14:40.314095
 81661b71-7b3c-43bb-8171-0cd6af2762fc	QT-2024-009	80ff5c2e-f596-4638-9f14-733ae515bbeb	bdfccab5-9e07-49c7-bb2a-9b2f69521eeb	23	1	2024-03-03	1200000000.00	50000000.00	1150000000.00	7	pending	Báo giá cho BYD Atto 3 Extended Range	2025-10-14 23:46:18.12036	2025-10-20 19:14:47.996452
+e913b770-4755-4375-9744-ff97ff827c7a	QUO-20251023-3448	78fe7eb0-ceb8-4793-a8af-187a3fe26f67	6f2431b7-10c9-4d61-b612-33e11b923752	1	1	2025-10-23	1200000000.00	0.00	1200000000.00	7	accepted	test	2025-10-23 10:31:25.24992	2025-10-23 10:31:25.24992
+0565564e-0656-4716-a799-a57c5f7bb17c	QUO-20251023-7976	78fe7eb0-ceb8-4793-a8af-187a3fe26f67	6f2431b7-10c9-4d61-b612-33e11b923752	1	1	2025-10-23	1200000000.00	0.00	1200000000.00	7	accepted	test	2025-10-23 10:36:28.973223	2025-10-23 10:36:28.973223
 \.
 
 
@@ -1283,6 +1574,22 @@ c6b5b1af-b84f-482c-a4ee-a69a66c8ba94	SC-2024-004	1a242971-a5d8-41ae-9681-0b4081c
 
 
 --
+-- Data for Name: sales_report_by_staff; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.sales_report_by_staff (user_id, avg_order_value, completed_orders, completed_sales, role_id, role_name, staff_name, total_orders, total_sales) FROM stdin;
+\.
+
+
+--
+-- Data for Name: test_drive_schedules; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.test_drive_schedules (schedule_id, created_at, notes, preferred_date, preferred_time, status, updated_at, customer_id, variant_id) FROM stdin;
+\.
+
+
+--
 -- Data for Name: test_drive_schedules_backup; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -1297,12 +1604,11 @@ ab2e7251-dcab-46e1-be82-bf42178dc8af	bc295b71-4784-42bb-8711-573b48d28101	8	2024
 -- Data for Name: user_roles; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.user_roles (role_id, role_name, description, permissions, created_at) FROM stdin;
-1	admin	System Administrator	{"users": ["create", "read", "update", "delete"], "orders": ["create", "read", "update", "delete"], "dealers": ["create", "read", "update", "delete"], "reports": ["read"], "invoices": ["create", "read", "update", "delete"], "vehicles": ["create", "read", "update", "delete"]}	2025-10-14 23:14:45.443104
-2	evm_staff	Electric Vehicle Manufacturer Staff	{"dealers": ["read", "update"], "reports": ["read"], "invoices": ["create", "read", "update"], "vehicles": ["create", "read", "update"]}	2025-10-14 23:14:45.443104
-3	dealer_manager	Dealer Manager	{"users": ["read"], "orders": ["create", "read", "update"], "reports": ["read"], "invoices": ["read"], "customers": ["create", "read", "update"]}	2025-10-14 23:14:45.443104
-4	dealer_staff	Dealer Staff	{"orders": ["create", "read"], "customers": ["create", "read", "update"], "quotations": ["create", "read", "update"]}	2025-10-14 23:14:45.443104
-5	evm_manager	EVM Manager	{"read": true, "write": true, "approve": true}	2025-10-15 00:52:56.216723
+COPY public.user_roles (role_id, role_name, description, created_at, permissions) FROM stdin;
+1	admin	System Administrator	2025-10-14 23:14:45.443104	{"users": ["create", "read", "update", "delete"], "orders": ["create", "read", "update", "delete"], "dealers": ["create", "read", "update", "delete"], "reports": ["read"], "invoices": ["create", "read", "update", "delete"], "vehicles": ["create", "read", "update", "delete"]}
+2	evm_staff	Electric Vehicle Manufacturer Staff	2025-10-14 23:14:45.443104	{"dealers": ["read", "update"], "reports": ["read"], "invoices": ["create", "read", "update"], "vehicles": ["create", "read", "update"]}
+3	dealer_manager	Dealer Manager	2025-10-14 23:14:45.443104	{"users": ["read"], "orders": ["create", "read", "update"], "reports": ["read"], "invoices": ["read"], "customers": ["create", "read", "update"]}
+4	dealer_staff	Dealer Staff 123	2025-10-14 23:14:45.443104	{"quotations":["read","write"],"vehicles":["read","write"],"orders":["read","write"],"customers":["read","write"]}
 \.
 
 
@@ -1311,14 +1617,12 @@ COPY public.user_roles (role_id, role_name, description, permissions, created_at
 --
 
 COPY public.users (user_id, username, email, password_hash, first_name, last_name, phone, address, date_of_birth, profile_image_url, profile_image_path, role_id, is_active, created_at, updated_at, dealer_id, role) FROM stdin;
-15e22891-d994-485e-ad40-6c6c6f72fca6	manager	manager@evdealer.com	$2a$10$xdeQrPjio4x1k15O9vKf7ebP.qsfi5b2PK/c3HZXEh8skI2Un2JXK	Manager	User	0987654321	Manager Address	\N	\N	\N	1	t	2025-10-16 10:19:37.073881	2025-10-16 10:19:37.073881	\N	DEALER_STAFF
-6f2431b7-10c9-4d61-b612-33e11b923752	admin	admin@evdealer.com	$2a$10$twGkmusRXuBWmxF7.j04n.jt7BMv2W1TgcVNGiZNLAlJ68vGWU7Ne	System	Administrator	0123456789	System Address	\N	\N	\N	1	t	2025-10-16 10:16:03.680024	2025-10-17 01:13:01.40688	\N	DEALER_STAFF
 2d9d55af-f0db-4210-b6a4-3f7ef4f72682	evm_manager	manager@evm.com	$2a$10$U6SBNWhwhkYEONC1OVGoGOAXNjtFU9YYYKpZBR4QXLH5Z1DKOgf5.	John	Smith	+84-123-456-7891	1000 Industrial Zone, District 7	\N	https://example.com/profiles/evm_manager.jpg	\N	2	t	2025-10-14 23:14:45.443104	2025-10-17 01:13:01.538323	\N	DEALER_STAFF
 611d8920-389f-44c6-91b4-686c7872b8e3	dealer_mgr_hcm	manager@dealerhcm.com	$2a$10$dl0sUmoPb6A408jO/7.zx.pXO943Dv/ryvsSBhRn2WRAXEzSQi4L6	Nguyen	Van A	+84-28-123-4567	123 Nguyen Hue Street, District 1	\N	https://example.com/profiles/dealer_mgr.jpg	\N	3	t	2025-10-14 23:14:45.443104	2025-10-17 01:13:01.61009	\N	DEALER_STAFF
-bdfccab5-9e07-49c7-bb2a-9b2f69521eeb	dealer_staff_hcm1	staff1@dealerhcm.com	$2a$10$BWPsKeSaKAOFMyNeHKKLO.aHvrfrREaqTOHsiab6M6zBtgF1f9IOi	Tran	Thi B	+84-28-123-4568	123 Nguyen Hue Street, District 1	\N	https://example.com/profiles/dealer_staff.jpg	\N	4	t	2025-10-14 23:14:45.443104	2025-10-17 01:13:01.68165	\N	DEALER_STAFF
-52b27bc0-f457-4f96-bcaf-d20daadf9f56	dealer_staff_hcm2	staff2@dealerhcm.com	$2a$10$SIdMAuN.Zpd6nbjOiFZ8p.WCJ/qQGXMKK3QGr9OXLugNjfgSjp2iu	Le	Van C	+84-28-123-4569	123 Nguyen Hue Street, District 1	\N	https://example.com/profiles/dealer_staff2.jpg	\N	4	t	2025-10-14 23:15:14.855996	2025-10-17 01:13:01.753751	\N	DEALER_STAFF
-5c6432ea-b056-4720-9a38-3fc670b103e6	testuser	test@example.com	\\\\\\.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi	Test	User	\N	\N	\N	\N	\N	1	t	2025-10-17 01:08:30.312395	2025-10-17 01:09:26.177561	\N	DEALER_STAFF
-4eb4b6bc-9cdf-47c6-8e04-fdf9fb11644d	api_test_user	apitest@example.com	$2a$10$AfdO5wjBF2tCNNQSaAd.KOsNgMtP6a5yMUiGS0X5lrUxd67lCyM0e	API	Test	0987654321	456 API Test St	\N	\N	\N	\N	t	2025-10-16 18:16:39.91593	2025-10-16 18:16:39.91593	\N	DEALER_STAFF
+52b27bc0-f457-4f96-bcaf-d20daadf9f56	dealer_staff_hcm2	staff2@dealerhcm.com	$2a$10$SIdMAuN.Zpd6nbjOiFZ8p.WCJ/qQGXMKK3QGr9OXLugNjfgSjp2iu	Test	User	+84-28-123-4569	123 Nguyen Hue Street, District 1	\N	https://example.com/profiles/dealer_staff2.jpg	\N	4	f	2025-10-14 23:15:14.855996	2025-10-26 21:03:15.540679	\N	DEALER_STAFF
+bdfccab5-9e07-49c7-bb2a-9b2f69521eeb	dealer_staff_hcm1	staff1@dealerhcm.com	$2a$10$BWPsKeSaKAOFMyNeHKKLO.aHvrfrREaqTOHsiab6M6zBtgF1f9IOi	Tran	Thi B	+84-28-123-4568	123 Nguyen Hue Street, District 1	\N	https://example.com/profiles/dealer_staff.jpg	\N	4	f	2025-10-14 23:14:45.443104	2025-10-26 21:06:19.811894	\N	DEALER_STAFF
+b8779c11-efef-48da-81e7-995dedcf8d30	toandd	toandd@gmail.com	$2a$10$enT8uwdggnoMdJGmM3C.YOCZxjOuj.p3x5UidZ5c1x3ZAW23x7K9O	toan	dang	0159753852	\N	\N	\N	\N	1	t	2025-10-26 14:13:28.924733	2025-10-26 14:13:28.924733	\N	DEALER_STAFF
+6f2431b7-10c9-4d61-b612-33e11b923752	admin	admin@evdealer.com	$2a$10$twGkmusRXuBWmxF7.j04n.jt7BMv2W1TgcVNGiZNLAlJ68vGWU7Ne	Test	Administrator	0123456789	System Address	\N	\N	\N	1	t	2025-10-16 10:16:03.680024	2025-10-26 17:33:01.226012	\N	admin
 \.
 
 
@@ -1374,12 +1678,12 @@ c414bcff-3702-44d9-bb2d-4e57631ad8f8	1a242971-a5d8-41ae-9681-0b4081c6a5da	863a8f
 --
 
 COPY public.vehicle_inventory (inventory_id, variant_id, color_id, warehouse_id, warehouse_location, vin, chassis_number, manufacturing_date, arrival_date, status, cost_price, selling_price, vehicle_images, interior_images, exterior_images, created_at, updated_at) FROM stdin;
-863a8f02-b9ba-4f21-bbf9-5dd09b481532	1	1	bf6844aa-e6d6-4d13-aef2-b2b0aa1a8a5a	Zone A - Premium	1HGBH41JXMN109186	\N	2024-01-15	2024-02-01	available	1000000000.00	1200000000.00	{"main": "https://example.com/images/vehicles/TSL-M3-SR-01-main.jpg", "rear": "https://example.com/images/vehicles/TSL-M3-SR-01-rear.jpg", "side": "https://example.com/images/vehicles/TSL-M3-SR-01-side.jpg", "front": "https://example.com/images/vehicles/TSL-M3-SR-01-front.jpg", "interior": "https://example.com/images/vehicles/TSL-M3-SR-01-interior.jpg"}	{"seats": "https://example.com/images/interior/TSL-M3-SR-01-seats.jpg", "console": "https://example.com/images/interior/TSL-M3-SR-01-console.jpg", "dashboard": "https://example.com/images/interior/TSL-M3-SR-01-dashboard.jpg"}	{"wheel": "https://example.com/images/exterior/TSL-M3-SR-01-wheel.jpg", "rear_view": "https://example.com/images/exterior/TSL-M3-SR-01-rear.jpg", "side_view": "https://example.com/images/exterior/TSL-M3-SR-01-side.jpg", "front_view": "https://example.com/images/exterior/TSL-M3-SR-01-front.jpg"}	2025-10-14 23:14:45.443104	2025-10-14 23:18:42.729405
-c643fb9f-6c4c-4764-8e50-d0c383baab17	2	2	bf6844aa-e6d6-4d13-aef2-b2b0aa1a8a5a	Zone B - Standard	1HGBH41JXMN109187	\N	2024-01-20	2024-02-05	available	700000000.00	800000000.00	{"main": "https://example.com/images/vehicles/TSL-MY-LR-01-main.jpg", "rear": "https://example.com/images/vehicles/TSL-MY-LR-01-rear.jpg", "side": "https://example.com/images/vehicles/TSL-MY-LR-01-side.jpg", "front": "https://example.com/images/vehicles/TSL-MY-LR-01-front.jpg", "interior": "https://example.com/images/vehicles/TSL-MY-LR-01-interior.jpg"}	{"seats": "https://example.com/images/interior/TSL-MY-LR-01-seats.jpg", "console": "https://example.com/images/interior/TSL-MY-LR-01-console.jpg", "dashboard": "https://example.com/images/interior/TSL-MY-LR-01-dashboard.jpg"}	{"wheel": "https://example.com/images/exterior/TSL-MY-LR-01-wheel.jpg", "rear_view": "https://example.com/images/exterior/TSL-MY-LR-01-rear.jpg", "side_view": "https://example.com/images/exterior/TSL-MY-LR-01-side.jpg", "front_view": "https://example.com/images/exterior/TSL-MY-LR-01-front.jpg"}	2025-10-14 23:14:45.443104	2025-10-14 23:18:42.729405
-0b519b1c-e178-4ede-8a42-688362cb3198	6	4	bf6844aa-e6d6-4d13-aef2-b2b0aa1a8a5a	Zone B - Standard	1HGBH41JXMN109188	\N	2024-01-25	2024-02-10	available	700000000.00	800000000.00	{"main": "https://example.com/images/vehicles/BYD-ATTO3-STD-01-main.jpg", "rear": "https://example.com/images/vehicles/BYD-ATTO3-STD-01-rear.jpg", "side": "https://example.com/images/vehicles/BYD-ATTO3-STD-01-side.jpg", "front": "https://example.com/images/vehicles/BYD-ATTO3-STD-01-front.jpg"}	{"seats": "https://example.com/images/interior/BYD-ATTO3-STD-01-seats.jpg", "dashboard": "https://example.com/images/interior/BYD-ATTO3-STD-01-dashboard.jpg"}	{"rear_view": "https://example.com/images/exterior/BYD-ATTO3-STD-01-rear.jpg", "side_view": "https://example.com/images/exterior/BYD-ATTO3-STD-01-side.jpg", "front_view": "https://example.com/images/exterior/BYD-ATTO3-STD-01-front.jpg"}	2025-10-14 23:15:14.855996	2025-10-14 23:18:42.729405
-6d43eb8d-6a31-404e-abdb-9389b86e7c17	8	1	bf6844aa-e6d6-4d13-aef2-b2b0aa1a8a5a	Zone C - Local	1HGBH41JXMN109189	\N	2024-02-01	2024-02-15	available	300000000.00	350000000.00	{"main": "https://example.com/images/vehicles/BMW-IX-XDRIVE50-01-main.jpg", "rear": "https://example.com/images/vehicles/BMW-IX-XDRIVE50-01-rear.jpg", "side": "https://example.com/images/vehicles/BMW-IX-XDRIVE50-01-side.jpg", "front": "https://example.com/images/vehicles/BMW-IX-XDRIVE50-01-front.jpg"}	{"seats": "https://example.com/images/interior/BMW-IX-XDRIVE50-01-seats.jpg", "dashboard": "https://example.com/images/interior/BMW-IX-XDRIVE50-01-dashboard.jpg"}	{"rear_view": "https://example.com/images/exterior/BMW-IX-XDRIVE50-01-rear.jpg", "side_view": "https://example.com/images/exterior/BMW-IX-XDRIVE50-01-side.jpg", "front_view": "https://example.com/images/exterior/BMW-IX-XDRIVE50-01-front.jpg"}	2025-10-14 23:15:14.855996	2025-10-14 23:18:42.729405
+863a8f02-b9ba-4f21-bbf9-5dd09b481532	1	1	bf6844aa-e6d6-4d13-aef2-b2b0aa1a8a5a	Zone A - Premium	1HGBH41JXMN109186	\N	2024-01-15	2024-02-01	available	1000000000.00	1200000000.00	{"main": "/uploads/inventory/main/ab7d06b6-59ef-4e1f-b651-9c3b513a5767.jpg"}	{"seats": "https://example.com/images/interior/TSL-M3-SR-01-seats.jpg", "console": "https://example.com/images/interior/TSL-M3-SR-01-console.jpg", "dashboard": "https://example.com/images/interior/TSL-M3-SR-01-dashboard.jpg"}	{"wheel": "https://example.com/images/exterior/TSL-M3-SR-01-wheel.jpg", "rear_view": "https://example.com/images/exterior/TSL-M3-SR-01-rear.jpg", "side_view": "https://example.com/images/exterior/TSL-M3-SR-01-side.jpg", "front_view": "https://example.com/images/exterior/TSL-M3-SR-01-front.jpg"}	2025-10-14 23:14:45.443104	2025-10-26 23:02:11.626691
 782dad0d-39d8-42c5-b7b7-961f4ad47372	10	5	bf6844aa-e6d6-4d13-aef2-b2b0aa1a8a5a	Zone A - Premium	1HGBH41JXMN109190	\N	2024-02-05	2024-02-20	available	1500000000.00	1800000000.00	{"main": "https://example.com/images/vehicles/MB-EQS450-01-main.jpg", "rear": "https://example.com/images/vehicles/MB-EQS450-01-rear.jpg", "side": "https://example.com/images/vehicles/MB-EQS450-01-side.jpg", "front": "https://example.com/images/vehicles/MB-EQS450-01-front.jpg"}	{"seats": "https://example.com/images/interior/MB-EQS450-01-seats.jpg", "dashboard": "https://example.com/images/interior/MB-EQS450-01-dashboard.jpg"}	{"rear_view": "https://example.com/images/exterior/MB-EQS450-01-rear.jpg", "side_view": "https://example.com/images/exterior/MB-EQS450-01-side.jpg", "front_view": "https://example.com/images/exterior/MB-EQS450-01-front.jpg"}	2025-10-14 23:15:14.855996	2025-10-14 23:18:42.729405
 d3105c40-d062-44d1-bd75-c3979af2b38f	\N	1	bf6844aa-e6d6-4d13-aef2-b2b0aa1a8a5a	\N	1HGBH41JXMN109192	\N	\N	\N	available	1000000000.00	1250000000.00	{}	{}	{}	2025-10-14 23:18:22.035186	2025-10-14 23:18:42.729405
+c643fb9f-6c4c-4764-8e50-d0c383baab17	2	2	bf6844aa-e6d6-4d13-aef2-b2b0aa1a8a5a	Zone B - Standard	1HGBH41JXMN109187	\N	2024-01-20	2024-02-05	available	700000000.00	800000000.00	{"main": "/uploads/inventory/main/15281252-d728-42c2-91b7-f4777c4ab61f.jpg"}	{"seats": "https://example.com/images/interior/TSL-MY-LR-01-seats.jpg", "console": "https://example.com/images/interior/TSL-MY-LR-01-console.jpg", "dashboard": "https://example.com/images/interior/TSL-MY-LR-01-dashboard.jpg"}	{"wheel": "https://example.com/images/exterior/TSL-MY-LR-01-wheel.jpg", "rear_view": "https://example.com/images/exterior/TSL-MY-LR-01-rear.jpg", "side_view": "https://example.com/images/exterior/TSL-MY-LR-01-side.jpg", "front_view": "https://example.com/images/exterior/TSL-MY-LR-01-front.jpg"}	2025-10-14 23:14:45.443104	2025-10-26 23:02:34.261354
+6d43eb8d-6a31-404e-abdb-9389b86e7c17	8	1	bf6844aa-e6d6-4d13-aef2-b2b0aa1a8a5a	Zone C - Local	1HGBH41JXMN109189	\N	2024-02-01	2024-02-15	available	300000000.00	350000000.00	{"main": "/uploads/inventory/main/16b90d3d-21ef-47ea-9590-d60b3a470c7c.jpg"}	{"seats": "https://example.com/images/interior/BMW-IX-XDRIVE50-01-seats.jpg", "dashboard": "https://example.com/images/interior/BMW-IX-XDRIVE50-01-dashboard.jpg"}	{"rear_view": "https://example.com/images/exterior/BMW-IX-XDRIVE50-01-rear.jpg", "side_view": "https://example.com/images/exterior/BMW-IX-XDRIVE50-01-side.jpg", "front_view": "https://example.com/images/exterior/BMW-IX-XDRIVE50-01-front.jpg"}	2025-10-14 23:15:14.855996	2025-10-26 23:02:44.493198
+0b519b1c-e178-4ede-8a42-688362cb3198	6	4	bf6844aa-e6d6-4d13-aef2-b2b0aa1a8a5a	Zone B - Standard	1HGBH41JXMN109188	\N	2024-01-25	2024-02-10	available	700000000.00	800000000.00	{"main": "/uploads/inventory/main/3fca45ca-7318-4925-8ce4-b2bdc7801dbb.png"}	{"seats": "https://example.com/images/interior/BYD-ATTO3-STD-01-seats.jpg", "dashboard": "https://example.com/images/interior/BYD-ATTO3-STD-01-dashboard.jpg"}	{"rear_view": "https://example.com/images/exterior/BYD-ATTO3-STD-01-rear.jpg", "side_view": "https://example.com/images/exterior/BYD-ATTO3-STD-01-side.jpg", "front_view": "https://example.com/images/exterior/BYD-ATTO3-STD-01-front.jpg"}	2025-10-14 23:15:14.855996	2025-10-27 00:02:39.541773
 e158e831-d652-407d-9b52-891f8526bc78	11	\N	bf6844aa-e6d6-4d13-aef2-b2b0aa1a8a5a	\N	1HGBH41JXMN109191	\N	\N	\N	available	1800000000.00	2300000000.00	{"main": "https://example.com/images/vehicles/VF-VF5PLUS-01-main.jpg", "rear": "https://example.com/images/vehicles/VF-VF5PLUS-01-rear.jpg", "side": "https://example.com/images/vehicles/VF-VF5PLUS-01-side.jpg", "front": "https://example.com/images/vehicles/VF-VF5PLUS-01-front.jpg"}	{"seats": "https://example.com/images/interior/VF-VF5PLUS-01-seats.jpg", "dashboard": "https://example.com/images/interior/VF-VF5PLUS-01-dashboard.jpg"}	{"rear_view": "https://example.com/images/exterior/VF-VF5PLUS-01-rear.jpg", "side_view": "https://example.com/images/exterior/VF-VF5PLUS-01-side.jpg", "front_view": "https://example.com/images/exterior/VF-VF5PLUS-01-front.jpg"}	2025-10-14 23:18:22.035186	2025-10-14 23:18:42.729405
 902ddb7a-b06b-44da-913b-8f13621789a8	1	1	bf6844aa-e6d6-4d13-aef2-b2b0aa1a8a5a	\N	VIN000000000001	CHASSIS001	2025-08-14	2025-09-14	available	\N	1200000000.00	\N	\N	\N	2025-10-14 16:22:48.637603	2025-10-14 16:22:48.637603
 39366961-364f-42c8-8041-1db3e3477756	2	1	bf6844aa-e6d6-4d13-aef2-b2b0aa1a8a5a	\N	VIN000000000002	CHASSIS002	2025-08-14	2025-09-14	available	\N	800000000.00	\N	\N	\N	2025-10-14 16:22:48.641635	2025-10-14 16:22:48.641635
@@ -1475,7 +1779,7 @@ bf6844aa-e6d6-4d13-aef2-b2b0aa1a8a5a	EV Main Warehouse	MAIN_WAREHOUSE	1000 Indus
 -- Name: user_roles_role_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.user_roles_role_id_seq', 5, true);
+SELECT pg_catalog.setval('public.user_roles_role_id_seq', 7, true);
 
 
 --
@@ -1512,6 +1816,14 @@ SELECT pg_catalog.setval('public.vehicle_variants_variant_id_seq', 34, true);
 
 ALTER TABLE ONLY public.appointments
     ADD CONSTRAINT appointments_pkey PRIMARY KEY (appointment_id);
+
+
+--
+-- Name: customer_debt_report customer_debt_report_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.customer_debt_report
+    ADD CONSTRAINT customer_debt_report_pkey PRIMARY KEY (customer_id);
 
 
 --
@@ -1563,6 +1875,30 @@ ALTER TABLE ONLY public.dealer_contracts
 
 
 --
+-- Name: dealer_discount_policies dealer_discount_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.dealer_discount_policies
+    ADD CONSTRAINT dealer_discount_policies_pkey PRIMARY KEY (policy_id);
+
+
+--
+-- Name: dealer_installment_plans dealer_installment_plans_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.dealer_installment_plans
+    ADD CONSTRAINT dealer_installment_plans_pkey PRIMARY KEY (plan_id);
+
+
+--
+-- Name: dealer_installment_schedules dealer_installment_schedules_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.dealer_installment_schedules
+    ADD CONSTRAINT dealer_installment_schedules_pkey PRIMARY KEY (schedule_id);
+
+
+--
 -- Name: dealer_invoices dealer_invoices_invoice_number_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1611,6 +1947,14 @@ ALTER TABLE ONLY public.dealer_payments
 
 
 --
+-- Name: dealer_performance_report dealer_performance_report_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.dealer_performance_report
+    ADD CONSTRAINT dealer_performance_report_pkey PRIMARY KEY (target_id);
+
+
+--
 -- Name: dealer_targets dealer_targets_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1635,6 +1979,14 @@ ALTER TABLE ONLY public.dealers
 
 
 --
+-- Name: delivery_tracking_report delivery_tracking_report_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.delivery_tracking_report
+    ADD CONSTRAINT delivery_tracking_report_pkey PRIMARY KEY (delivery_id);
+
+
+--
 -- Name: installment_plans installment_plans_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1648,6 +2000,22 @@ ALTER TABLE ONLY public.installment_plans
 
 ALTER TABLE ONLY public.installment_schedules
     ADD CONSTRAINT installment_schedules_pkey PRIMARY KEY (schedule_id);
+
+
+--
+-- Name: inventory_turnover_report inventory_turnover_report_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.inventory_turnover_report
+    ADD CONSTRAINT inventory_turnover_report_pkey PRIMARY KEY (brand_name);
+
+
+--
+-- Name: monthly_sales_summary monthly_sales_summary_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.monthly_sales_summary
+    ADD CONSTRAINT monthly_sales_summary_pkey PRIMARY KEY (sales_year);
 
 
 --
@@ -1712,6 +2080,22 @@ ALTER TABLE ONLY public.sales_contracts
 
 ALTER TABLE ONLY public.sales_contracts
     ADD CONSTRAINT sales_contracts_pkey PRIMARY KEY (contract_id);
+
+
+--
+-- Name: sales_report_by_staff sales_report_by_staff_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.sales_report_by_staff
+    ADD CONSTRAINT sales_report_by_staff_pkey PRIMARY KEY (user_id);
+
+
+--
+-- Name: test_drive_schedules test_drive_schedules_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.test_drive_schedules
+    ADD CONSTRAINT test_drive_schedules_pkey PRIMARY KEY (schedule_id);
 
 
 --
@@ -2496,6 +2880,30 @@ ALTER TABLE ONLY public.dealer_payments
 
 
 --
+-- Name: appointments fk88083ngr9rv9wj4p916pj40c2; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.appointments
+    ADD CONSTRAINT fk88083ngr9rv9wj4p916pj40c2 FOREIGN KEY (staff_id) REFERENCES public.users(user_id);
+
+
+--
+-- Name: dealer_installment_plans fk92d3eqekwmmm7fnj4a05whbc5; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.dealer_installment_plans
+    ADD CONSTRAINT fk92d3eqekwmmm7fnj4a05whbc5 FOREIGN KEY (invoice_id) REFERENCES public.dealer_invoices(invoice_id);
+
+
+--
+-- Name: dealer_discount_policies fk9k40cr9dwn2jdhhjduf4hness; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.dealer_discount_policies
+    ADD CONSTRAINT fk9k40cr9dwn2jdhhjduf4hness FOREIGN KEY (variant_id) REFERENCES public.vehicle_variants(variant_id);
+
+
+--
 -- Name: appointments fk_appointments_variant; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -2541,6 +2949,46 @@ ALTER TABLE ONLY public.pricing_policies
 
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT fk_users_dealer FOREIGN KEY (dealer_id) REFERENCES public.dealers(dealer_id);
+
+
+--
+-- Name: pricing_policies fkd7eqnxkd9h9us7tj6c1q89jny; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.pricing_policies
+    ADD CONSTRAINT fkd7eqnxkd9h9us7tj6c1q89jny FOREIGN KEY (variant_id) REFERENCES public.vehicle_variants(variant_id);
+
+
+--
+-- Name: test_drive_schedules fkdgr7gp15xmlvd7adomimmw2wt; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.test_drive_schedules
+    ADD CONSTRAINT fkdgr7gp15xmlvd7adomimmw2wt FOREIGN KEY (customer_id) REFERENCES public.customers(customer_id);
+
+
+--
+-- Name: dealer_installment_schedules fkfr6c0gs94glrnuq9b3smnbox0; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.dealer_installment_schedules
+    ADD CONSTRAINT fkfr6c0gs94glrnuq9b3smnbox0 FOREIGN KEY (plan_id) REFERENCES public.dealer_installment_plans(plan_id);
+
+
+--
+-- Name: test_drive_schedules fkn1dd9vk9aqi236u4s06n5iant; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.test_drive_schedules
+    ADD CONSTRAINT fkn1dd9vk9aqi236u4s06n5iant FOREIGN KEY (variant_id) REFERENCES public.vehicle_variants(variant_id);
+
+
+--
+-- Name: appointments fkrlbb09f329sfsmftrh7y0yxtk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.appointments
+    ADD CONSTRAINT fkrlbb09f329sfsmftrh7y0yxtk FOREIGN KEY (customer_id) REFERENCES public.customers(customer_id);
 
 
 --
@@ -2747,5 +3195,5 @@ ALTER TABLE ONLY public.vehicle_variants
 -- PostgreSQL database dump complete
 --
 
-\unrestrict gUftZhIvOWd0qr0Sse64j5PW8661UwnLD4lt2oBc7j6bJh6cuCOBa5a5aTh5Ml1
+\unrestrict lsTBATDyo6DILHbdxCCFAKqR2q1DbTiNI6VQ2LJppFfVqdSX0yBXD4L4C2glacW
 

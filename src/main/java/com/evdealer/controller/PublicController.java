@@ -6,10 +6,13 @@ import com.evdealer.service.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -41,6 +44,9 @@ public class PublicController {
     
     @Autowired
     private AppointmentService appointmentService;
+    
+    @Autowired
+    private VehicleComparisonService vehicleComparisonService;
     
     // ==================== VEHICLE CATALOG ====================
     
@@ -136,94 +142,9 @@ public class PublicController {
                 .orElse(ResponseEntity.notFound().build());
     }
     
-    // ==================== CUSTOMER ACTIONS ====================
-    
-    @PostMapping("/customers")
-    @Operation(summary = "Đăng ký khách hàng", description = "Khách hàng có thể đăng ký thông tin mà không cần đăng nhập")
-    public ResponseEntity<Customer> createCustomer(@RequestBody CustomerRequest request) {
-        try {
-            Customer customer = new Customer();
-            customer.setFirstName(request.getFirstName());
-            customer.setLastName(request.getLastName());
-            customer.setEmail(request.getEmail());
-            customer.setPhone(request.getPhone());
-            customer.setDateOfBirth(request.getDateOfBirth());
-            customer.setAddress(request.getAddress());
-            customer.setCity(request.getCity());
-            customer.setProvince(request.getProvince());
-            customer.setPostalCode(request.getPostalCode());
-            customer.setCreditScore(request.getCreditScore());
-            customer.setPreferredContactMethod(request.getPreferredContactMethod());
-            customer.setNotes(request.getNotes());
-            
-            Customer createdCustomer = customerService.createCustomer(customer);
-            return ResponseEntity.ok(createdCustomer);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
-    
-    @PostMapping("/quotations")
-    @Operation(summary = "Tạo báo giá", description = "Khách hàng có thể tạo báo giá mà không cần đăng nhập")
-    public ResponseEntity<Quotation> createQuotation(@RequestBody QuotationRequest request) {
-        try {
-            Quotation createdQuotation = quotationService.createQuotationFromRequest(request);
-            return ResponseEntity.ok(createdQuotation);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
-    
-    @PostMapping("/orders")
-    @Operation(summary = "Tạo đơn hàng", description = "Khách hàng có thể tạo đơn hàng mà không cần đăng nhập")
-    public ResponseEntity<Order> createOrder(@RequestBody OrderRequest request) {
-        try {
-            Order createdOrder = orderService.createOrderFromRequest(request);
-            return ResponseEntity.ok(createdOrder);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
-    
-    @PostMapping("/feedbacks")
-    @Operation(summary = "Gửi phản hồi", description = "Khách hàng có thể gửi phản hồi mà không cần đăng nhập")
-    public ResponseEntity<CustomerFeedback> createFeedback(@RequestBody CustomerFeedbackRequest request) {
-        try {
-            CustomerFeedback feedback = new CustomerFeedback();
-            feedback.setCustomer(customerService.getCustomerById(request.getCustomerId()).orElse(null));
-            feedback.setRating(request.getRating());
-            feedback.setMessage(request.getComment());
-            feedback.setFeedbackType(request.getFeedbackType());
-            
-            CustomerFeedback createdFeedback = customerFeedbackService.createFeedback(feedback);
-            return ResponseEntity.ok(createdFeedback);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
-    
-    @PostMapping("/appointments")
-    @Operation(summary = "Đặt lịch hẹn", description = "Khách hàng có thể đặt lịch hẹn mà không cần đăng nhập")
-    public ResponseEntity<Appointment> createAppointment(@RequestBody AppointmentRequest request) {
-        try {
-            Appointment appointment = new Appointment();
-            appointment.setCustomer(customerService.getCustomerById(request.getCustomerId()).orElse(null));
-            appointment.setVariant(vehicleService.getVariantById(request.getVariantId()).orElse(null));
-            appointment.setAppointmentType(request.getAppointmentType());
-            appointment.setTitle(request.getTitle());
-            appointment.setDescription(request.getDescription());
-            appointment.setAppointmentDate(request.getAppointmentDate());
-            appointment.setDurationMinutes(request.getDurationMinutes());
-            appointment.setLocation(request.getLocation());
-            appointment.setStatus(request.getStatus() != null ? request.getStatus() : "pending");
-            appointment.setNotes(request.getNotes());
-            
-            Appointment createdAppointment = appointmentService.createAppointment(appointment);
-            return ResponseEntity.ok(createdAppointment);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
+    // ==================== CUSTOMER ACTIONS (READ-ONLY) ====================
+    // Note: All CRUD operations have been moved to authenticated endpoints
+    // This controller now only provides read-only access for customers
     
     // ==================== SEARCH & FILTER ====================
     
@@ -239,5 +160,86 @@ public class PublicController {
     public ResponseEntity<List<VehicleModel>> getModelsByBrand(@PathVariable Integer brandId) {
         List<VehicleModel> models = vehicleService.getModelsByBrand(brandId);
         return ResponseEntity.ok(models);
+    }
+    
+    // ==================== VEHICLE COMPARISON ====================
+    
+    @PostMapping("/vehicle-compare")
+    @Operation(summary = "So sánh xe", description = "Khách hàng có thể so sánh nhiều xe theo các tiêu chí khác nhau")
+    public ResponseEntity<?> compareVehicles(@RequestBody VehicleComparisonRequest request) {
+        try {
+            VehicleComparisonResponse response = vehicleComparisonService.compareVehicles(request);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Vehicle comparison failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    @GetMapping("/vehicle-compare/quick")
+    @Operation(summary = "So sánh nhanh xe", description = "Khách hàng có thể so sánh nhanh các xe theo danh sách ID")
+    public ResponseEntity<?> quickCompareVehicles(
+            @RequestParam List<Integer> variantIds) {
+        try {
+            VehicleComparisonResponse response = vehicleComparisonService.quickCompare(variantIds);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Quick comparison failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    @GetMapping("/vehicle-compare/available")
+    @Operation(summary = "Xe có thể so sánh", description = "Khách hàng có thể xem danh sách xe có thể so sánh")
+    public ResponseEntity<List<VehicleVariant>> getAvailableVehiclesForComparison() {
+        try {
+            List<VehicleVariant> variants = vehicleComparisonService.getAvailableVariantsForComparison();
+            return ResponseEntity.ok(variants);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    @PostMapping("/vehicle-compare/{variantId1}/vs/{variantId2}")
+    @Operation(summary = "So sánh 2 xe", description = "Khách hàng có thể so sánh trực tiếp 2 xe cụ thể")
+    public ResponseEntity<?> compareTwoVehicles(
+            @PathVariable Integer variantId1,
+            @PathVariable Integer variantId2) {
+        try {
+            VehicleComparisonResponse response = vehicleComparisonService.quickCompare(
+                    List.of(variantId1, variantId2));
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Two-vehicle comparison failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    @GetMapping("/vehicle-compare/criteria")
+    @Operation(summary = "Tiêu chí so sánh", description = "Khách hàng có thể xem danh sách các tiêu chí so sánh có sẵn")
+    public ResponseEntity<Map<String, Object>> getComparisonCriteria() {
+        Map<String, Object> criteria = new HashMap<>();
+        criteria.put("availableCriteria", List.of(
+                "price", "range", "power", "acceleration", "topSpeed", 
+                "batteryCapacity", "chargingTime", "availability"
+        ));
+        criteria.put("maxVehicles", 5);
+        criteria.put("defaultCriteria", List.of("price", "range", "power", "acceleration"));
+        return ResponseEntity.ok(criteria);
     }
 }

@@ -103,94 +103,9 @@ public class HomeController {
         return ResponseEntity.ok(promotions);
     }
     
-    // ==================== CUSTOMER ACTIONS ====================
-    
-    @PostMapping("/register")
-    @Operation(summary = "Đăng ký khách hàng", description = "Đăng ký thông tin khách hàng mới")
-    public ResponseEntity<Customer> registerCustomer(@RequestBody CustomerRequest request) {
-        try {
-            Customer customer = new Customer();
-            customer.setFirstName(request.getFirstName());
-            customer.setLastName(request.getLastName());
-            customer.setEmail(request.getEmail());
-            customer.setPhone(request.getPhone());
-            customer.setDateOfBirth(request.getDateOfBirth());
-            customer.setAddress(request.getAddress());
-            customer.setCity(request.getCity());
-            customer.setProvince(request.getProvince());
-            customer.setPostalCode(request.getPostalCode());
-            customer.setCreditScore(request.getCreditScore());
-            customer.setPreferredContactMethod(request.getPreferredContactMethod());
-            customer.setNotes(request.getNotes());
-            
-            Customer createdCustomer = customerService.createCustomer(customer);
-            return ResponseEntity.ok(createdCustomer);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
-    
-    @PostMapping("/quotation")
-    @Operation(summary = "Tạo báo giá", description = "Tạo báo giá cho khách hàng")
-    public ResponseEntity<Quotation> createQuotation(@RequestBody QuotationRequest request) {
-        try {
-            Quotation createdQuotation = quotationService.createQuotationFromRequest(request);
-            return ResponseEntity.ok(createdQuotation);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
-    
-    @PostMapping("/order")
-    @Operation(summary = "Đặt hàng", description = "Tạo đơn hàng cho khách hàng")
-    public ResponseEntity<Order> createOrder(@RequestBody OrderRequest request) {
-        try {
-            Order createdOrder = orderService.createOrderFromRequest(request);
-            return ResponseEntity.ok(createdOrder);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
-    
-    @PostMapping("/feedback")
-    @Operation(summary = "Gửi phản hồi", description = "Gửi phản hồi từ khách hàng")
-    public ResponseEntity<CustomerFeedback> submitFeedback(@RequestBody CustomerFeedbackRequest request) {
-        try {
-            CustomerFeedback feedback = new CustomerFeedback();
-            feedback.setCustomer(customerService.getCustomerById(request.getCustomerId()).orElse(null));
-            feedback.setRating(request.getRating());
-            feedback.setMessage(request.getComment());
-            feedback.setFeedbackType(request.getFeedbackType());
-            
-            CustomerFeedback createdFeedback = customerFeedbackService.createFeedback(feedback);
-            return ResponseEntity.ok(createdFeedback);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
-    
-    @PostMapping("/appointment")
-    @Operation(summary = "Đặt lịch hẹn", description = "Đặt lịch hẹn với khách hàng")
-    public ResponseEntity<Appointment> bookAppointment(@RequestBody AppointmentRequest request) {
-        try {
-            Appointment appointment = new Appointment();
-            appointment.setCustomer(customerService.getCustomerById(request.getCustomerId()).orElse(null));
-            appointment.setVariant(vehicleService.getVariantById(request.getVariantId()).orElse(null));
-            appointment.setAppointmentType(request.getAppointmentType());
-            appointment.setTitle(request.getTitle());
-            appointment.setDescription(request.getDescription());
-            appointment.setAppointmentDate(request.getAppointmentDate());
-            appointment.setDurationMinutes(request.getDurationMinutes());
-            appointment.setLocation(request.getLocation());
-            appointment.setStatus(request.getStatus() != null ? request.getStatus() : "pending");
-            appointment.setNotes(request.getNotes());
-            
-            Appointment createdAppointment = appointmentService.createAppointment(appointment);
-            return ResponseEntity.ok(createdAppointment);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
+    // ==================== CUSTOMER ACTIONS (READ-ONLY) ====================
+    // Note: All CRUD operations have been moved to authenticated endpoints
+    // This controller now only provides read-only access for customers
     
     // ==================== SEARCH & FILTER ====================
     

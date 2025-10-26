@@ -67,6 +67,7 @@ public class SecurityConfig {
                                  "/brands/**",
                                  "/models/**",
                                  "/variants/**",
+                                 "/uploads/**",
                                  "/colors/**",
                                  "/api/public/**",
                                  "/api/vehicles/**",
@@ -76,11 +77,7 @@ public class SecurityConfig {
                                  "/api/vehicle-colors/**",
                                  "/api/vehicle-inventory/**",
                                  "/api/promotions/**",
-                                 "/api/quotations/**",
-                                 "/api/orders/**",
-                                 "/api/customers/**",
-                                 "/api/feedbacks/**",
-                                 "/api/appointments/**").permitAll()
+                                 "/api/quotations/**").permitAll()
                 // Admin and management endpoints require authentication
                 .requestMatchers("/api/users/**",
                                  "/api/dealers/**",
@@ -92,7 +89,14 @@ public class SecurityConfig {
                                  "/api/vehicle-deliveries/**",
                                  "/api/sales-contracts/**",
                                  "/api/inventory-management/**",
-                                 "/api/product-management/**").authenticated()
+                                 "/api/product-management/**",
+                                 "/api/customer-payments/**",
+                                 "/api/dealer-payments/**",
+                                 "/api/images/**",
+                                 "/api/orders/**",
+                                 "/api/customers/**",
+                                 "/api/feedbacks/**",
+                                 "/api/appointments/**").authenticated()
                 .anyRequest().permitAll()
             )
             .sessionManagement(session -> session
