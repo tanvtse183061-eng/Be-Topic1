@@ -1,6 +1,7 @@
 package com.evdealer.service;
 
 import com.evdealer.entity.VehicleInventory;
+import com.evdealer.enums.VehicleStatus;
 import com.evdealer.repository.VehicleInventoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -116,7 +117,11 @@ public class VehicleInventoryService {
     public VehicleInventory updateInventoryStatus(UUID inventoryId, String status) {
         VehicleInventory vehicleInventory = vehicleInventoryRepository.findById(inventoryId)
                 .orElseThrow(() -> new RuntimeException("Vehicle inventory not found"));
-        vehicleInventory.setStatus(status);
+        
+        // Normalize status using enum
+        VehicleStatus normalizedStatus = VehicleStatus.fromString(status);
+        vehicleInventory.setStatus(normalizedStatus.getValue());
+        
         return vehicleInventoryRepository.save(vehicleInventory);
     }
     
@@ -124,6 +129,52 @@ public class VehicleInventoryService {
         if (vehicleInventoryRepository.existsByVin(inventory.getVin())) {
             throw new RuntimeException("Vehicle with VIN already exists: " + inventory.getVin());
         }
+        
+        // Normalize status before saving
+        if (inventory.getStatus() != null) {
+            VehicleStatus normalizedStatus = VehicleStatus.fromString(inventory.getStatus());
+            inventory.setStatus(normalizedStatus.getValue());
+        } else {
+            inventory.setStatus(VehicleStatus.AVAILABLE.getValue());
+        }
+        
         return vehicleInventoryRepository.save(inventory);
+    }
+    
+    /**
+     * Normalize all existing status values in the database
+     * This method should be called once to fix existing data
+     */
+    public int normalizeAllStatuses() {
+        List<VehicleInventory> allInventory = vehicleInventoryRepository.findAll();
+        int updatedCount = 0;
+        
+        for (VehicleInventory inventory : allInventory) {
+            String currentStatus = inventory.getStatus();
+            if (currentStatus != null) {
+                VehicleStatus normalizedStatus = VehicleStatus.fromString(currentStatus);
+                if (!normalizedStatus.getValue().equals(currentStatus)) {
+                    inventory.setStatus(normalizedStatus.getValue());
+                    vehicleInventoryRepository.save(inventory);
+                    updatedCount++;
+                }
+            }
+        }
+        
+        return updatedCount;
+    }
+    
+    /**
+     * Get all available status values with descriptions
+     */
+    public java.util.Map<String, String> getAllStatusOptions() {
+        return VehicleStatus.getAllWithDescriptions();
+    }
+    
+    /**
+     * Validate status value
+     */
+    public boolean isValidStatus(String status) {
+        return VehicleStatus.isValid(status);
     }
 }

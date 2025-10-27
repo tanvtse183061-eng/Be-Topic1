@@ -13,9 +13,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class FileUploadService {
@@ -29,7 +31,7 @@ public class FileUploadService {
     @Value("${app.upload.allowed-extensions:jpg,jpeg,png,gif,webp}")
     private String allowedExtensions;
     
-    private static final List<String> ALLOWED_IMAGE_TYPES = Arrays.asList(
+    private static final java.util.List<String> ALLOWED_IMAGE_TYPES = Arrays.asList(
         "image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"
     );
     
@@ -150,7 +152,7 @@ public class FileUploadService {
         }
         
         String extension = getFileExtension(filename).toLowerCase();
-        List<String> allowedExts = Arrays.asList(allowedExtensions.toLowerCase().split(","));
+        java.util.List<String> allowedExts = Arrays.asList(allowedExtensions.toLowerCase().split(","));
         if (!allowedExts.contains(extension)) {
             throw new IOException("Invalid file extension. Allowed extensions: " + allowedExtensions);
         }
@@ -332,5 +334,418 @@ public class FileUploadService {
         public void addFile(FileUploadResult file) {
             this.files.add(file);
         }
+    }
+    
+    // ==================== READ METHODS ====================
+    
+    public Map<String, Object> listImages(String category, int page, int size) throws IOException {
+        Map<String, Object> result = new HashMap<>();
+        java.util.List<Map<String, Object>> images = new ArrayList<>();
+        
+        Path basePath = Paths.get(uploadDir);
+        if (!Files.exists(basePath)) {
+            result.put("images", images);
+            result.put("totalCount", 0);
+            result.put("page", page);
+            result.put("size", size);
+            result.put("totalPages", 0);
+            return result;
+        }
+        
+        java.util.List<Path> directories = new ArrayList<>();
+        if (category != null && !category.trim().isEmpty()) {
+            Path categoryPath = basePath.resolve(category);
+            if (Files.exists(categoryPath)) {
+                directories.add(categoryPath);
+            }
+        } else {
+            // List all categories
+            Files.list(basePath)
+                .filter(Files::isDirectory)
+                .forEach(directories::add);
+        }
+        
+        for (Path dir : directories) {
+            String currentCategory = basePath.relativize(dir).toString();
+            Files.list(dir)
+                .filter(Files::isRegularFile)
+                .filter(this::isImageFile)
+                .forEach(filePath -> {
+                    try {
+                        Map<String, Object> imageInfo = getImageFileInfo(filePath, currentCategory);
+                        images.add(imageInfo);
+                    } catch (IOException e) {
+                        // Skip files that can't be processed
+                    }
+                });
+        }
+        
+        // Sort by creation time (newest first)
+        images.sort((a, b) -> {
+            LocalDateTime timeA = (LocalDateTime) a.get("createdAt");
+            LocalDateTime timeB = (LocalDateTime) b.get("createdAt");
+            return timeB.compareTo(timeA);
+        });
+        
+        // Pagination
+        int totalCount = images.size();
+        int totalPages = (int) Math.ceil((double) totalCount / size);
+        int startIndex = page * size;
+        int endIndex = Math.min(startIndex + size, totalCount);
+        
+        java.util.List<Map<String, Object>> paginatedImages = images.subList(startIndex, endIndex);
+        
+        result.put("images", paginatedImages);
+        result.put("totalCount", totalCount);
+        result.put("page", page);
+        result.put("size", size);
+        result.put("totalPages", totalPages);
+        
+        return result;
+    }
+    
+    public Map<String, Object> getImageInfo(String category, String filename) throws IOException {
+        Path imagePath = Paths.get(uploadDir, category, filename);
+        if (!Files.exists(imagePath)) {
+            return null;
+        }
+        
+        return getImageFileInfo(imagePath, category);
+    }
+    
+    public Map<String, Object> searchImages(String filename, String category, int page, int size) throws IOException {
+        Map<String, Object> result = new HashMap<>();
+        java.util.List<Map<String, Object>> images = new ArrayList<>();
+        
+        Path basePath = Paths.get(uploadDir);
+        if (!Files.exists(basePath)) {
+            result.put("images", images);
+            result.put("totalCount", 0);
+            result.put("page", page);
+            result.put("size", size);
+            result.put("totalPages", 0);
+            return result;
+        }
+        
+        java.util.List<Path> directories = new ArrayList<>();
+        if (category != null && !category.trim().isEmpty()) {
+            Path categoryPath = basePath.resolve(category);
+            if (Files.exists(categoryPath)) {
+                directories.add(categoryPath);
+            }
+        } else {
+            Files.list(basePath)
+                .filter(Files::isDirectory)
+                .forEach(directories::add);
+        }
+        
+        for (Path dir : directories) {
+            String currentCategory = basePath.relativize(dir).toString();
+            Files.list(dir)
+                .filter(Files::isRegularFile)
+                .filter(this::isImageFile)
+                .filter(filePath -> {
+                    if (filename == null || filename.trim().isEmpty()) {
+                        return true;
+                    }
+                    return filePath.getFileName().toString().toLowerCase()
+                        .contains(filename.toLowerCase());
+                })
+                .forEach(filePath -> {
+                    try {
+                        Map<String, Object> imageInfo = getImageFileInfo(filePath, currentCategory);
+                        images.add(imageInfo);
+                    } catch (IOException e) {
+                        // Skip files that can't be processed
+                    }
+                });
+        }
+        
+        // Sort by creation time (newest first)
+        images.sort((a, b) -> {
+            LocalDateTime timeA = (LocalDateTime) a.get("createdAt");
+            LocalDateTime timeB = (LocalDateTime) b.get("createdAt");
+            return timeB.compareTo(timeA);
+        });
+        
+        // Pagination
+        int totalCount = images.size();
+        int totalPages = (int) Math.ceil((double) totalCount / size);
+        int startIndex = page * size;
+        int endIndex = Math.min(startIndex + size, totalCount);
+        
+        java.util.List<Map<String, Object>> paginatedImages = images.subList(startIndex, endIndex);
+        
+        result.put("images", paginatedImages);
+        result.put("totalCount", totalCount);
+        result.put("page", page);
+        result.put("size", size);
+        result.put("totalPages", totalPages);
+        
+        return result;
+    }
+    
+    // ==================== UPDATE METHODS ====================
+    
+    public FileUploadResult uploadImageWithName(MultipartFile file, String category, String filename) throws IOException {
+        validateFile(file);
+        
+        String categoryDir = uploadDir + File.separator + category;
+        Path uploadPath = Paths.get(categoryDir);
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+        
+        // Use the provided filename
+        String originalFilename = file.getOriginalFilename();
+        String extension = getFileExtension(originalFilename);
+        String finalFilename = filename;
+        if (!finalFilename.toLowerCase().endsWith(extension.toLowerCase())) {
+            finalFilename += extension;
+        }
+        
+        Path filePath = uploadPath.resolve(finalFilename);
+        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+        
+        // Process image (resize and create thumbnail)
+        Path thumbnailDir = uploadPath.resolve("thumbnails");
+        if (!Files.exists(thumbnailDir)) {
+            Files.createDirectories(thumbnailDir);
+        }
+        Path thumbnailPath = thumbnailDir.resolve(finalFilename);
+        createThumbnail(filePath, thumbnailPath);
+        optimizeImage(filePath);
+        
+        FileUploadResult result = new FileUploadResult();
+        result.setStoredFilename(finalFilename);
+        result.setOriginalFilename(originalFilename);
+        result.setFileSize(file.getSize());
+        result.setContentType(file.getContentType());
+        result.setUrl("/uploads/" + category + "/" + finalFilename);
+        result.setThumbnailUrl("/uploads/" + category + "/thumbnails/" + finalFilename);
+        result.setCategory(category);
+        
+        return result;
+    }
+    
+    public boolean renameImage(String category, String oldFilename, String newFilename) {
+        try {
+            Path oldPath = Paths.get(uploadDir, category, oldFilename);
+            Path newPath = Paths.get(uploadDir, category, newFilename);
+            
+            if (!Files.exists(oldPath)) {
+                return false;
+            }
+            
+            Files.move(oldPath, newPath, StandardCopyOption.REPLACE_EXISTING);
+            
+            // Also rename thumbnail if exists
+            Path oldThumbnailPath = Paths.get(uploadDir, category, "thumbnails", oldFilename);
+            Path newThumbnailPath = Paths.get(uploadDir, category, "thumbnails", newFilename);
+            
+            if (Files.exists(oldThumbnailPath)) {
+                Files.move(oldThumbnailPath, newThumbnailPath, StandardCopyOption.REPLACE_EXISTING);
+            }
+            
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+    
+    public boolean moveImage(String oldCategory, String filename, String newCategory) {
+        try {
+            Path oldPath = Paths.get(uploadDir, oldCategory, filename);
+            Path newDir = Paths.get(uploadDir, newCategory);
+            Path newPath = newDir.resolve(filename);
+            
+            if (!Files.exists(oldPath)) {
+                return false;
+            }
+            
+            if (!Files.exists(newDir)) {
+                Files.createDirectories(newDir);
+            }
+            
+            Files.move(oldPath, newPath, StandardCopyOption.REPLACE_EXISTING);
+            
+            // Also move thumbnail if exists
+            Path oldThumbnailPath = Paths.get(uploadDir, oldCategory, "thumbnails", filename);
+            Path newThumbnailDir = Paths.get(uploadDir, newCategory, "thumbnails");
+            Path newThumbnailPath = newThumbnailDir.resolve(filename);
+            
+            if (Files.exists(oldThumbnailPath)) {
+                if (!Files.exists(newThumbnailDir)) {
+                    Files.createDirectories(newThumbnailDir);
+                }
+                Files.move(oldThumbnailPath, newThumbnailPath, StandardCopyOption.REPLACE_EXISTING);
+            }
+            
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+    
+    // ==================== BULK OPERATIONS ====================
+    
+    public Map<String, Object> bulkDeleteImages(java.util.List<Map<String, String>> images) {
+        Map<String, Object> result = new HashMap<>();
+        java.util.List<String> success = new ArrayList<>();
+        java.util.List<String> failed = new ArrayList<>();
+        
+        for (Map<String, String> image : images) {
+            String category = image.get("category");
+            String filename = image.get("filename");
+            
+            if (deleteImage(category, filename)) {
+                success.add(category + "/" + filename);
+            } else {
+                failed.add(category + "/" + filename);
+            }
+        }
+        
+        result.put("success", success);
+        result.put("failed", failed);
+        result.put("successCount", success.size());
+        result.put("failedCount", failed.size());
+        result.put("totalCount", images.size());
+        
+        return result;
+    }
+    
+    public Map<String, Object> bulkMoveImages(java.util.List<Map<String, String>> images, String newCategory) {
+        Map<String, Object> result = new HashMap<>();
+        java.util.List<String> success = new ArrayList<>();
+        java.util.List<String> failed = new ArrayList<>();
+        
+        for (Map<String, String> image : images) {
+            String oldCategory = image.get("category");
+            String filename = image.get("filename");
+            
+            if (moveImage(oldCategory, filename, newCategory)) {
+                success.add(oldCategory + "/" + filename + " -> " + newCategory + "/" + filename);
+            } else {
+                failed.add(oldCategory + "/" + filename);
+            }
+        }
+        
+        result.put("success", success);
+        result.put("failed", failed);
+        result.put("successCount", success.size());
+        result.put("failedCount", failed.size());
+        result.put("totalCount", images.size());
+        result.put("newCategory", newCategory);
+        
+        return result;
+    }
+    
+    // ==================== STATISTICS ====================
+    
+    public Map<String, Object> getImageStats() throws IOException {
+        Map<String, Object> stats = new HashMap<>();
+        Path basePath = Paths.get(uploadDir);
+        
+        if (!Files.exists(basePath)) {
+            stats.put("totalImages", 0);
+            stats.put("totalSize", 0);
+            stats.put("categories", new HashMap<>());
+            return stats;
+        }
+        
+        int totalImages = 0;
+        long totalSize = 0;
+        Map<String, Map<String, Object>> categories = new HashMap<>();
+        
+        Files.list(basePath)
+            .filter(Files::isDirectory)
+            .forEach(dir -> {
+                try {
+                    String categoryName = basePath.relativize(dir).toString();
+                    Map<String, Object> categoryStats = getCategoryStats(dir);
+                    categories.put(categoryName, categoryStats);
+                } catch (IOException e) {
+                    // Skip directories that can't be processed
+                }
+            });
+        
+        for (Map<String, Object> categoryStats : categories.values()) {
+            totalImages += (Integer) categoryStats.get("imageCount");
+            totalSize += (Long) categoryStats.get("totalSize");
+        }
+        
+        stats.put("totalImages", totalImages);
+        stats.put("totalSize", totalSize);
+        stats.put("categories", categories);
+        
+        return stats;
+    }
+    
+    public Map<String, Object> getImageStatsByCategory(String category) throws IOException {
+        Path categoryPath = Paths.get(uploadDir, category);
+        
+        if (!Files.exists(categoryPath)) {
+            Map<String, Object> emptyStats = new HashMap<>();
+            emptyStats.put("imageCount", 0);
+            emptyStats.put("totalSize", 0);
+            emptyStats.put("category", category);
+            return emptyStats;
+        }
+        
+        Map<String, Object> stats = getCategoryStats(categoryPath);
+        stats.put("category", category);
+        
+        return stats;
+    }
+    
+    // ==================== HELPER METHODS ====================
+    
+    private boolean isImageFile(Path filePath) {
+        String filename = filePath.getFileName().toString().toLowerCase();
+        return Arrays.stream(allowedExtensions.split(","))
+            .anyMatch(ext -> filename.endsWith("." + ext.trim()));
+    }
+    
+    private Map<String, Object> getImageFileInfo(Path filePath, String category) throws IOException {
+        Map<String, Object> info = new HashMap<>();
+        BasicFileAttributes attrs = Files.readAttributes(filePath, BasicFileAttributes.class);
+        
+        info.put("filename", filePath.getFileName().toString());
+        info.put("category", category);
+        info.put("fileSize", attrs.size());
+        info.put("createdAt", LocalDateTime.ofInstant(attrs.creationTime().toInstant(), ZoneId.systemDefault()));
+        info.put("modifiedAt", LocalDateTime.ofInstant(attrs.lastModifiedTime().toInstant(), ZoneId.systemDefault()));
+        info.put("url", "/uploads/" + category + "/" + filePath.getFileName().toString());
+        info.put("thumbnailUrl", "/uploads/" + category + "/thumbnails/" + filePath.getFileName().toString());
+        
+        // Check if thumbnail exists
+        Path thumbnailPath = Paths.get(uploadDir, category, "thumbnails", filePath.getFileName().toString());
+        info.put("hasThumbnail", Files.exists(thumbnailPath));
+        
+        return info;
+    }
+    
+    private Map<String, Object> getCategoryStats(Path categoryPath) throws IOException {
+        Map<String, Object> stats = new HashMap<>();
+        int imageCount = 0;
+        long totalSize = 0;
+        
+        for (Path filePath : Files.list(categoryPath)
+                .filter(Files::isRegularFile)
+                .filter(this::isImageFile)
+                .collect(Collectors.toList())) {
+            try {
+                BasicFileAttributes attrs = Files.readAttributes(filePath, BasicFileAttributes.class);
+                imageCount++;
+                totalSize += attrs.size();
+            } catch (IOException e) {
+                // Skip files that can't be processed
+            }
+        }
+        
+        stats.put("imageCount", imageCount);
+        stats.put("totalSize", totalSize);
+        
+        return stats;
     }
 }

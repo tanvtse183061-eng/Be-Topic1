@@ -1,8 +1,22 @@
 package com.evdealer.controller;
 
-import com.evdealer.dto.*;
-import com.evdealer.entity.*;
-import com.evdealer.service.*;
+import com.evdealer.dto.VehicleComparisonRequest;
+import com.evdealer.dto.VehicleComparisonResponse;
+import com.evdealer.entity.VehicleBrand;
+import com.evdealer.entity.VehicleModel;
+import com.evdealer.entity.VehicleVariant;
+import com.evdealer.entity.VehicleColor;
+import com.evdealer.entity.VehicleInventory;
+import com.evdealer.entity.Promotion;
+import com.evdealer.service.VehicleService;
+import com.evdealer.service.VehicleInventoryService;
+import com.evdealer.service.PromotionService;
+import com.evdealer.service.QuotationService;
+import com.evdealer.service.OrderService;
+import com.evdealer.service.CustomerService;
+import com.evdealer.service.CustomerFeedbackService;
+import com.evdealer.service.AppointmentService;
+import com.evdealer.service.VehicleComparisonService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;

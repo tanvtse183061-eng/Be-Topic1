@@ -12,7 +12,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -47,11 +49,72 @@ public class VehicleInventoryController {
                 .orElse(ResponseEntity.notFound().build());
     }
     
-    @GetMapping("/status/{status}")
-    @Operation(summary = "Get inventory by status", description = "Retrieve vehicle inventory filtered by status")
-    public ResponseEntity<List<VehicleInventory>> getInventoryByStatus(@PathVariable String status) {
-        List<VehicleInventory> inventory = vehicleInventoryService.getInventoryByStatus(status);
-        return ResponseEntity.ok(inventory);
+    @GetMapping("/statuses")
+    @Operation(summary = "Get all available statuses", description = "Retrieve all unique statuses used in vehicle inventory")
+    public ResponseEntity<List<String>> getAllStatuses() {
+        List<VehicleInventory> allInventory = vehicleInventoryService.getAllVehicleInventory();
+        List<String> statuses = allInventory.stream()
+                .map(VehicleInventory::getStatus)
+                .distinct()
+                .sorted()
+                .collect(java.util.stream.Collectors.toList());
+        return ResponseEntity.ok(statuses);
+    }
+    
+    @GetMapping("/status-summary")
+    @Operation(summary = "Get status summary", description = "Get count of vehicles for each status")
+    public ResponseEntity<Map<String, Object>> getStatusSummary() {
+        List<VehicleInventory> allInventory = vehicleInventoryService.getAllVehicleInventory();
+        Map<String, Long> statusCounts = allInventory.stream()
+                .collect(java.util.stream.Collectors.groupingBy(
+                    VehicleInventory::getStatus,
+                    java.util.stream.Collectors.counting()
+                ));
+        
+        Map<String, Object> summary = new HashMap<>();
+        summary.put("totalVehicles", allInventory.size());
+        summary.put("statusCounts", statusCounts);
+        summary.put("availableStatuses", statusCounts.keySet().stream().sorted().collect(java.util.stream.Collectors.toList()));
+        
+        return ResponseEntity.ok(summary);
+    }
+    
+    @PostMapping("/normalize-statuses")
+    @Operation(summary = "Normalize all status values", description = "Fix case sensitivity and normalize all existing status values in the database")
+    public ResponseEntity<Map<String, Object>> normalizeAllStatuses() {
+        try {
+            int updatedCount = vehicleInventoryService.normalizeAllStatuses();
+            Map<String, Object> result = new HashMap<>();
+            result.put("success", true);
+            result.put("message", "Status normalization completed");
+            result.put("updatedCount", updatedCount);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", "Failed to normalize statuses: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    @GetMapping("/status-options")
+    @Operation(summary = "Get all available status options", description = "Get all valid status values with descriptions")
+    public ResponseEntity<Map<String, String>> getStatusOptions() {
+        Map<String, String> statusOptions = vehicleInventoryService.getAllStatusOptions();
+        return ResponseEntity.ok(statusOptions);
+    }
+    
+    @PostMapping("/validate-status")
+    @Operation(summary = "Validate status value", description = "Check if a status value is valid")
+    public ResponseEntity<Map<String, Object>> validateStatus(@RequestParam String status) {
+        boolean isValid = vehicleInventoryService.isValidStatus(status);
+        Map<String, Object> result = new HashMap<>();
+        result.put("status", status);
+        result.put("isValid", isValid);
+        if (!isValid) {
+            result.put("message", "Invalid status. Valid options: " + String.join(", ", vehicleInventoryService.getAllStatusOptions().keySet()));
+        }
+        return ResponseEntity.ok(result);
     }
     
     @GetMapping("/variant/{variantId}")

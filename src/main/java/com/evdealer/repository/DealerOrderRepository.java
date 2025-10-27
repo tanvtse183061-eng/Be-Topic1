@@ -31,5 +31,29 @@ public interface DealerOrderRepository extends JpaRepository<DealerOrder, UUID> 
     List<DealerOrder> findByEvmStaffAndStatus(@Param("evmStaffId") UUID evmStaffId, @Param("status") String status);
     
     boolean existsByDealerOrderNumber(String dealerOrderNumber);
+    
+    // New methods for improved dealer order management
+    List<DealerOrder> findByApprovalStatus(String approvalStatus);
+    
+    @Query("SELECT do FROM DealerOrder do WHERE do.dealer.dealerId = :dealerId")
+    List<DealerOrder> findByDealerId(@Param("dealerId") UUID dealerId);
+    
+    @Query("SELECT do FROM DealerOrder do WHERE do.dealer.dealerId = :dealerId AND do.approvalStatus = :approvalStatus")
+    List<DealerOrder> findByDealerIdAndApprovalStatus(@Param("dealerId") UUID dealerId, @Param("approvalStatus") String approvalStatus);
+    
+    @Query("SELECT do FROM DealerOrder do WHERE do.orderType = :orderType")
+    List<DealerOrder> findByOrderType(@Param("orderType") String orderType);
+    
+    @Query("SELECT do FROM DealerOrder do WHERE do.priority = :priority")
+    List<DealerOrder> findByPriority(@Param("priority") String priority);
+    
+    @Query("SELECT do FROM DealerOrder do WHERE do.approvalStatus = 'PENDING' AND do.orderDate <= :cutoffDate")
+    List<DealerOrder> findOverduePendingOrders(@Param("cutoffDate") LocalDate cutoffDate);
+    
+    @Query("SELECT COUNT(do) FROM DealerOrder do WHERE do.approvalStatus = :approvalStatus")
+    Long countByApprovalStatus(@Param("approvalStatus") String approvalStatus);
+    
+    @Query("SELECT SUM(do.totalAmount) FROM DealerOrder do WHERE do.approvalStatus = 'APPROVED' AND do.orderDate BETWEEN :startDate AND :endDate")
+    java.math.BigDecimal sumApprovedAmountByDateRange(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 }
 

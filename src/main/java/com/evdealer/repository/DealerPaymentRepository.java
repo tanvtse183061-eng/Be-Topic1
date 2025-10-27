@@ -3,6 +3,7 @@ package com.evdealer.repository;
 import com.evdealer.entity.DealerPayment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -29,4 +30,10 @@ public interface DealerPaymentRepository extends JpaRepository<DealerPayment, UU
     List<DealerPayment> findByPaymentType(String paymentType);
     
     List<DealerPayment> findByReferenceNumber(String referenceNumber);
+    
+    // Additional methods for new APIs
+    @Query("SELECT dp FROM DealerPayment dp WHERE dp.invoice.dealerOrder.dealer.dealerId = :dealerId")
+    List<DealerPayment> findByInvoiceDealerOrderDealerDealerId(@Param("dealerId") UUID dealerId);
+    
+    long countByStatus(String status);
 }

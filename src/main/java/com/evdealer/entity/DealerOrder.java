@@ -7,6 +7,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -20,6 +21,10 @@ public class DealerOrder {
     
     @Column(name = "dealer_order_number", nullable = false, unique = true, length = 100)
     private String dealerOrderNumber;
+    
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "dealer_id", nullable = false)
+    private Dealer dealer;
     
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "evm_staff_id", nullable = true)
@@ -38,13 +43,31 @@ public class DealerOrder {
     private BigDecimal totalAmount;
     
     @Column(name = "status", length = 50, nullable = false)
-    private String status = "pending";
+    private String status = "PENDING"; // PENDING, APPROVED, REJECTED, CONFIRMED, IN_PRODUCTION, READY_FOR_DELIVERY, DELIVERED, CANCELLED
     
     @Column(name = "priority", length = 20, nullable = false)
-    private String priority = "normal";
+    private String priority = "NORMAL"; // LOW, NORMAL, HIGH, URGENT
+    
+    @Column(name = "order_type", length = 50, nullable = false)
+    private String orderType = "PURCHASE"; // PURCHASE, RESERVE, SAMPLE
+    
+    @Column(name = "approval_status", length = 50, nullable = false)
+    private String approvalStatus = "PENDING"; // PENDING, APPROVED, REJECTED
+    
+    @Column(name = "rejection_reason", columnDefinition = "TEXT")
+    private String rejectionReason;
+    
+    @Column(name = "approved_by")
+    private UUID approvedBy;
+    
+    @Column(name = "approved_at")
+    private LocalDateTime approvedAt;
     
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
+    
+    @OneToMany(mappedBy = "dealerOrder", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<DealerOrderItem> items;
     
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -57,8 +80,9 @@ public class DealerOrder {
     // Constructors
     public DealerOrder() {}
     
-    public DealerOrder(String dealerOrderNumber, User evmStaff, LocalDate orderDate, Integer totalQuantity, BigDecimal totalAmount) {
+    public DealerOrder(String dealerOrderNumber, Dealer dealer, User evmStaff, LocalDate orderDate, Integer totalQuantity, BigDecimal totalAmount) {
         this.dealerOrderNumber = dealerOrderNumber;
+        this.dealer = dealer;
         this.evmStaff = evmStaff;
         this.orderDate = orderDate;
         this.totalQuantity = totalQuantity;
@@ -80,6 +104,14 @@ public class DealerOrder {
     
     public void setDealerOrderNumber(String dealerOrderNumber) {
         this.dealerOrderNumber = dealerOrderNumber;
+    }
+    
+    public Dealer getDealer() {
+        return dealer;
+    }
+    
+    public void setDealer(Dealer dealer) {
+        this.dealer = dealer;
     }
     
     public User getEvmStaff() {
@@ -136,6 +168,54 @@ public class DealerOrder {
     
     public void setPriority(String priority) {
         this.priority = priority;
+    }
+    
+    public String getOrderType() {
+        return orderType;
+    }
+    
+    public void setOrderType(String orderType) {
+        this.orderType = orderType;
+    }
+    
+    public String getApprovalStatus() {
+        return approvalStatus;
+    }
+    
+    public void setApprovalStatus(String approvalStatus) {
+        this.approvalStatus = approvalStatus;
+    }
+    
+    public String getRejectionReason() {
+        return rejectionReason;
+    }
+    
+    public void setRejectionReason(String rejectionReason) {
+        this.rejectionReason = rejectionReason;
+    }
+    
+    public UUID getApprovedBy() {
+        return approvedBy;
+    }
+    
+    public void setApprovedBy(UUID approvedBy) {
+        this.approvedBy = approvedBy;
+    }
+    
+    public LocalDateTime getApprovedAt() {
+        return approvedAt;
+    }
+    
+    public void setApprovedAt(LocalDateTime approvedAt) {
+        this.approvedAt = approvedAt;
+    }
+    
+    public List<DealerOrderItem> getItems() {
+        return items;
+    }
+    
+    public void setItems(List<DealerOrderItem> items) {
+        this.items = items;
     }
     
     public String getNotes() {

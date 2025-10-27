@@ -49,4 +49,8 @@ public interface VehicleInventoryRepository extends JpaRepository<VehicleInvento
     
     @Query("SELECT vi FROM VehicleInventory vi WHERE vi.chassisNumber LIKE %:chassisNumber%")
     List<VehicleInventory> findByChassisNumberContaining(@Param("chassisNumber") String chassisNumber);
+    
+    // Additional method for dealer order items
+    @Query("SELECT vi FROM VehicleInventory vi WHERE vi.variant.variantId = :variantId AND vi.color.colorId = :colorId AND vi.status = :status")
+    List<VehicleInventory> findByVariantVariantIdAndColorColorIdAndStatus(@Param("variantId") Integer variantId, @Param("colorId") Integer colorId, @Param("status") String status);
 }

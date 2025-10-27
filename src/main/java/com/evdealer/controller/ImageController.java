@@ -260,6 +260,256 @@ public class ImageController {
         }
     }
     
+    // ==================== READ APIs ====================
+    
+    @GetMapping("/list")
+    @Operation(summary = "Lấy danh sách hình ảnh", description = "Lấy danh sách tất cả hình ảnh theo danh mục")
+    public ResponseEntity<?> listImages(
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "20") int size) {
+        
+        try {
+            Map<String, Object> result = fileUploadService.listImages(category, page, size);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Failed to list images: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    @GetMapping("/list/{category}")
+    @Operation(summary = "Lấy hình ảnh theo danh mục", description = "Lấy danh sách hình ảnh trong một danh mục cụ thể")
+    public ResponseEntity<?> listImagesByCategory(
+            @PathVariable String category,
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "20") int size) {
+        
+        try {
+            Map<String, Object> result = fileUploadService.listImages(category, page, size);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Failed to list images for category " + category + ": " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    @GetMapping("/info/{category}/{filename}")
+    @Operation(summary = "Thông tin hình ảnh", description = "Lấy thông tin chi tiết của một hình ảnh")
+    public ResponseEntity<?> getImageInfo(
+            @PathVariable String category,
+            @PathVariable String filename) {
+        
+        try {
+            Map<String, Object> info = fileUploadService.getImageInfo(category, filename);
+            if (info != null) {
+                return ResponseEntity.ok(info);
+            } else {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Image not found");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+            }
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Failed to get image info: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    @GetMapping("/search")
+    @Operation(summary = "Tìm kiếm hình ảnh", description = "Tìm kiếm hình ảnh theo tên file hoặc danh mục")
+    public ResponseEntity<?> searchImages(
+            @RequestParam(required = false) String filename,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "20") int size) {
+        
+        try {
+            Map<String, Object> result = fileUploadService.searchImages(filename, category, page, size);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Search failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    // ==================== UPDATE APIs ====================
+    
+    @PutMapping(value = "/update/{category}/{filename}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Cập nhật hình ảnh", description = "Thay thế hình ảnh hiện tại bằng hình ảnh mới")
+    public ResponseEntity<?> updateImage(
+            @PathVariable String category,
+            @PathVariable String filename,
+            @RequestParam("file") MultipartFile newFile) {
+        
+        try {
+            // First delete the old image
+            boolean deleted = fileUploadService.deleteImage(category, filename);
+            if (!deleted) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Failed to delete old image");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+            
+            // Upload the new image with the same filename
+            FileUploadService.FileUploadResult result = fileUploadService.uploadImageWithName(newFile, category, filename);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Image updated successfully");
+            response.put("category", category);
+            response.put("filename", filename);
+            response.put("uploadResult", result);
+            
+            return ResponseEntity.ok(response);
+        } catch (IOException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Image update failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Image update failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    @PutMapping("/rename/{category}/{oldFilename}")
+    @Operation(summary = "Đổi tên hình ảnh", description = "Đổi tên file hình ảnh")
+    public ResponseEntity<?> renameImage(
+            @PathVariable String category,
+            @PathVariable String oldFilename,
+            @RequestParam String newFilename) {
+        
+        try {
+            boolean renamed = fileUploadService.renameImage(category, oldFilename, newFilename);
+            
+            if (renamed) {
+                Map<String, String> response = new HashMap<>();
+                response.put("message", "Image renamed successfully");
+                response.put("category", category);
+                response.put("oldFilename", oldFilename);
+                response.put("newFilename", newFilename);
+                return ResponseEntity.ok(response);
+            } else {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Failed to rename image");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Rename failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    @PutMapping("/move/{oldCategory}/{filename}")
+    @Operation(summary = "Di chuyển hình ảnh", description = "Di chuyển hình ảnh sang danh mục khác")
+    public ResponseEntity<?> moveImage(
+            @PathVariable String oldCategory,
+            @PathVariable String filename,
+            @RequestParam String newCategory) {
+        
+        try {
+            boolean moved = fileUploadService.moveImage(oldCategory, filename, newCategory);
+            
+            if (moved) {
+                Map<String, String> response = new HashMap<>();
+                response.put("message", "Image moved successfully");
+                response.put("oldCategory", oldCategory);
+                response.put("newCategory", newCategory);
+                response.put("filename", filename);
+                return ResponseEntity.ok(response);
+            } else {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Failed to move image");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Move failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    // ==================== BULK OPERATIONS ====================
+    
+    @PostMapping("/bulk-delete")
+    @Operation(summary = "Xóa nhiều hình ảnh", description = "Xóa nhiều hình ảnh cùng lúc")
+    public ResponseEntity<?> bulkDeleteImages(@RequestBody Map<String, Object> request) {
+        try {
+            @SuppressWarnings("unchecked")
+            java.util.List<Map<String, String>> images = (java.util.List<Map<String, String>>) request.get("images");
+            
+            if (images == null || images.isEmpty()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "No images specified for deletion");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+            
+            Map<String, Object> result = fileUploadService.bulkDeleteImages(images);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Bulk delete failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    @PostMapping("/bulk-move")
+    @Operation(summary = "Di chuyển nhiều hình ảnh", description = "Di chuyển nhiều hình ảnh sang danh mục khác")
+    public ResponseEntity<?> bulkMoveImages(@RequestBody Map<String, Object> request) {
+        try {
+            @SuppressWarnings("unchecked")
+            java.util.List<Map<String, String>> images = (java.util.List<Map<String, String>>) request.get("images");
+            String newCategory = (String) request.get("newCategory");
+            
+            if (images == null || images.isEmpty() || newCategory == null) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Images and newCategory are required");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+            
+            Map<String, Object> result = fileUploadService.bulkMoveImages(images, newCategory);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Bulk move failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    // ==================== STATISTICS ====================
+    
+    @GetMapping("/stats")
+    @Operation(summary = "Thống kê hình ảnh", description = "Lấy thống kê về hình ảnh trong hệ thống")
+    public ResponseEntity<?> getImageStats() {
+        try {
+            Map<String, Object> stats = fileUploadService.getImageStats();
+            return ResponseEntity.ok(stats);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Failed to get image stats: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    @GetMapping("/stats/{category}")
+    @Operation(summary = "Thống kê theo danh mục", description = "Lấy thống kê hình ảnh theo danh mục")
+    public ResponseEntity<?> getImageStatsByCategory(@PathVariable String category) {
+        try {
+            Map<String, Object> stats = fileUploadService.getImageStatsByCategory(category);
+            return ResponseEntity.ok(stats);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Failed to get image stats for category " + category + ": " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    // ==================== UTILITY APIs ====================
+    
     @GetMapping("/info")
     @Operation(summary = "Thông tin upload", description = "Lấy thông tin cấu hình upload")
     public ResponseEntity<Map<String, Object>> getUploadInfo() {

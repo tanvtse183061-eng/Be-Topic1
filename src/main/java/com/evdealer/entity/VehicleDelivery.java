@@ -64,6 +64,26 @@ public class VehicleDelivery {
     @Column(name = "customer_signature_path", length = 500)
     private String customerSignaturePath;
     
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "dealer_order_id")
+    private DealerOrder dealerOrder;
+    
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "dealer_order_item_id")
+    private DealerOrderItem dealerOrderItem;
+    
+    @Column(name = "scheduled_delivery_date")
+    private LocalDate scheduledDeliveryDate;
+    
+    @Column(name = "actual_delivery_date")
+    private LocalDate actualDeliveryDate;
+    
+    @Column(name = "notes", columnDefinition = "TEXT")
+    private String notes;
+    
+    @Column(name = "condition", length = 100)
+    private String condition;
+    
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -202,6 +222,54 @@ public class VehicleDelivery {
     
     public void setCustomerSignaturePath(String customerSignaturePath) {
         this.customerSignaturePath = customerSignaturePath;
+    }
+    
+    public DealerOrder getDealerOrder() {
+        return dealerOrder;
+    }
+    
+    public void setDealerOrder(DealerOrder dealerOrder) {
+        this.dealerOrder = dealerOrder;
+    }
+    
+    public DealerOrderItem getDealerOrderItem() {
+        return dealerOrderItem;
+    }
+    
+    public void setDealerOrderItem(DealerOrderItem dealerOrderItem) {
+        this.dealerOrderItem = dealerOrderItem;
+    }
+    
+    public LocalDate getScheduledDeliveryDate() {
+        return scheduledDeliveryDate;
+    }
+    
+    public void setScheduledDeliveryDate(LocalDate scheduledDeliveryDate) {
+        this.scheduledDeliveryDate = scheduledDeliveryDate;
+    }
+    
+    public LocalDate getActualDeliveryDate() {
+        return actualDeliveryDate;
+    }
+    
+    public void setActualDeliveryDate(LocalDate actualDeliveryDate) {
+        this.actualDeliveryDate = actualDeliveryDate;
+    }
+    
+    public String getNotes() {
+        return notes;
+    }
+    
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
+    
+    public String getCondition() {
+        return condition;
+    }
+    
+    public void setCondition(String condition) {
+        this.condition = condition;
     }
     
     public LocalDateTime getCreatedAt() {

@@ -38,4 +38,13 @@ public interface DealerInvoiceRepository extends JpaRepository<DealerInvoice, UU
     List<DealerInvoice> findOverdueInvoices();
     
     List<DealerInvoice> findByDueDateBetween(LocalDate startDate, LocalDate endDate);
+    
+    // Additional methods for new APIs
+    @Query("SELECT di FROM DealerInvoice di WHERE di.dealerOrder.dealer.dealerId = :dealerId")
+    List<DealerInvoice> findByDealerOrderDealerDealerId(@Param("dealerId") UUID dealerId);
+    
+    @Query("SELECT di FROM DealerInvoice di WHERE di.dealerOrder.dealer.dealerId = :dealerId AND di.status = :status")
+    List<DealerInvoice> findByDealerOrderDealerDealerIdAndStatus(@Param("dealerId") UUID dealerId, @Param("status") String status);
+    
+    long countByStatus(String status);
 }

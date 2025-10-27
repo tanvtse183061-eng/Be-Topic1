@@ -41,4 +41,7 @@ public interface VehicleDeliveryRepository extends JpaRepository<VehicleDelivery
     
     @Query("SELECT vd FROM VehicleDelivery vd WHERE CONCAT(vd.customer.firstName, ' ', vd.customer.lastName) LIKE %:customerName%")
     List<VehicleDelivery> findByCustomerNameContainingIgnoreCase(@Param("customerName") String customerName);
+    
+    // Additional methods for new APIs
+    long countByDeliveryStatus(String deliveryStatus);
 }

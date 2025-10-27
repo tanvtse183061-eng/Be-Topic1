@@ -91,4 +91,50 @@ public class DealerPaymentService {
         dealerPayment.setStatus(status);
         return dealerPaymentRepository.save(dealerPayment);
     }
+    
+    // Additional methods for new APIs
+    public Optional<DealerPayment> getDealerPaymentById(UUID paymentId) {
+        return dealerPaymentRepository.findById(paymentId);
+    }
+    
+    public List<DealerPayment> getPaymentsByDealer(UUID dealerId) {
+        return dealerPaymentRepository.findByInvoiceDealerOrderDealerDealerId(dealerId);
+    }
+    
+    public java.util.Map<String, Object> getDealerPaymentSummary(UUID dealerId) {
+        java.util.Map<String, Object> summary = new java.util.HashMap<>();
+        
+        List<DealerPayment> payments = getPaymentsByDealer(dealerId);
+        java.math.BigDecimal totalPaid = payments.stream()
+                .filter(p -> "COMPLETED".equals(p.getStatus()))
+                .map(DealerPayment::getAmount)
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+        
+        long totalPayments = payments.size();
+        long completedPayments = payments.stream()
+                .filter(p -> "COMPLETED".equals(p.getStatus()))
+                .count();
+        
+        summary.put("totalPayments", totalPayments);
+        summary.put("completedPayments", completedPayments);
+        summary.put("totalPaidAmount", totalPaid);
+        
+        return summary;
+    }
+    
+    public java.util.Map<String, Object> getPaymentStatistics() {
+        java.util.Map<String, Object> stats = new java.util.HashMap<>();
+        
+        long totalPayments = dealerPaymentRepository.count();
+        long completedPayments = dealerPaymentRepository.countByStatus("COMPLETED");
+        long pendingPayments = dealerPaymentRepository.countByStatus("PENDING");
+        long failedPayments = dealerPaymentRepository.countByStatus("FAILED");
+        
+        stats.put("totalPayments", totalPayments);
+        stats.put("completedPayments", completedPayments);
+        stats.put("pendingPayments", pendingPayments);
+        stats.put("failedPayments", failedPayments);
+        
+        return stats;
+    }
 }

@@ -118,4 +118,52 @@ public class VehicleDeliveryService {
         
         return vehicleDeliveryRepository.save(delivery);
     }
+    
+    // Additional methods for dealer delivery APIs
+    public List<VehicleDelivery> getDeliveriesByDealer(UUID dealerId) {
+        // This would need to be implemented based on dealer relationship
+        // For now, return empty list
+        return new java.util.ArrayList<>();
+    }
+    
+    public List<VehicleDelivery> getDeliveriesByDealerAndStatus(UUID dealerId, String status) {
+        // This would need to be implemented based on dealer relationship
+        // For now, return empty list
+        return new java.util.ArrayList<>();
+    }
+    
+    public java.util.Map<String, Object> getDealerDeliverySummary(UUID dealerId) {
+        java.util.Map<String, Object> summary = new java.util.HashMap<>();
+        
+        List<VehicleDelivery> deliveries = getDeliveriesByDealer(dealerId);
+        long totalDeliveries = deliveries.size();
+        long completedDeliveries = deliveries.stream()
+                .filter(d -> "delivered".equals(d.getDeliveryStatus()))
+                .count();
+        long pendingDeliveries = deliveries.stream()
+                .filter(d -> "pending".equals(d.getDeliveryStatus()))
+                .count();
+        
+        summary.put("totalDeliveries", totalDeliveries);
+        summary.put("completedDeliveries", completedDeliveries);
+        summary.put("pendingDeliveries", pendingDeliveries);
+        
+        return summary;
+    }
+    
+    public java.util.Map<String, Object> getDeliveryStatistics() {
+        java.util.Map<String, Object> stats = new java.util.HashMap<>();
+        
+        long totalDeliveries = vehicleDeliveryRepository.count();
+        long completedDeliveries = vehicleDeliveryRepository.countByDeliveryStatus("delivered");
+        long pendingDeliveries = vehicleDeliveryRepository.countByDeliveryStatus("pending");
+        long cancelledDeliveries = vehicleDeliveryRepository.countByDeliveryStatus("cancelled");
+        
+        stats.put("totalDeliveries", totalDeliveries);
+        stats.put("completedDeliveries", completedDeliveries);
+        stats.put("pendingDeliveries", pendingDeliveries);
+        stats.put("cancelledDeliveries", cancelledDeliveries);
+        
+        return stats;
+    }
 }
