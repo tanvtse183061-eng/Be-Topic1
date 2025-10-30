@@ -1,5 +1,6 @@
 package com.evdealer.entity;
 
+import com.evdealer.enums.ContractStatus;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -39,8 +40,9 @@ public class DealerContract {
     @Column(name = "minimum_sales_target", precision = 15, scale = 2)
     private BigDecimal minimumSalesTarget;
     
+    @Enumerated(EnumType.STRING)
     @Column(name = "contract_status", length = 50, nullable = false)
-    private String contractStatus = "active";
+    private ContractStatus contractStatus = ContractStatus.ACTIVE;
     
     @Column(name = "signed_date")
     private LocalDate signedDate;
@@ -53,6 +55,16 @@ public class DealerContract {
     
     @Column(name = "terms_and_conditions", columnDefinition = "TEXT")
     private String termsAndConditions;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "dealer_id")
+    private Dealer dealer;
+    
+    @Column(name = "monthly_target", precision = 15, scale = 2)
+    private BigDecimal monthlyTarget;
+    
+    @Column(name = "yearly_target", precision = 15, scale = 2)
+    private BigDecimal yearlyTarget;
     
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -137,11 +149,11 @@ public class DealerContract {
         this.minimumSalesTarget = minimumSalesTarget;
     }
     
-    public String getContractStatus() {
+    public ContractStatus getContractStatus() {
         return contractStatus;
     }
     
-    public void setContractStatus(String contractStatus) {
+    public void setContractStatus(ContractStatus contractStatus) {
         this.contractStatus = contractStatus;
     }
     
@@ -191,5 +203,29 @@ public class DealerContract {
     
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+    
+    public Dealer getDealer() {
+        return dealer;
+    }
+    
+    public void setDealer(Dealer dealer) {
+        this.dealer = dealer;
+    }
+    
+    public BigDecimal getMonthlyTarget() {
+        return monthlyTarget;
+    }
+    
+    public void setMonthlyTarget(BigDecimal monthlyTarget) {
+        this.monthlyTarget = monthlyTarget;
+    }
+    
+    public BigDecimal getYearlyTarget() {
+        return yearlyTarget;
+    }
+    
+    public void setYearlyTarget(BigDecimal yearlyTarget) {
+        this.yearlyTarget = yearlyTarget;
     }
 }

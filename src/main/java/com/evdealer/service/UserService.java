@@ -60,7 +60,12 @@ public class UserService {
     }
     
     public List<User> getUsersByRole(String roleName) {
-        return userRepository.findByRoleName(roleName);
+        try {
+            com.evdealer.enums.UserType userType = com.evdealer.enums.UserType.valueOf(roleName.toUpperCase());
+            return userRepository.findByRoleName(userType);
+        } catch (IllegalArgumentException e) {
+            return new java.util.ArrayList<>();
+        }
     }
     
     public List<User> getUsersByDealer(UUID dealerId) {
@@ -68,7 +73,12 @@ public class UserService {
     }
     
     public List<User> getUsersByRoleString(String roleString) {
-        return userRepository.findByRoleString(roleString);
+        try {
+            com.evdealer.enums.UserType userType = com.evdealer.enums.UserType.valueOf(roleString.toUpperCase());
+            return userRepository.findByRoleString(userType);
+        } catch (IllegalArgumentException e) {
+            return new java.util.ArrayList<>();
+        }
     }
     
     public List<User> searchUsersByName(String name) {
@@ -133,11 +143,12 @@ public class UserService {
             user.setDealer(dealer);
         }
         
-        // Set role
-        if (request.getRoleString() != null) {
-            UserRole role = userRoleRepository.findByRoleName(request.getRoleString())
-                    .orElseThrow(() -> new RuntimeException("Role not found: " + request.getRoleString()));
-            user.setRole(role);
+        // Set user type and status
+        if (request.getUserType() != null) {
+            user.setUserType(request.getUserType());
+        }
+        if (request.getStatus() != null) {
+            user.setStatus(request.getStatus());
         }
         
         return userRepository.save(user);
@@ -152,7 +163,8 @@ public class UserService {
         System.out.println("Existing user username: " + user.getUsername());
         System.out.println("New username: " + userUpdateRequest.getUsername());
         System.out.println("New email: " + userUpdateRequest.getEmail());
-        System.out.println("New role: " + userUpdateRequest.getRole());
+        System.out.println("New user type: " + userUpdateRequest.getUserType());
+        System.out.println("New status: " + userUpdateRequest.getStatus());
         System.out.println("New is active: " + userUpdateRequest.getIsActive());
         System.out.println("==================================");
         
@@ -198,8 +210,11 @@ public class UserService {
         if (userUpdateRequest.getProfileImagePath() != null) {
             user.setProfileImagePath(userUpdateRequest.getProfileImagePath());
         }
-        if (userUpdateRequest.getRole() != null) {
-            user.setRoleString(userUpdateRequest.getRole());
+        if (userUpdateRequest.getUserType() != null) {
+            user.setUserType(userUpdateRequest.getUserType());
+        }
+        if (userUpdateRequest.getStatus() != null) {
+            user.setStatus(userUpdateRequest.getStatus());
         }
         if (userUpdateRequest.getDealerId() != null) {
             // Find dealer by ID and set it
@@ -305,9 +320,17 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("Role not found with id: " + roleId));
         
         // Check if role is being used by any users
-        List<User> usersWithRole = userRepository.findByRole(role);
-        if (!usersWithRole.isEmpty()) {
-            throw new RuntimeException("Cannot delete role. It is being used by " + usersWithRole.size() + " user(s)");
+        // Since User entity no longer has direct role relationship, 
+        // we'll check if any users have this role name as their userType
+        String roleName = role.getRoleName().toUpperCase();
+        try {
+            com.evdealer.enums.UserType userType = com.evdealer.enums.UserType.valueOf(roleName);
+            List<User> usersWithRole = userRepository.findByRoleName(userType);
+            if (!usersWithRole.isEmpty()) {
+                throw new RuntimeException("Cannot delete role. It is being used by " + usersWithRole.size() + " user(s)");
+            }
+        } catch (IllegalArgumentException e) {
+            // Role name doesn't match any UserType enum, so it's safe to delete
         }
         
         userRoleRepository.delete(role);

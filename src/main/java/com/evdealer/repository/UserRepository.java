@@ -1,7 +1,8 @@
 package com.evdealer.repository;
 
 import com.evdealer.entity.User;
-import com.evdealer.entity.UserRole;
+import com.evdealer.enums.UserType;
+import com.evdealer.enums.UserStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,18 +22,24 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     
     Optional<User> findByEmail(String email);
     
-    @Query("SELECT u FROM User u WHERE u.isActive = true")
+    @Query("SELECT u FROM User u WHERE u.status = com.evdealer.enums.UserStatus.ACTIVE")
     List<User> findByIsActiveTrue();
     
-    List<User> findByRoleRoleId(Integer roleId);
+    List<User> findByUserType(UserType userType);
     
-    @Query("SELECT u FROM User u WHERE u.role.roleName = :roleName")
-    List<User> findByRoleName(@Param("roleName") String roleName);
+    List<User> findByStatus(UserStatus status);
+    
+    @Query("SELECT u FROM User u WHERE u.userType = :userType AND u.status = :status")
+    List<User> findByUserTypeAndStatus(@Param("userType") UserType userType, @Param("status") UserStatus status);
     
     @Query("SELECT u FROM User u WHERE u.dealer.dealerId = :dealerId")
     List<User> findByDealerDealerId(@Param("dealerId") UUID dealerId);
     
-    List<User> findByRoleString(String roleString);
+    // Legacy methods for backward compatibility
+    @Query("SELECT u FROM User u WHERE u.userType = :userType")
+    List<User> findByRoleString(@Param("userType") com.evdealer.enums.UserType userType);
+    @Query("SELECT u FROM User u WHERE u.userType = :userType")
+    List<User> findByRoleName(@Param("userType") com.evdealer.enums.UserType userType);
     
     @Query("SELECT u FROM User u WHERE u.firstName LIKE %:name% OR u.lastName LIKE %:name%")
     List<User> findByNameContaining(@Param("name") String name);
@@ -40,7 +47,5 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     boolean existsByUsername(String username);
     
     boolean existsByEmail(String email);
-    
-    List<User> findByRole(UserRole role);
 }
 

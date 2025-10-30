@@ -1,8 +1,10 @@
 package com.evdealer.dto;
 
+import com.evdealer.enums.DealerStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Schema(description = "Dealer request DTO for dealer management")
 public class DealerRequest {
@@ -46,8 +48,20 @@ public class DealerRequest {
     @Schema(description = "Commission rate", example = "5.5")
     private BigDecimal commissionRate;
     
-    @Schema(description = "Status", example = "active", allowableValues = {"active", "inactive", "suspended"})
-    private String status;
+    @Schema(description = "Status", example = "ACTIVE", allowableValues = {"ACTIVE", "INACTIVE", "SUSPENDED", "TERMINATED"})
+    private DealerStatus status;
+    
+    @Schema(description = "Contract start date", example = "2025-01-01")
+    private LocalDate contractStartDate;
+    
+    @Schema(description = "Contract end date", example = "2025-12-31")
+    private LocalDate contractEndDate;
+    
+    @Schema(description = "Monthly sales target", example = "1000000000")
+    private BigDecimal monthlySalesTarget;
+    
+    @Schema(description = "Yearly sales target", example = "12000000000")
+    private BigDecimal yearlySalesTarget;
     
     @Schema(description = "Notes", example = "Premium dealer with excellent service")
     private String notes;
@@ -166,12 +180,44 @@ public class DealerRequest {
         this.commissionRate = commissionRate;
     }
     
-    public String getStatus() {
+    public DealerStatus getStatus() {
         return status;
     }
     
-    public void setStatus(String status) {
+    public void setStatus(DealerStatus status) {
         this.status = status;
+    }
+    
+    public LocalDate getContractStartDate() {
+        return contractStartDate;
+    }
+    
+    public void setContractStartDate(LocalDate contractStartDate) {
+        this.contractStartDate = contractStartDate;
+    }
+    
+    public LocalDate getContractEndDate() {
+        return contractEndDate;
+    }
+    
+    public void setContractEndDate(LocalDate contractEndDate) {
+        this.contractEndDate = contractEndDate;
+    }
+    
+    public BigDecimal getMonthlySalesTarget() {
+        return monthlySalesTarget;
+    }
+    
+    public void setMonthlySalesTarget(BigDecimal monthlySalesTarget) {
+        this.monthlySalesTarget = monthlySalesTarget;
+    }
+    
+    public BigDecimal getYearlySalesTarget() {
+        return yearlySalesTarget;
+    }
+    
+    public void setYearlySalesTarget(BigDecimal yearlySalesTarget) {
+        this.yearlySalesTarget = yearlySalesTarget;
     }
     
     public String getNotes() {

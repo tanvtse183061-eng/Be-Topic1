@@ -9,7 +9,14 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "dealer_order_items")
+@Table(
+    name = "dealer_order_items",
+    indexes = {
+        @Index(name = "idx_dealer_order_items_order", columnList = "dealer_order_id"),
+        @Index(name = "idx_dealer_order_items_variant", columnList = "variant_id"),
+        @Index(name = "idx_dealer_order_items_color", columnList = "color_id")
+    }
+)
 public class DealerOrderItem {
     
     @Id
@@ -17,15 +24,15 @@ public class DealerOrderItem {
     @Column(name = "item_id")
     private UUID itemId;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dealer_order_id", nullable = false)
     private DealerOrder dealerOrder;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "variant_id", nullable = false)
     private VehicleVariant variant;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "color_id", nullable = false)
     private VehicleColor color;
     
@@ -77,13 +84,22 @@ public class DealerOrderItem {
     
     // Helper method to calculate prices
     public void calculatePrices() {
+        if (this.unitPrice == null || this.quantity == null) {
+            return;
+        }
         this.totalPrice = this.unitPrice.multiply(BigDecimal.valueOf(this.quantity));
-        
         if (this.discountPercentage != null && this.discountPercentage.compareTo(BigDecimal.ZERO) > 0) {
             this.discountAmount = this.totalPrice.multiply(this.discountPercentage.divide(BigDecimal.valueOf(100)));
+        } else {
+            this.discountAmount = BigDecimal.ZERO;
         }
-        
-        this.finalPrice = this.totalPrice.subtract(this.discountAmount != null ? this.discountAmount : BigDecimal.ZERO);
+        this.finalPrice = this.totalPrice.subtract(this.discountAmount);
+    }
+
+    @PrePersist
+    @PreUpdate
+    private void onPersistOrUpdate() {
+        calculatePrices();
     }
     
     // Getters and Setters
@@ -197,5 +213,18 @@ public class DealerOrderItem {
     
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DealerOrderItem that = (DealerOrderItem) o;
+        return java.util.Objects.equals(itemId, that.itemId);
+    }
+
+    @Override
+    public int hashCode() {
+        return itemId != null ? itemId.hashCode() : 0;
     }
 }

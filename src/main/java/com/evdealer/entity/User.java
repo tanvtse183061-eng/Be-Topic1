@@ -1,5 +1,7 @@
 package com.evdealer.entity;
 
+import com.evdealer.enums.UserType;
+import com.evdealer.enums.UserStatus;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -47,16 +49,20 @@ public class User {
     @Column(name = "profile_image_path", length = 500)
     private String profileImagePath;
     
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "role_id", nullable = true)
-    private UserRole role;
-    
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dealer_id", nullable = true)
     private Dealer dealer;
     
-    @Column(name = "role", length = 50, nullable = false)
-    private String roleString = "DEALER_STAFF";
+    @Enumerated(EnumType.STRING)
+    @Column(name = "user_type", length = 20, nullable = false)
+    private UserType userType = UserType.DEALER_STAFF;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 20, nullable = false)
+    private UserStatus status = UserStatus.ACTIVE;
+    
+    @Column(name = "last_login")
+    private LocalDateTime lastLogin;
     
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
@@ -169,14 +175,6 @@ public class User {
         this.profileImagePath = profileImagePath;
     }
     
-    public UserRole getRole() {
-        return role;
-    }
-    
-    public void setRole(UserRole role) {
-        this.role = role;
-    }
-    
     public Dealer getDealer() {
         return dealer;
     }
@@ -185,12 +183,28 @@ public class User {
         this.dealer = dealer;
     }
     
-    public String getRoleString() {
-        return roleString;
+    public UserType getUserType() {
+        return userType;
     }
     
-    public void setRoleString(String roleString) {
-        this.roleString = roleString;
+    public void setUserType(UserType userType) {
+        this.userType = userType;
+    }
+    
+    public UserStatus getStatus() {
+        return status;
+    }
+    
+    public void setStatus(UserStatus status) {
+        this.status = status;
+    }
+    
+    public LocalDateTime getLastLogin() {
+        return lastLogin;
+    }
+    
+    public void setLastLogin(LocalDateTime lastLogin) {
+        this.lastLogin = lastLogin;
     }
     
     public Boolean getIsActive() {
@@ -215,6 +229,19 @@ public class User {
     
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        User that = (User) o;
+        return java.util.Objects.equals(userId, that.userId);
+    }
+
+    @Override
+    public int hashCode() {
+        return userId != null ? userId.hashCode() : 0;
     }
 }
 

@@ -10,7 +10,15 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "quotations")
+@Table(
+    name = "quotations",
+    indexes = {
+        @Index(name = "idx_quotations_customer", columnList = "customer_id"),
+        @Index(name = "idx_quotations_user", columnList = "user_id"),
+        @Index(name = "idx_quotations_variant", columnList = "variant_id"),
+        @Index(name = "idx_quotations_color", columnList = "color_id")
+    }
+)
 public class Quotation {
     
     @Id
@@ -21,20 +29,20 @@ public class Quotation {
     @Column(name = "quotation_number", nullable = false, unique = true, length = 100)
     private String quotationNumber;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = true)
     private Customer customer;
     
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = true)
     private User user;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "variant_id", nullable = true)
     private VehicleVariant variant;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "color_id", nullable = true)
     private VehicleColor color;
     
@@ -201,5 +209,18 @@ public class Quotation {
     
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Quotation that = (Quotation) o;
+        return java.util.Objects.equals(quotationId, that.quotationId);
+    }
+
+    @Override
+    public int hashCode() {
+        return quotationId != null ? quotationId.hashCode() : 0;
     }
 }

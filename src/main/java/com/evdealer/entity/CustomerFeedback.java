@@ -16,11 +16,11 @@ public class CustomerFeedback {
     @Column(name = "feedback_id")
     private UUID feedbackId;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = true)
     private Customer customer;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = true)
     private Order order;
     

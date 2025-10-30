@@ -17,7 +17,7 @@ public class DealerInstallmentSchedule {
     @Column(name = "schedule_id")
     private UUID scheduleId;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "plan_id", nullable = false)
     private DealerInstallmentPlan plan;
     
@@ -168,6 +168,19 @@ public class DealerInstallmentSchedule {
     
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DealerInstallmentSchedule that = (DealerInstallmentSchedule) o;
+        return java.util.Objects.equals(scheduleId, that.scheduleId);
+    }
+
+    @Override
+    public int hashCode() {
+        return scheduleId != null ? scheduleId.hashCode() : 0;
     }
 }
 

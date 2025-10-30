@@ -17,7 +17,7 @@ public class DealerPayment {
     @Column(name = "payment_id")
     private UUID paymentId;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "invoice_id", nullable = false)
     private DealerInvoice invoice;
     
@@ -135,6 +135,19 @@ public class DealerPayment {
     
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DealerPayment that = (DealerPayment) o;
+        return java.util.Objects.equals(paymentId, that.paymentId);
+    }
+
+    @Override
+    public int hashCode() {
+        return paymentId != null ? paymentId.hashCode() : 0;
     }
 }
 

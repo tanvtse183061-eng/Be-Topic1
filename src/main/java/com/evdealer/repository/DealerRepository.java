@@ -1,6 +1,7 @@
 package com.evdealer.repository;
 
 import com.evdealer.entity.Dealer;
+import com.evdealer.enums.DealerStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,8 +17,10 @@ public interface DealerRepository extends JpaRepository<Dealer, UUID> {
     @Query("SELECT d FROM Dealer d WHERE d.dealerCode = :dealerCode")
     Optional<Dealer> findByDealerCode(@Param("dealerCode") String dealerCode);
     
+    List<Dealer> findByStatus(DealerStatus status);
+    
     @Query("SELECT d FROM Dealer d WHERE d.status = :status")
-    List<Dealer> findByStatus(@Param("status") String status);
+    List<Dealer> findByStatusString(@Param("status") String status);
     
     @Query("SELECT d FROM Dealer d WHERE d.dealerType = :dealerType")
     List<Dealer> findByDealerType(@Param("dealerType") String dealerType);

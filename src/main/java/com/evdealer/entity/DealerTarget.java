@@ -17,7 +17,7 @@ public class DealerTarget {
     @Column(name = "target_id")
     private UUID targetId;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dealer_id", nullable = true)
     private Dealer dealer;
     

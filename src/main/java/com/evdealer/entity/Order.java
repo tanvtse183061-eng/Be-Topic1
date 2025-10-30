@@ -1,5 +1,8 @@
 package com.evdealer.entity;
 
+import com.evdealer.enums.OrderType;
+import com.evdealer.enums.PaymentStatus;
+import com.evdealer.enums.DeliveryStatus;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -10,7 +13,16 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "orders")
+@Table(
+    name = "orders",
+    indexes = {
+        @Index(name = "idx_orders_customer", columnList = "customer_id"),
+        @Index(name = "idx_orders_user", columnList = "user_id"),
+        @Index(name = "idx_orders_inventory", columnList = "inventory_id"),
+        @Index(name = "idx_orders_order_date", columnList = "order_date"),
+        @Index(name = "idx_orders_status", columnList = "status")
+    }
+)
 public class Order {
     
     @Id
@@ -21,20 +33,20 @@ public class Order {
     @Column(name = "order_number", nullable = false, unique = true, length = 100)
     private String orderNumber;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "quotation_id", nullable = true)
     private Quotation quotation;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = true)
     private Customer customer;
     
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = true)
     private User user;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "inventory_id", nullable = true)
     private VehicleInventory inventory;
     
@@ -43,6 +55,27 @@ public class Order {
     
     @Column(name = "status", length = 50, nullable = false)
     private String status = "pending";
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "order_type", length = 20, nullable = false)
+    private OrderType orderType = OrderType.RETAIL;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_status", length = 20, nullable = false)
+    private PaymentStatus paymentStatus = PaymentStatus.PENDING;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "delivery_status", length = 20, nullable = false)
+    private DeliveryStatus deliveryStatus = DeliveryStatus.PENDING;
+    
+    @Column(name = "fulfillment_status", length = 50)
+    private String fulfillmentStatus = "PENDING";
+    
+    @Column(name = "fulfillment_method", length = 50)
+    private String fulfillmentMethod;
+    
+    @Column(name = "fulfillment_reference_id")
+    private UUID fulfillmentReferenceId;
     
     @Column(name = "total_amount", precision = 12, scale = 2)
     private BigDecimal totalAmount;
@@ -219,5 +252,66 @@ public class Order {
     
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+    
+    public OrderType getOrderType() {
+        return orderType;
+    }
+    
+    public void setOrderType(OrderType orderType) {
+        this.orderType = orderType;
+    }
+    
+    public PaymentStatus getPaymentStatus() {
+        return paymentStatus;
+    }
+    
+    public void setPaymentStatus(PaymentStatus paymentStatus) {
+        this.paymentStatus = paymentStatus;
+    }
+    
+    public DeliveryStatus getDeliveryStatus() {
+        return deliveryStatus;
+    }
+    
+    public void setDeliveryStatus(DeliveryStatus deliveryStatus) {
+        this.deliveryStatus = deliveryStatus;
+    }
+    
+    public String getFulfillmentStatus() {
+        return fulfillmentStatus;
+    }
+    
+    public void setFulfillmentStatus(String fulfillmentStatus) {
+        this.fulfillmentStatus = fulfillmentStatus;
+    }
+    
+    public String getFulfillmentMethod() {
+        return fulfillmentMethod;
+    }
+    
+    public void setFulfillmentMethod(String fulfillmentMethod) {
+        this.fulfillmentMethod = fulfillmentMethod;
+    }
+    
+    public UUID getFulfillmentReferenceId() {
+        return fulfillmentReferenceId;
+    }
+    
+    public void setFulfillmentReferenceId(UUID fulfillmentReferenceId) {
+        this.fulfillmentReferenceId = fulfillmentReferenceId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Order that = (Order) o;
+        return java.util.Objects.equals(orderId, that.orderId);
+    }
+
+    @Override
+    public int hashCode() {
+        return orderId != null ? orderId.hashCode() : 0;
     }
 }

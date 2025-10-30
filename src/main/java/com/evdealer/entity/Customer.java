@@ -191,5 +191,18 @@ public class Customer {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Customer that = (Customer) o;
+        return java.util.Objects.equals(customerId, that.customerId);
+    }
+
+    @Override
+    public int hashCode() {
+        return customerId != null ? customerId.hashCode() : 0;
+    }
 }
 

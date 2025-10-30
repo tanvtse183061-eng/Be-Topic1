@@ -55,7 +55,7 @@ public class OrderService {
     
     
     public List<Order> getOrdersByStatus(String status) {
-        return orderRepository.findByStatus(status);
+        return orderRepository.findByStatusString(status);
     }
     
     public List<Order> getOrdersByDateRange(LocalDate startDate, LocalDate endDate) {
@@ -102,7 +102,22 @@ public class OrderService {
         order.setUser(user);
         order.setInventory(inventory);
         order.setOrderDate(request.getOrderDate() != null ? request.getOrderDate() : LocalDate.now());
-        order.setStatus(normalizeStatus(request.getStatus()));
+        // Set order type and status enums
+        if (request.getOrderType() != null) {
+            order.setOrderType(request.getOrderType());
+        }
+        if (request.getPaymentStatus() != null) {
+            order.setPaymentStatus(request.getPaymentStatus());
+        }
+        if (request.getDeliveryStatus() != null) {
+            order.setDeliveryStatus(request.getDeliveryStatus());
+        }
+        if (request.getFulfillmentStatus() != null) {
+            order.setFulfillmentStatus(request.getFulfillmentStatus());
+        }
+        if (request.getFulfillmentMethod() != null) {
+            order.setFulfillmentMethod(request.getFulfillmentMethod());
+        }
         order.setTotalAmount(request.getTotalAmount());
         order.setDepositAmount(request.getDepositAmount() != null ? request.getDepositAmount() : BigDecimal.ZERO);
         order.setBalanceAmount(request.getBalanceAmount());
@@ -119,29 +134,6 @@ public class OrderService {
         String dateStr = LocalDate.now().toString().replace("-", "");
         String randomStr = String.format("%04d", (int) (Math.random() * 10000));
         return "ORD-" + dateStr + "-" + randomStr;
-    }
-    
-    private String normalizeStatus(String raw) {
-        if (raw == null) {
-            return "pending";
-        }
-        String value = raw.trim().toLowerCase();
-        if (value.isEmpty() || value.equals("undefined") || value.equals("null")) {
-            return "pending";
-        }
-        // allowed statuses per business rules
-        switch (value) {
-            case "pending":
-            case "confirmed":
-            case "processing":
-            case "shipped":
-            case "delivered":
-            case "cancelled":
-                return value;
-            default:
-                // fallback to pending if unknown
-                return "pending";
-        }
     }
     
     public Order updateOrder(UUID orderId, Order orderDetails) {

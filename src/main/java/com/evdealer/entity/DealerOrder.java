@@ -1,5 +1,7 @@
 package com.evdealer.entity;
 
+import com.evdealer.enums.PaymentTerms;
+import com.evdealer.enums.DeliveryTerms;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -11,7 +13,15 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "dealer_orders")
+@Table(
+    name = "dealer_orders",
+    indexes = {
+        @Index(name = "idx_dealer_orders_dealer", columnList = "dealer_id"),
+        @Index(name = "idx_dealer_orders_staff", columnList = "evm_staff_id"),
+        @Index(name = "idx_dealer_orders_order_date", columnList = "order_date"),
+        @Index(name = "idx_dealer_orders_status", columnList = "status")
+    }
+)
 public class DealerOrder {
     
     @Id
@@ -22,11 +32,11 @@ public class DealerOrder {
     @Column(name = "dealer_order_number", nullable = false, unique = true, length = 100)
     private String dealerOrderNumber;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dealer_id", nullable = false)
     private Dealer dealer;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "evm_staff_id", nullable = true)
     private User evmStaff;
     
@@ -66,7 +76,21 @@ public class DealerOrder {
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
     
-    @OneToMany(mappedBy = "dealerOrder", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_terms", length = 50)
+    private PaymentTerms paymentTerms = PaymentTerms.NET_30;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "delivery_terms", length = 50)
+    private DeliveryTerms deliveryTerms = DeliveryTerms.FOB_FACTORY;
+    
+    @Column(name = "discount_applied", precision = 5, scale = 2)
+    private java.math.BigDecimal discountApplied = java.math.BigDecimal.ZERO;
+    
+    @Column(name = "discount_reason", columnDefinition = "TEXT")
+    private String discountReason;
+    
+    @OneToMany(mappedBy = "dealerOrder", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<DealerOrderItem> items;
     
     @CreationTimestamp
@@ -240,6 +264,51 @@ public class DealerOrder {
     
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+    
+    public PaymentTerms getPaymentTerms() {
+        return paymentTerms;
+    }
+    
+    public void setPaymentTerms(PaymentTerms paymentTerms) {
+        this.paymentTerms = paymentTerms;
+    }
+    
+    public DeliveryTerms getDeliveryTerms() {
+        return deliveryTerms;
+    }
+    
+    public void setDeliveryTerms(DeliveryTerms deliveryTerms) {
+        this.deliveryTerms = deliveryTerms;
+    }
+    
+    public java.math.BigDecimal getDiscountApplied() {
+        return discountApplied;
+    }
+    
+    public void setDiscountApplied(java.math.BigDecimal discountApplied) {
+        this.discountApplied = discountApplied;
+    }
+    
+    public String getDiscountReason() {
+        return discountReason;
+    }
+    
+    public void setDiscountReason(String discountReason) {
+        this.discountReason = discountReason;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DealerOrder that = (DealerOrder) o;
+        return java.util.Objects.equals(dealerOrderId, that.dealerOrderId);
+    }
+
+    @Override
+    public int hashCode() {
+        return dealerOrderId != null ? dealerOrderId.hashCode() : 0;
     }
 }
 

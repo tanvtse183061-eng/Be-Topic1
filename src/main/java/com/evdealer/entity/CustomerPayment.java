@@ -17,11 +17,11 @@ public class CustomerPayment {
     @Column(name = "payment_id")
     private UUID paymentId;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = true)
     private Order order;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = true)
     private Customer customer;
     
@@ -46,7 +46,7 @@ public class CustomerPayment {
     @Column(name = "status", length = 50, nullable = false)
     private String status = "pending";
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "processed_by")
     private User processedBy;
     

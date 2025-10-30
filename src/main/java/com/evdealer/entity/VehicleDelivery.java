@@ -10,7 +10,19 @@ import java.time.LocalTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "vehicle_deliveries")
+@Table(
+    name = "vehicle_deliveries",
+    indexes = {
+        @Index(name = "idx_vehicle_delivery_order", columnList = "order_id"),
+        @Index(name = "idx_vehicle_delivery_inventory", columnList = "inventory_id"),
+        @Index(name = "idx_vehicle_delivery_customer", columnList = "customer_id"),
+        @Index(name = "idx_vehicle_delivery_delivered_by", columnList = "delivered_by"),
+        @Index(name = "idx_vehicle_delivery_dealer_order", columnList = "dealer_order_id"),
+        @Index(name = "idx_vehicle_delivery_order_item", columnList = "dealer_order_item_id"),
+        @Index(name = "idx_vehicle_delivery_date", columnList = "delivery_date"),
+        @Index(name = "idx_vehicle_delivery_status", columnList = "delivery_status")
+    }
+)
 public class VehicleDelivery {
     
     @Id
@@ -18,15 +30,15 @@ public class VehicleDelivery {
     @Column(name = "delivery_id")
     private UUID deliveryId;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "inventory_id", nullable = false)
     private VehicleInventory inventory;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
     
@@ -51,7 +63,7 @@ public class VehicleDelivery {
     @Column(name = "delivery_notes", columnDefinition = "TEXT")
     private String deliveryNotes;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "delivered_by")
     private User deliveredBy;
     
@@ -64,11 +76,11 @@ public class VehicleDelivery {
     @Column(name = "customer_signature_path", length = 500)
     private String customerSignaturePath;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dealer_order_id")
     private DealerOrder dealerOrder;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dealer_order_item_id")
     private DealerOrderItem dealerOrderItem;
     
@@ -286,5 +298,18 @@ public class VehicleDelivery {
     
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        VehicleDelivery that = (VehicleDelivery) o;
+        return java.util.Objects.equals(deliveryId, that.deliveryId);
+    }
+
+    @Override
+    public int hashCode() {
+        return deliveryId != null ? deliveryId.hashCode() : 0;
     }
 }

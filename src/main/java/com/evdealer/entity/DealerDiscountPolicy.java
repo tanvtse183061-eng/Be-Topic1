@@ -18,7 +18,7 @@ public class DealerDiscountPolicy {
     @Column(name = "policy_id")
     private UUID policyId;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "variant_id", nullable = false)
     private VehicleVariant variant;
     

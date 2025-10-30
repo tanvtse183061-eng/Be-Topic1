@@ -1,0 +1,7 @@
+com\evdealer\dto\LoginRequestTest_qodo$EquivalencePartitioningTests.class
+com\evdealer\dto\LoginRequestTest_qodo.class
+com\evdealer\dto\LoginRequestTest_qodo$ValidationTests.class
+com\evdealer\dto\LoginRequestTest_qodo$EdgeCaseTests.class
+com\evdealer\dto\LoginRequestTest_qodo$ConstructorTests.class
+com\evdealer\dto\LoginRequestTest_qodo$GetterSetterTests.class
+com\evdealer\dto\LoginRequestTest_qodo$BoundaryValueTests.class

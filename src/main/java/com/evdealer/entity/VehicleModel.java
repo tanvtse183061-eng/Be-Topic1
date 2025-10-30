@@ -17,7 +17,7 @@ public class VehicleModel {
     @Column(name = "model_id")
     private Integer modelId;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "brand_id", nullable = false)
     private VehicleBrand brand;
     
@@ -147,6 +147,19 @@ public class VehicleModel {
     
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        VehicleModel that = (VehicleModel) o;
+        return java.util.Objects.equals(modelId, that.modelId);
+    }
+
+    @Override
+    public int hashCode() {
+        return modelId != null ? modelId.hashCode() : 0;
     }
 }
 

@@ -1,16 +1,19 @@
 package com.evdealer.service;
 
+import com.evdealer.dto.*;
 import com.evdealer.entity.*;
 import com.evdealer.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
 
 @Service
 @Transactional
@@ -33,74 +36,96 @@ public class ReportService {
     
     @Autowired
     private InstallmentPlanRepository installmentPlanRepository;
+
+    // Map Order -> OrderDTO (local mapper for report outputs)
+    private OrderDTO toOrderDTO(Order o) {
+        OrderDTO dto = new OrderDTO();
+        dto.setOrderId(o.getOrderId());
+        dto.setOrderNumber(o.getOrderNumber());
+        dto.setCustomerId(o.getCustomer() != null ? o.getCustomer().getCustomerId() : null);
+        dto.setUserId(o.getUser() != null ? o.getUser().getUserId() : null);
+        dto.setInventoryId(o.getInventory() != null ? o.getInventory().getInventoryId() : null);
+        dto.setOrderDate(o.getOrderDate());
+        dto.setStatus(o.getStatus());
+        dto.setTotalAmount(o.getTotalAmount());
+        return dto;
+    }
     
     // Sales Report by Staff - Using actual Order and User data
-    public Map<String, Object> getSalesReportByStaff() {
-        List<User> salesStaff = userRepository.findByRoleString("DEALER_STAFF");
-        Map<String, Object> report = new HashMap<>();
-        
+    public List<SalesByStaffItemDTO> getSalesReportByStaff() {
+        List<User> salesStaff = userRepository.findByUserType(com.evdealer.enums.UserType.DEALER_STAFF);
+        List<SalesByStaffItemDTO> items = new ArrayList<>();
+
         for (User staff : salesStaff) {
             List<Order> staffOrders = orderRepository.findByUserId(staff.getUserId());
             BigDecimal totalSales = staffOrders.stream()
                 .map(Order::getTotalAmount)
+                .filter(v -> v != null)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-            
-            Map<String, Object> staffData = new HashMap<>();
-            staffData.put("staffId", staff.getUserId());
-            staffData.put("staffName", staff.getFirstName() + " " + staff.getLastName());
-            staffData.put("totalOrders", staffOrders.size());
-            staffData.put("totalSales", totalSales);
-            
-            report.put(staff.getUserId().toString(), staffData);
+
+            SalesByStaffItemDTO dto = new SalesByStaffItemDTO(
+                staff.getUserId(),
+                staff.getFirstName() + " " + staff.getLastName(),
+                staff.getUserType() != null ? staff.getUserType().toString() : "UNKNOWN",
+                staffOrders.size(),
+                totalSales
+            );
+            items.add(dto);
         }
-        
-        return report;
+
+        items.sort(Comparator.comparing(SalesByStaffItemDTO::getTotalSales).reversed());
+        return items;
     }
     
-    public Map<String, Object> getSalesReportByRole(String roleString) {
-        List<User> users = userRepository.findByRoleString(roleString);
-        Map<String, Object> report = new HashMap<>();
-        
-        for (User user : users) {
-            List<Order> userOrders = orderRepository.findByUserId(user.getUserId());
-            BigDecimal totalSales = userOrders.stream()
-                .map(Order::getTotalAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-            
-            Map<String, Object> userData = new HashMap<>();
-            userData.put("userId", user.getUserId());
-            userData.put("userName", user.getFirstName() + " " + user.getLastName());
-            userData.put("role", user.getRoleString());
-            userData.put("totalOrders", userOrders.size());
-            userData.put("totalSales", totalSales);
-            
-            report.put(user.getUserId().toString(), userData);
+    public List<SalesByStaffItemDTO> getSalesReportByRole(String roleString) {
+        try {
+            com.evdealer.enums.UserType userType = com.evdealer.enums.UserType.valueOf(roleString.toUpperCase());
+            List<User> users = userRepository.findByRoleString(userType);
+            List<SalesByStaffItemDTO> items = new ArrayList<>();
+
+            for (User user : users) {
+                List<Order> userOrders = orderRepository.findByUserId(user.getUserId());
+                BigDecimal totalSales = userOrders.stream()
+                    .map(Order::getTotalAmount)
+                    .filter(v -> v != null)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                SalesByStaffItemDTO dto = new SalesByStaffItemDTO(
+                    user.getUserId(),
+                    user.getFirstName() + " " + user.getLastName(),
+                    user.getUserType() != null ? user.getUserType().toString() : "UNKNOWN",
+                    userOrders.size(),
+                    totalSales
+                );
+                items.add(dto);
+            }
+
+            items.sort(Comparator.comparing(SalesByStaffItemDTO::getTotalSales).reversed());
+            return items;
+        } catch (IllegalArgumentException e) {
+            return new ArrayList<>();
         }
-        
-        return report;
     }
     
     // Customer Debt Report - Using InstallmentPlan data
-    public Map<String, Object> getCustomerDebtReport() {
+    public List<CustomerDebtItemDTO> getCustomerDebtReport() {
         List<InstallmentPlan> activePlans = installmentPlanRepository.findByPlanStatus("active");
-        Map<String, Object> report = new HashMap<>();
-        
+        List<CustomerDebtItemDTO> items = new ArrayList<>();
+
         for (InstallmentPlan plan : activePlans) {
             if (plan.getCustomer() != null) {
-                Map<String, Object> customerData = new HashMap<>();
-                customerData.put("customerId", plan.getCustomer().getCustomerId());
-                customerData.put("customerName", plan.getCustomer().getFirstName() + " " + plan.getCustomer().getLastName());
-                customerData.put("totalAmount", plan.getTotalAmount());
-                customerData.put("paidAmount", plan.getDownPaymentAmount()); // Using down payment as paid amount
-                customerData.put("remainingAmount", plan.getTotalAmount().subtract(plan.getDownPaymentAmount()));
-                customerData.put("installmentCount", plan.getLoanTermMonths()); // Using loan term months as count
-                customerData.put("planType", plan.getPlanType());
-                
-                report.put(plan.getCustomer().getCustomerId().toString(), customerData);
+                CustomerDebtItemDTO dto = new CustomerDebtItemDTO();
+                dto.setCustomerId(plan.getCustomer().getCustomerId());
+                dto.setCustomerName(plan.getCustomer().getFirstName() + " " + plan.getCustomer().getLastName());
+                dto.setTotalAmount(plan.getTotalAmount());
+                dto.setPaidAmount(plan.getDownPaymentAmount());
+                dto.setRemainingAmount(plan.getTotalAmount().subtract(plan.getDownPaymentAmount()));
+                dto.setInstallmentCount(plan.getLoanTermMonths());
+                dto.setPlanType(plan.getPlanType());
+                items.add(dto);
             }
         }
-        
-        return report;
+        return items;
     }
     
     public List<InstallmentPlan> getCustomersWithActiveInstallments() {
@@ -108,10 +133,10 @@ public class ReportService {
     }
     
     // Inventory Turnover Report - Using VehicleInventory data
-    public Map<String, Object> getInventoryTurnoverReport() {
+    public InventoryTurnoverReportDTO getInventoryTurnoverReport() {
         List<VehicleInventory> allInventory = vehicleInventoryRepository.findAll();
-        Map<String, Object> report = new HashMap<>();
-        
+        InventoryTurnoverReportDTO dto = new InventoryTurnoverReportDTO();
+
         long availableCount = allInventory.stream()
             .filter(inv -> "available".equals(inv.getStatus()))
             .count();
@@ -124,13 +149,13 @@ public class ReportService {
             .filter(inv -> "reserved".equals(inv.getStatus()))
             .count();
         
-        report.put("totalInventory", allInventory.size());
-        report.put("availableCount", availableCount);
-        report.put("soldCount", soldCount);
-        report.put("reservedCount", reservedCount);
-        report.put("turnoverRate", soldCount > 0 ? (double) soldCount / allInventory.size() : 0.0);
-        
-        return report;
+        dto.setTotalInventory(allInventory.size());
+        dto.setAvailableCount(availableCount);
+        dto.setSoldCount(soldCount);
+        dto.setReservedCount(reservedCount);
+        dto.setTurnoverRate(allInventory.size() > 0 ? (double) soldCount / allInventory.size() : 0.0);
+
+        return dto;
     }
     
     public List<VehicleInventory> getAvailableInventory() {
@@ -142,19 +167,17 @@ public class ReportService {
     }
     
     // Dealer Performance Report - Using DealerTarget data
-    public Map<String, Object> getDealerPerformanceReport() {
+    public List<DealerPerformanceItemDTO> getDealerPerformanceReport() {
         List<DealerTarget> allTargets = dealerTargetRepository.findAll();
-        Map<String, Object> report = new HashMap<>();
+        List<DealerPerformanceItemDTO> items = new ArrayList<>();
         
         for (DealerTarget target : allTargets) {
             if (target.getDealer() != null) {
-                Map<String, Object> dealerData = new HashMap<>();
-                dealerData.put("dealerId", target.getDealer().getDealerId());
-                dealerData.put("dealerName", target.getDealer().getDealerName());
-                dealerData.put("targetYear", target.getTargetYear());
-                dealerData.put("targetSales", target.getTargetQuantity());
-                dealerData.put("targetRevenue", target.getTargetAmount());
-                dealerData.put("targetScope", target.getTargetScope());
+                DealerPerformanceItemDTO dto = new DealerPerformanceItemDTO();
+                dto.setDealerId(target.getDealer().getDealerId());
+                dto.setDealerName(target.getDealer().getDealerName());
+                dto.setTargetYear(target.getTargetYear());
+                dto.setTargetRevenue(target.getTargetAmount());
                 
                 // Calculate achievement rate (simplified)
                 // Get all users from this dealer and sum their orders
@@ -164,6 +187,7 @@ public class ReportService {
                     List<Order> userOrders = orderRepository.findByUserId(dealerUser.getUserId());
                     BigDecimal userSales = userOrders.stream()
                         .map(Order::getTotalAmount)
+                        .filter(v -> v != null)
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
                     actualSales = actualSales.add(userSales);
                 }
@@ -172,14 +196,12 @@ public class ReportService {
                     ? (actualSales.doubleValue() / target.getTargetAmount().doubleValue()) * 100 
                     : 0.0;
                 
-                dealerData.put("actualSales", actualSales);
-                dealerData.put("achievementRate", achievementRate);
-                
-                report.put(target.getDealer().getDealerId().toString(), dealerData);
+                dto.setActualSales(actualSales);
+                dto.setAchievementRate(achievementRate);
+                items.add(dto);
             }
         }
-        
-        return report;
+        return items;
     }
     
     public List<DealerTarget> getPerformanceByYear(Integer year) {
@@ -187,9 +209,9 @@ public class ReportService {
     }
     
     // Monthly Sales Summary - Using Order data
-    public Map<String, Object> getMonthlySalesSummary(Integer year, Integer month) {
+    public MonthlySalesSummaryDTO getMonthlySalesSummary(Integer year, Integer month) {
         List<Order> orders = orderRepository.findAll();
-        Map<String, Object> summary = new HashMap<>();
+        MonthlySalesSummaryDTO summary = new MonthlySalesSummaryDTO();
         
         long monthlyOrders = orders.stream()
             .filter(order -> order.getOrderDate() != null 
@@ -202,19 +224,20 @@ public class ReportService {
                 && order.getOrderDate().getYear() == year 
                 && order.getOrderDate().getMonthValue() == month)
             .map(Order::getTotalAmount)
+            .filter(v -> v != null)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
         
-        summary.put("year", year);
-        summary.put("month", month);
-        summary.put("totalOrders", monthlyOrders);
-        summary.put("totalRevenue", monthlyRevenue);
-        
+        summary.setYear(year);
+        summary.setMonth(month);
+        summary.setTotalOrders(monthlyOrders);
+        summary.setTotalRevenue(monthlyRevenue);
+
         return summary;
     }
     
-    public Map<String, Object> getSalesByYearRange(Integer startYear, Integer endYear) {
+    public YearRangeSalesSummaryDTO getSalesByYearRange(Integer startYear, Integer endYear) {
         List<Order> orders = orderRepository.findAll();
-        Map<String, Object> summary = new HashMap<>();
+        YearRangeSalesSummaryDTO summary = new YearRangeSalesSummaryDTO();
         
         long totalOrders = orders.stream()
             .filter(order -> order.getOrderDate() != null 
@@ -229,10 +252,10 @@ public class ReportService {
             .map(Order::getTotalAmount)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
         
-        summary.put("startYear", startYear);
-        summary.put("endYear", endYear);
-        summary.put("totalOrders", totalOrders);
-        summary.put("totalRevenue", totalRevenue);
+        summary.setStartYear(startYear);
+        summary.setEndYear(endYear);
+        summary.setTotalOrders(totalOrders);
+        summary.setTotalRevenue(totalRevenue);
         
         return summary;
     }
@@ -242,19 +265,55 @@ public class ReportService {
         return vehicleDeliveryRepository.findAll();
     }
     
-    public List<VehicleDelivery> getDeliveriesByStatus(String status) {
-        return vehicleDeliveryRepository.findByDeliveryStatus(status);
+    public List<VehicleDeliveryDTO> getDeliveriesByStatus(String status) {
+        return vehicleDeliveryRepository.findByDeliveryStatus(status)
+                .stream().map(this::toDeliveryDTO).toList();
     }
     
-    public List<VehicleDelivery> getDeliveriesByDate(LocalDate date) {
-        return vehicleDeliveryRepository.findByDeliveryDate(date);
+    public List<VehicleDeliveryDTO> getDeliveriesByDate(LocalDate date) {
+        return vehicleDeliveryRepository.findByDeliveryDate(date)
+                .stream().map(this::toDeliveryDTO).toList();
     }
     
-    public List<VehicleDelivery> getDeliveriesByDateRange(LocalDate startDate, LocalDate endDate) {
-        return vehicleDeliveryRepository.findByDeliveryDateBetween(startDate, endDate);
+    public List<VehicleDeliveryDTO> getDeliveriesByDateRange(LocalDate startDate, LocalDate endDate) {
+        return vehicleDeliveryRepository.findByDeliveryDateBetween(startDate, endDate)
+                .stream().map(this::toDeliveryDTO).toList();
     }
     
-    public List<VehicleDelivery> getDeliveriesByCustomer(String customerName) {
-        return vehicleDeliveryRepository.findByCustomerNameContainingIgnoreCase(customerName);
+    public List<VehicleDeliveryDTO> getDeliveriesByCustomer(String customerName) {
+        return vehicleDeliveryRepository.findByCustomerNameContainingIgnoreCase(customerName)
+                .stream().map(this::toDeliveryDTO).toList();
+    }
+
+    // Walk-in purchases: Orders without quotations (assumed walk-in) and with a linked customer
+    public List<OrderDTO> getWalkInPurchases() {
+        return orderRepository.findWalkInOrders().stream().map(this::toOrderDTO).toList();
+    }
+
+    public List<OrderDTO> getWalkInPurchases(LocalDate startDate, LocalDate endDate, String status) {
+        return orderRepository.findWalkInOrdersFiltered(startDate, endDate, status)
+                .stream().map(this::toOrderDTO).toList();
+    }
+
+    public Page<OrderDTO> getWalkInPurchasesPaged(LocalDate startDate, LocalDate endDate, String status, Pageable pageable) {
+        return orderRepository.findWalkInOrdersFiltered(startDate, endDate, status, pageable)
+                .map(this::toOrderDTO);
+    }
+
+    private VehicleDeliveryDTO toDeliveryDTO(VehicleDelivery d) {
+        VehicleDeliveryDTO dto = new VehicleDeliveryDTO();
+        dto.setDeliveryId(d.getDeliveryId());
+        dto.setOrderId(d.getOrder() != null ? d.getOrder().getOrderId() : null);
+        dto.setInventoryId(d.getInventory() != null ? d.getInventory().getInventoryId() : null);
+        dto.setCustomerId(d.getCustomer() != null ? d.getCustomer().getCustomerId() : null);
+        dto.setDeliveryDate(d.getDeliveryDate());
+        dto.setDeliveryStatus(d.getDeliveryStatus());
+        dto.setDeliveryAddress(d.getDeliveryAddress());
+        dto.setDeliveryContactName(d.getDeliveryContactName());
+        dto.setDeliveryContactPhone(d.getDeliveryContactPhone());
+        dto.setDeliveredBy(d.getDeliveredBy() != null ? d.getDeliveredBy().getUserId() : null);
+        dto.setCreatedAt(d.getCreatedAt());
+        dto.setUpdatedAt(d.getUpdatedAt());
+        return dto;
     }
 }

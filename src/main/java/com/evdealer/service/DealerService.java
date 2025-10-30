@@ -35,7 +35,7 @@ public class DealerService {
     }
     
     public List<Dealer> getDealersByStatus(String status) {
-        return dealerRepository.findByStatus(status);
+        return dealerRepository.findByStatusString(status);
     }
     
     public List<Dealer> getDealersByType(String dealerType) {
@@ -124,7 +124,7 @@ public class DealerService {
         dealer.setLicenseNumber(request.getLicenseNumber());
         dealer.setTaxCode(request.getTaxCode());
         dealer.setCommissionRate(request.getCommissionRate());
-        dealer.setStatus(request.getStatus() != null ? request.getStatus() : "active");
+        dealer.setStatus(request.getStatus() != null ? request.getStatus() : com.evdealer.enums.DealerStatus.ACTIVE);
         dealer.setNotes(request.getNotes());
         
         return dealerRepository.save(dealer);
@@ -185,7 +185,7 @@ public class DealerService {
     public Dealer updateDealerStatus(UUID dealerId, String status) {
         Dealer dealer = dealerRepository.findById(dealerId)
                 .orElseThrow(() -> new RuntimeException("Dealer not found with id: " + dealerId));
-        dealer.setStatus(status);
+        dealer.setStatus(com.evdealer.enums.DealerStatus.valueOf(status.toUpperCase()));
         return dealerRepository.save(dealer);
     }
 }

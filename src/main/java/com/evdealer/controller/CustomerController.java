@@ -1,5 +1,6 @@
 package com.evdealer.controller;
 
+import com.evdealer.dto.CustomerDTO;
 import com.evdealer.entity.Customer;
 import com.evdealer.service.CustomerService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,62 +24,62 @@ public class CustomerController {
     
     @GetMapping
     @Operation(summary = "Lấy danh sách khách hàng", description = "Lấy tất cả khách hàng")
-    public ResponseEntity<List<Customer>> getAllCustomers() {
+    public ResponseEntity<List<CustomerDTO>> getAllCustomers() {
         List<Customer> customers = customerService.getAllCustomers();
-        return ResponseEntity.ok(customers);
+        return ResponseEntity.ok(customers.stream().map(this::toDTO).toList());
     }
     
     @GetMapping("/{customerId}")
     @Operation(summary = "Lấy khách hàng theo ID", description = "Lấy thông tin khách hàng theo ID")
-    public ResponseEntity<Customer> getCustomerById(@PathVariable UUID customerId) {
+    public ResponseEntity<CustomerDTO> getCustomerById(@PathVariable UUID customerId) {
         return customerService.getCustomerById(customerId)
-                .map(customer -> ResponseEntity.ok(customer))
+                .map(customer -> ResponseEntity.ok(toDTO(customer)))
                 .orElse(ResponseEntity.notFound().build());
     }
     
     @GetMapping("/email/{email}")
     @Operation(summary = "Lấy khách hàng theo email", description = "Lấy thông tin khách hàng theo email")
-    public ResponseEntity<Customer> getCustomerByEmail(@PathVariable String email) {
+    public ResponseEntity<CustomerDTO> getCustomerByEmail(@PathVariable String email) {
         return customerService.getCustomerByEmail(email)
-                .map(customer -> ResponseEntity.ok(customer))
+                .map(customer -> ResponseEntity.ok(toDTO(customer)))
                 .orElse(ResponseEntity.notFound().build());
     }
     
     @GetMapping("/phone/{phone}")
     @Operation(summary = "Lấy khách hàng theo số điện thoại", description = "Lấy thông tin khách hàng theo số điện thoại")
-    public ResponseEntity<Customer> getCustomerByPhone(@PathVariable String phone) {
+    public ResponseEntity<CustomerDTO> getCustomerByPhone(@PathVariable String phone) {
         return customerService.getCustomerByPhone(phone)
-                .map(customer -> ResponseEntity.ok(customer))
+                .map(customer -> ResponseEntity.ok(toDTO(customer)))
                 .orElse(ResponseEntity.notFound().build());
     }
     
     @GetMapping("/search")
     @Operation(summary = "Tìm kiếm khách hàng", description = "Tìm kiếm khách hàng theo tên")
-    public ResponseEntity<List<Customer>> searchCustomersByName(@RequestParam String name) {
+    public ResponseEntity<List<CustomerDTO>> searchCustomersByName(@RequestParam String name) {
         List<Customer> customers = customerService.searchCustomersByName(name);
-        return ResponseEntity.ok(customers);
+        return ResponseEntity.ok(customers.stream().map(this::toDTO).toList());
     }
     
     @GetMapping("/city/{city}")
     @Operation(summary = "Lấy khách hàng theo thành phố", description = "Lấy danh sách khách hàng theo thành phố")
-    public ResponseEntity<List<Customer>> getCustomersByCity(@PathVariable String city) {
+    public ResponseEntity<List<CustomerDTO>> getCustomersByCity(@PathVariable String city) {
         List<Customer> customers = customerService.getCustomersByCity(city);
-        return ResponseEntity.ok(customers);
+        return ResponseEntity.ok(customers.stream().map(this::toDTO).toList());
     }
     
     @GetMapping("/province/{province}")
     @Operation(summary = "Lấy khách hàng theo tỉnh", description = "Lấy danh sách khách hàng theo tỉnh")
-    public ResponseEntity<List<Customer>> getCustomersByProvince(@PathVariable String province) {
+    public ResponseEntity<List<CustomerDTO>> getCustomersByProvince(@PathVariable String province) {
         List<Customer> customers = customerService.getCustomersByProvince(province);
-        return ResponseEntity.ok(customers);
+        return ResponseEntity.ok(customers.stream().map(this::toDTO).toList());
     }
     
     @PostMapping
     @Operation(summary = "Tạo khách hàng mới", description = "Tạo khách hàng mới")
-    public ResponseEntity<Customer> createCustomer(@RequestBody Customer customer) {
+    public ResponseEntity<CustomerDTO> createCustomer(@RequestBody Customer customer) {
         try {
             Customer createdCustomer = customerService.createCustomer(customer);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdCustomer);
+            return ResponseEntity.status(HttpStatus.CREATED).body(toDTO(createdCustomer));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
         }
@@ -86,10 +87,10 @@ public class CustomerController {
     
     @PutMapping("/{customerId}")
     @Operation(summary = "Cập nhật khách hàng", description = "Cập nhật thông tin khách hàng")
-    public ResponseEntity<Customer> updateCustomer(@PathVariable UUID customerId, @RequestBody Customer customerDetails) {
+    public ResponseEntity<CustomerDTO> updateCustomer(@PathVariable UUID customerId, @RequestBody Customer customerDetails) {
         try {
             Customer updatedCustomer = customerService.updateCustomer(customerId, customerDetails);
-            return ResponseEntity.ok(updatedCustomer);
+            return ResponseEntity.ok(toDTO(updatedCustomer));
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
@@ -104,6 +105,18 @@ public class CustomerController {
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
+    }
+    private CustomerDTO toDTO(Customer c) {
+        CustomerDTO dto = new CustomerDTO();
+        dto.setCustomerId(c.getCustomerId());
+        dto.setFirstName(c.getFirstName());
+        dto.setLastName(c.getLastName());
+        dto.setEmail(c.getEmail());
+        dto.setPhone(c.getPhone());
+        dto.setCity(c.getCity());
+        dto.setProvince(c.getProvince());
+        dto.setDateOfBirth(c.getDateOfBirth());
+        return dto;
     }
 }
 

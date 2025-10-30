@@ -31,5 +31,8 @@ public interface VehicleVariantRepository extends JpaRepository<VehicleVariant, 
     
     @Query("SELECT vv FROM VehicleVariant vv WHERE vv.rangeKm >= :minRange")
     List<VehicleVariant> findByMinRange(@Param("minRange") Integer minRange);
+
+    @Query("SELECT vv FROM VehicleVariant vv WHERE vv.model IS NULL")
+    List<VehicleVariant> findVariantsWithNoModel();
 }
 

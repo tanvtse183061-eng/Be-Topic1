@@ -18,11 +18,11 @@ public class PricingPolicy {
     @Column(name = "policy_id")
     private UUID policyId;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "variant_id", nullable = true)
     private VehicleVariant variant;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dealer_id", nullable = true)
     private Dealer dealer;
     
@@ -269,6 +269,19 @@ public class PricingPolicy {
     
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PricingPolicy that = (PricingPolicy) o;
+        return java.util.Objects.equals(policyId, that.policyId);
+    }
+
+    @Override
+    public int hashCode() {
+        return policyId != null ? policyId.hashCode() : 0;
     }
 }
 

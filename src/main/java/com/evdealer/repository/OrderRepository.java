@@ -1,6 +1,11 @@
 package com.evdealer.repository;
 
 import com.evdealer.entity.Order;
+import com.evdealer.enums.OrderType;
+import com.evdealer.enums.PaymentStatus;
+import com.evdealer.enums.DeliveryStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -23,7 +28,12 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
     List<Order> findByCustomerCustomerId(@Param("customerId") UUID customerId);
     
     
-    List<Order> findByStatus(String status);
+    List<Order> findByOrderType(OrderType orderType);
+    List<Order> findByPaymentStatus(PaymentStatus paymentStatus);
+    List<Order> findByDeliveryStatus(DeliveryStatus deliveryStatus);
+    
+    @Query("SELECT o FROM Order o WHERE o.status = :status")
+    List<Order> findByStatusString(@Param("status") String status);
     
     @Query("SELECT o FROM Order o WHERE o.orderDate BETWEEN :startDate AND :endDate")
     List<Order> findByOrderDateBetween(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
@@ -35,4 +45,34 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
     List<Order> findByUserId(@Param("userId") UUID userId);
     
     boolean existsByOrderNumber(String orderNumber);
+
+    @Query("SELECT o FROM Order o WHERE o.quotation IS NULL AND o.customer IS NOT NULL")
+    List<Order> findWalkInOrders();
+
+    @Query("""
+        SELECT o FROM Order o
+        WHERE o.quotation IS NULL
+          AND o.customer IS NOT NULL
+          AND (:startDate IS NULL OR o.orderDate >= :startDate)
+          AND (:endDate   IS NULL OR o.orderDate <= :endDate)
+          AND (:status    IS NULL OR o.status = :status)
+    """)
+    List<Order> findWalkInOrdersFiltered(
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            @Param("status") String status);
+
+    @Query("""
+        SELECT o FROM Order o
+        WHERE o.quotation IS NULL
+          AND o.customer IS NOT NULL
+          AND (:startDate IS NULL OR o.orderDate >= :startDate)
+          AND (:endDate   IS NULL OR o.orderDate <= :endDate)
+          AND (:status    IS NULL OR o.status = :status)
+    """)
+    Page<Order> findWalkInOrdersFiltered(
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            @Param("status") String status,
+            Pageable pageable);
 }

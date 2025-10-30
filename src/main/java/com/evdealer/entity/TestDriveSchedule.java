@@ -18,11 +18,11 @@ public class TestDriveSchedule {
     @Column(name = "schedule_id")
     private UUID scheduleId;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = true)
     private Customer customer;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "variant_id", nullable = true)
     private VehicleVariant variant;
     
@@ -127,6 +127,19 @@ public class TestDriveSchedule {
     
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TestDriveSchedule that = (TestDriveSchedule) o;
+        return java.util.Objects.equals(scheduleId, that.scheduleId);
+    }
+
+    @Override
+    public int hashCode() {
+        return scheduleId != null ? scheduleId.hashCode() : 0;
     }
 }
 

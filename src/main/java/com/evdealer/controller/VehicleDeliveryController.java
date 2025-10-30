@@ -1,6 +1,7 @@
 package com.evdealer.controller;
 
 import com.evdealer.entity.User;
+import com.evdealer.dto.VehicleDeliveryDTO;
 import com.evdealer.entity.VehicleDelivery;
 import com.evdealer.entity.DealerOrder;
 import com.evdealer.entity.DealerOrderItem;
@@ -10,7 +11,6 @@ import com.evdealer.service.DealerOrderService;
 import com.evdealer.service.DealerOrderItemService;
 import com.evdealer.service.DealerService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -44,99 +44,99 @@ public class VehicleDeliveryController {
     private DealerService dealerService;
     
     @GetMapping
-    public ResponseEntity<List<VehicleDelivery>> getAllDeliveries() {
+    public ResponseEntity<List<VehicleDeliveryDTO>> getAllDeliveries() {
         List<VehicleDelivery> deliveries = vehicleDeliveryService.getAllDeliveries();
-        return ResponseEntity.ok(deliveries);
+        return ResponseEntity.ok(deliveries.stream().map(this::toDTO).toList());
     }
     
     @GetMapping("/{deliveryId}")
-    public ResponseEntity<VehicleDelivery> getDeliveryById(@PathVariable UUID deliveryId) {
+    public ResponseEntity<VehicleDeliveryDTO> getDeliveryById(@PathVariable UUID deliveryId) {
         return vehicleDeliveryService.getDeliveryById(deliveryId)
-                .map(delivery -> ResponseEntity.ok(delivery))
+                .map(delivery -> ResponseEntity.ok(toDTO(delivery)))
                 .orElse(ResponseEntity.notFound().build());
     }
     
     @GetMapping("/order/{orderId}")
-    public ResponseEntity<List<VehicleDelivery>> getDeliveriesByOrder(@PathVariable UUID orderId) {
+    public ResponseEntity<List<VehicleDeliveryDTO>> getDeliveriesByOrder(@PathVariable UUID orderId) {
         List<VehicleDelivery> deliveries = vehicleDeliveryService.getDeliveriesByOrder(orderId);
-        return ResponseEntity.ok(deliveries);
+        return ResponseEntity.ok(deliveries.stream().map(this::toDTO).toList());
     }
     
     @GetMapping("/inventory/{inventoryId}")
-    public ResponseEntity<List<VehicleDelivery>> getDeliveriesByInventory(@PathVariable UUID inventoryId) {
+    public ResponseEntity<List<VehicleDeliveryDTO>> getDeliveriesByInventory(@PathVariable UUID inventoryId) {
         List<VehicleDelivery> deliveries = vehicleDeliveryService.getDeliveriesByInventory(inventoryId);
-        return ResponseEntity.ok(deliveries);
+        return ResponseEntity.ok(deliveries.stream().map(this::toDTO).toList());
     }
     
     @GetMapping("/customer/{customerId}")
-    public ResponseEntity<List<VehicleDelivery>> getDeliveriesByCustomer(@PathVariable UUID customerId) {
+    public ResponseEntity<List<VehicleDeliveryDTO>> getDeliveriesByCustomer(@PathVariable UUID customerId) {
         List<VehicleDelivery> deliveries = vehicleDeliveryService.getDeliveriesByCustomer(customerId);
-        return ResponseEntity.ok(deliveries);
+        return ResponseEntity.ok(deliveries.stream().map(this::toDTO).toList());
     }
     
     @GetMapping("/status/{deliveryStatus}")
-    public ResponseEntity<List<VehicleDelivery>> getDeliveriesByStatus(@PathVariable String deliveryStatus) {
+    public ResponseEntity<List<VehicleDeliveryDTO>> getDeliveriesByStatus(@PathVariable String deliveryStatus) {
         List<VehicleDelivery> deliveries = vehicleDeliveryService.getDeliveriesByStatus(deliveryStatus);
-        return ResponseEntity.ok(deliveries);
+        return ResponseEntity.ok(deliveries.stream().map(this::toDTO).toList());
     }
     
     @GetMapping("/date/{date}")
-    public ResponseEntity<List<VehicleDelivery>> getDeliveriesByDate(@PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+    public ResponseEntity<List<VehicleDeliveryDTO>> getDeliveriesByDate(@PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         List<VehicleDelivery> deliveries = vehicleDeliveryService.getDeliveriesByDate(date);
-        return ResponseEntity.ok(deliveries);
+        return ResponseEntity.ok(deliveries.stream().map(this::toDTO).toList());
     }
     
     @GetMapping("/date-range")
-    public ResponseEntity<List<VehicleDelivery>> getDeliveriesByDateRange(
+    public ResponseEntity<List<VehicleDeliveryDTO>> getDeliveriesByDateRange(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         List<VehicleDelivery> deliveries = vehicleDeliveryService.getDeliveriesByDateRange(startDate, endDate);
-        return ResponseEntity.ok(deliveries);
+        return ResponseEntity.ok(deliveries.stream().map(this::toDTO).toList());
     }
     
     @GetMapping("/delivered-by/{userId}")
-    public ResponseEntity<List<VehicleDelivery>> getDeliveriesByDeliveredBy(@PathVariable UUID userId) {
+    public ResponseEntity<List<VehicleDeliveryDTO>> getDeliveriesByDeliveredBy(@PathVariable UUID userId) {
         List<VehicleDelivery> deliveries = vehicleDeliveryService.getDeliveriesByDeliveredBy(userId);
-        return ResponseEntity.ok(deliveries);
+        return ResponseEntity.ok(deliveries.stream().map(this::toDTO).toList());
     }
     
     @GetMapping("/customer/{customerId}/status/{status}")
-    public ResponseEntity<List<VehicleDelivery>> getDeliveriesByCustomerAndStatus(@PathVariable UUID customerId, @PathVariable String status) {
+    public ResponseEntity<List<VehicleDeliveryDTO>> getDeliveriesByCustomerAndStatus(@PathVariable UUID customerId, @PathVariable String status) {
         List<VehicleDelivery> deliveries = vehicleDeliveryService.getDeliveriesByCustomerAndStatus(customerId, status);
-        return ResponseEntity.ok(deliveries);
+        return ResponseEntity.ok(deliveries.stream().map(this::toDTO).toList());
     }
     
     @GetMapping("/overdue")
-    public ResponseEntity<List<VehicleDelivery>> getOverdueDeliveries() {
+    public ResponseEntity<List<VehicleDeliveryDTO>> getOverdueDeliveries() {
         List<VehicleDelivery> deliveries = vehicleDeliveryService.getOverdueDeliveries();
-        return ResponseEntity.ok(deliveries);
+        return ResponseEntity.ok(deliveries.stream().map(this::toDTO).toList());
     }
     
     @PostMapping
-    public ResponseEntity<VehicleDelivery> createDelivery(@RequestBody VehicleDelivery delivery) {
+    public ResponseEntity<VehicleDeliveryDTO> createDelivery(@RequestBody VehicleDelivery delivery) {
         try {
             VehicleDelivery createdDelivery = vehicleDeliveryService.createDelivery(delivery);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdDelivery);
+            return ResponseEntity.status(HttpStatus.CREATED).body(toDTO(createdDelivery));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
         }
     }
     
     @PutMapping("/{deliveryId}")
-    public ResponseEntity<VehicleDelivery> updateDelivery(@PathVariable UUID deliveryId, @RequestBody VehicleDelivery deliveryDetails) {
+    public ResponseEntity<VehicleDeliveryDTO> updateDelivery(@PathVariable UUID deliveryId, @RequestBody VehicleDelivery deliveryDetails) {
         try {
             VehicleDelivery updatedDelivery = vehicleDeliveryService.updateDelivery(deliveryId, deliveryDetails);
-            return ResponseEntity.ok(updatedDelivery);
+            return ResponseEntity.ok(toDTO(updatedDelivery));
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
     }
     
     @PutMapping("/{deliveryId}/status")
-    public ResponseEntity<VehicleDelivery> updateDeliveryStatus(@PathVariable UUID deliveryId, @RequestParam String status) {
+    public ResponseEntity<VehicleDeliveryDTO> updateDeliveryStatus(@PathVariable UUID deliveryId, @RequestParam String status) {
         try {
             VehicleDelivery updatedDelivery = vehicleDeliveryService.updateDeliveryStatus(deliveryId, status);
-            return ResponseEntity.ok(updatedDelivery);
+            return ResponseEntity.ok(toDTO(updatedDelivery));
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
@@ -242,7 +242,7 @@ public class VehicleDeliveryController {
             Map<String, Object> response = new HashMap<>();
             response.put("dealerId", dealerId);
             response.put("dealerName", dealer.getDealerName());
-            response.put("deliveries", deliveries);
+            response.put("deliveries", deliveries.stream().map(this::toDTO).toList());
             response.put("deliveryCount", deliveries.size());
             
             return ResponseEntity.ok(response);
@@ -267,7 +267,7 @@ public class VehicleDeliveryController {
             response.put("dealerId", dealerId);
             response.put("dealerName", dealer.getDealerName());
             response.put("status", status);
-            response.put("deliveries", deliveries);
+            response.put("deliveries", deliveries.stream().map(this::toDTO).toList());
             response.put("deliveryCount", deliveries.size());
             
             return ResponseEntity.ok(response);
@@ -301,7 +301,7 @@ public class VehicleDeliveryController {
             delivery.setNotes(delivery.getNotes() + " [DEALER CONFIRMED: " + dealerNotes + "]");
             delivery.setCondition(condition);
             
-            VehicleDelivery updatedDelivery = vehicleDeliveryService.updateDelivery(deliveryId, delivery);
+            vehicleDeliveryService.updateDelivery(deliveryId, delivery);
             
             // Update order item status
             if (delivery.getDealerOrderItem() != null) {
@@ -361,8 +361,8 @@ public class VehicleDeliveryController {
             Map<String, Object> response = new HashMap<>();
             response.put("dealerId", dealerId);
             response.put("dealerName", dealer.getDealerName());
-            response.put("scheduledDeliveries", pendingDeliveries);
-            response.put("inTransitDeliveries", inTransitDeliveries);
+            response.put("scheduledDeliveries", pendingDeliveries.stream().map(this::toDTO).toList());
+            response.put("inTransitDeliveries", inTransitDeliveries.stream().map(this::toDTO).toList());
             response.put("scheduledCount", pendingDeliveries.size());
             response.put("inTransitCount", inTransitDeliveries.size());
             response.put("totalPendingCount", pendingDeliveries.size() + inTransitDeliveries.size());
@@ -388,5 +388,22 @@ public class VehicleDeliveryController {
             error.put("error", "Failed to get delivery statistics: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
+    }
+
+    private VehicleDeliveryDTO toDTO(VehicleDelivery d) {
+        VehicleDeliveryDTO dto = new VehicleDeliveryDTO();
+        dto.setDeliveryId(d.getDeliveryId());
+        dto.setOrderId(d.getOrder() != null ? d.getOrder().getOrderId() : null);
+        dto.setInventoryId(d.getInventory() != null ? d.getInventory().getInventoryId() : null);
+        dto.setCustomerId(d.getCustomer() != null ? d.getCustomer().getCustomerId() : null);
+        dto.setDeliveryDate(d.getDeliveryDate());
+        dto.setDeliveryStatus(d.getDeliveryStatus());
+        dto.setDeliveryAddress(d.getDeliveryAddress());
+        dto.setDeliveryContactName(d.getDeliveryContactName());
+        dto.setDeliveryContactPhone(d.getDeliveryContactPhone());
+        dto.setDeliveredBy(d.getDeliveredBy() != null ? d.getDeliveredBy().getUserId() : null);
+        dto.setCreatedAt(d.getCreatedAt());
+        dto.setUpdatedAt(d.getUpdatedAt());
+        return dto;
     }
 }

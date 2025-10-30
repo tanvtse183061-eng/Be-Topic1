@@ -76,5 +76,18 @@ public class UserRole {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        UserRole that = (UserRole) o;
+        return java.util.Objects.equals(roleId, that.roleId);
+    }
+
+    @Override
+    public int hashCode() {
+        return roleId != null ? roleId.hashCode() : 0;
+    }
 }
 

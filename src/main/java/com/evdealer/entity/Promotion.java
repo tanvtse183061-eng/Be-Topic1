@@ -18,7 +18,7 @@ public class Promotion {
     @Column(name = "promotion_id")
     private UUID promotionId;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "variant_id", nullable = true)
     private VehicleVariant variant;
     
@@ -148,6 +148,19 @@ public class Promotion {
     
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Promotion that = (Promotion) o;
+        return java.util.Objects.equals(promotionId, that.promotionId);
+    }
+
+    @Override
+    public int hashCode() {
+        return promotionId != null ? promotionId.hashCode() : 0;
     }
 }
 

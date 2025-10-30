@@ -17,19 +17,19 @@ public class InstallmentPlan {
     @Column(name = "plan_id")
     private UUID planId;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = true)
     private Order order;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = true)
     private Customer customer;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "invoice_id", nullable = true)
     private DealerInvoice invoice;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dealer_id", nullable = true)
     private Dealer dealer;
     
@@ -230,6 +230,19 @@ public class InstallmentPlan {
     
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        InstallmentPlan that = (InstallmentPlan) o;
+        return java.util.Objects.equals(planId, that.planId);
+    }
+
+    @Override
+    public int hashCode() {
+        return planId != null ? planId.hashCode() : 0;
     }
 }
 

@@ -29,20 +29,7 @@ public class HomeController {
     @Autowired
     private PromotionService promotionService;
     
-    @Autowired
-    private QuotationService quotationService;
-    
-    @Autowired
-    private OrderService orderService;
-    
-    @Autowired
-    private CustomerService customerService;
-    
-    @Autowired
-    private CustomerFeedbackService customerFeedbackService;
-    
-    @Autowired
-    private AppointmentService appointmentService;
+    // Removed unused injected services after DTO refactor to avoid warnings
     
     // ==================== HOME PAGE ENDPOINTS ====================
     
@@ -53,11 +40,11 @@ public class HomeController {
         
         // Featured vehicles (available inventory)
         List<VehicleInventory> featuredVehicles = vehicleInventoryService.getInventoryByStatus("available");
-        homeData.put("featuredVehicles", featuredVehicles);
+        homeData.put("featuredVehicles", featuredVehicles.stream().map(this::toInventoryDTO).toList());
         
         // Active promotions
         List<Promotion> activePromotions = promotionService.getPromotionsByStatus("active");
-        homeData.put("activePromotions", activePromotions);
+        homeData.put("activePromotions", activePromotions.stream().map(this::toPromotionDTO).toList());
         
         // Statistics
         Map<String, Object> stats = new HashMap<>();
@@ -75,32 +62,32 @@ public class HomeController {
         
         // Vehicle brands
         List<VehicleBrand> brands = vehicleService.getAllBrands();
-        catalog.put("brands", brands);
+        catalog.put("brands", brands.stream().map(this::toBrandDTO).toList());
         
         // Vehicle models
         List<VehicleModel> models = vehicleService.getAllModels();
-        catalog.put("models", models);
+        catalog.put("models", models.stream().map(this::toModelDTO).toList());
         
         // Vehicle variants
         List<VehicleVariant> variants = vehicleService.getAllVariants();
-        catalog.put("variants", variants);
+        catalog.put("variants", variants.stream().map(this::toVariantDTO).toList());
         
         // Vehicle colors
         List<VehicleColor> colors = vehicleService.getAllColors();
-        catalog.put("colors", colors);
+        catalog.put("colors", colors.stream().map(this::toColorDTO).toList());
         
         // Available inventory
         List<VehicleInventory> inventory = vehicleInventoryService.getInventoryByStatus("available");
-        catalog.put("availableInventory", inventory);
+        catalog.put("availableInventory", inventory.stream().map(this::toInventoryDTO).toList());
         
         return ResponseEntity.ok(catalog);
     }
     
     @GetMapping("/promotions")
     @Operation(summary = "Khuyến mãi", description = "Xem tất cả khuyến mãi đang hoạt động")
-    public ResponseEntity<List<Promotion>> getPromotions() {
+    public ResponseEntity<List<PromotionDTO>> getPromotions() {
         List<Promotion> promotions = promotionService.getPromotionsByStatus("active");
-        return ResponseEntity.ok(promotions);
+        return ResponseEntity.ok(promotions.stream().map(this::toPromotionDTO).toList());
     }
     
     // ==================== CUSTOMER ACTIONS (READ-ONLY) ====================
@@ -123,7 +110,7 @@ public class HomeController {
         
         // Get all available inventory
         List<VehicleInventory> allInventory = vehicleInventoryService.getInventoryByStatus("available");
-        searchResults.put("results", allInventory);
+        searchResults.put("results", allInventory.stream().map(this::toInventoryDTO).toList());
         searchResults.put("totalCount", allInventory.size());
         
         return ResponseEntity.ok(searchResults);
@@ -131,16 +118,16 @@ public class HomeController {
     
     @GetMapping("/inventory/available")
     @Operation(summary = "Xe có sẵn", description = "Xem tất cả xe có sẵn để mua")
-    public ResponseEntity<List<VehicleInventory>> getAvailableVehicles() {
+    public ResponseEntity<List<VehicleInventoryDTO>> getAvailableVehicles() {
         List<VehicleInventory> availableVehicles = vehicleInventoryService.getInventoryByStatus("available");
-        return ResponseEntity.ok(availableVehicles);
+        return ResponseEntity.ok(availableVehicles.stream().map(this::toInventoryDTO).toList());
     }
     
     @GetMapping("/inventory/{inventoryId}")
     @Operation(summary = "Chi tiết xe", description = "Xem chi tiết xe trong kho")
-    public ResponseEntity<VehicleInventory> getVehicleDetails(@PathVariable UUID inventoryId) {
+    public ResponseEntity<VehicleInventoryDTO> getVehicleDetails(@PathVariable UUID inventoryId) {
         return vehicleInventoryService.getInventoryById(inventoryId)
-                .map(inventory -> ResponseEntity.ok(inventory))
+                .map(inventory -> ResponseEntity.ok(toInventoryDTO(inventory)))
                 .orElse(ResponseEntity.notFound().build());
     }
     
@@ -148,61 +135,123 @@ public class HomeController {
     
     @GetMapping("/brands")
     @Operation(summary = "Thương hiệu", description = "Xem tất cả thương hiệu xe")
-    public ResponseEntity<List<VehicleBrand>> getBrands() {
+    public ResponseEntity<List<VehicleBrandDTO>> getBrands() {
         List<VehicleBrand> brands = vehicleService.getAllBrands();
-        return ResponseEntity.ok(brands);
+        return ResponseEntity.ok(brands.stream().map(this::toBrandDTO).toList());
     }
     
     @GetMapping("/brands/{brandId}")
     @Operation(summary = "Chi tiết thương hiệu", description = "Xem chi tiết thương hiệu")
-    public ResponseEntity<VehicleBrand> getBrandDetails(@PathVariable Integer brandId) {
+    public ResponseEntity<VehicleBrandDTO> getBrandDetails(@PathVariable Integer brandId) {
         return vehicleService.getBrandById(brandId)
-                .map(brand -> ResponseEntity.ok(brand))
+                .map(brand -> ResponseEntity.ok(toBrandDTO(brand)))
                 .orElse(ResponseEntity.notFound().build());
     }
     
     @GetMapping("/models")
     @Operation(summary = "Mẫu xe", description = "Xem tất cả mẫu xe")
-    public ResponseEntity<List<VehicleModel>> getModels() {
+    public ResponseEntity<List<VehicleModelDTO>> getModels() {
         List<VehicleModel> models = vehicleService.getAllModels();
-        return ResponseEntity.ok(models);
+        return ResponseEntity.ok(models.stream().map(this::toModelDTO).toList());
     }
     
     @GetMapping("/models/{modelId}")
     @Operation(summary = "Chi tiết mẫu xe", description = "Xem chi tiết mẫu xe")
-    public ResponseEntity<VehicleModel> getModelDetails(@PathVariable Integer modelId) {
+    public ResponseEntity<VehicleModelDTO> getModelDetails(@PathVariable Integer modelId) {
         return vehicleService.getModelById(modelId)
-                .map(model -> ResponseEntity.ok(model))
+                .map(model -> ResponseEntity.ok(toModelDTO(model)))
                 .orElse(ResponseEntity.notFound().build());
     }
     
     @GetMapping("/variants")
     @Operation(summary = "Phiên bản xe", description = "Xem tất cả phiên bản xe")
-    public ResponseEntity<List<VehicleVariant>> getVariants() {
+    public ResponseEntity<List<VehicleVariantDTO>> getVariants() {
         List<VehicleVariant> variants = vehicleService.getAllVariants();
-        return ResponseEntity.ok(variants);
+        return ResponseEntity.ok(variants.stream().map(this::toVariantDTO).toList());
     }
     
     @GetMapping("/variants/{variantId}")
     @Operation(summary = "Chi tiết phiên bản xe", description = "Xem chi tiết phiên bản xe")
-    public ResponseEntity<VehicleVariant> getVariantDetails(@PathVariable Integer variantId) {
+    public ResponseEntity<VehicleVariantDTO> getVariantDetails(@PathVariable Integer variantId) {
         return vehicleService.getVariantById(variantId)
-                .map(variant -> ResponseEntity.ok(variant))
+                .map(variant -> ResponseEntity.ok(toVariantDTO(variant)))
                 .orElse(ResponseEntity.notFound().build());
     }
     
     @GetMapping("/colors")
     @Operation(summary = "Màu xe", description = "Xem tất cả màu xe")
-    public ResponseEntity<List<VehicleColor>> getColors() {
+    public ResponseEntity<List<VehicleColorDTO>> getColors() {
         List<VehicleColor> colors = vehicleService.getAllColors();
-        return ResponseEntity.ok(colors);
+        return ResponseEntity.ok(colors.stream().map(this::toColorDTO).toList());
     }
     
     @GetMapping("/colors/{colorId}")
     @Operation(summary = "Chi tiết màu xe", description = "Xem chi tiết màu xe")
-    public ResponseEntity<VehicleColor> getColorDetails(@PathVariable Integer colorId) {
+    public ResponseEntity<VehicleColorDTO> getColorDetails(@PathVariable Integer colorId) {
         return vehicleService.getColorById(colorId)
-                .map(color -> ResponseEntity.ok(color))
+                .map(color -> ResponseEntity.ok(toColorDTO(color)))
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    private VehicleBrandDTO toBrandDTO(VehicleBrand b) {
+        VehicleBrandDTO dto = new VehicleBrandDTO();
+        dto.setBrandId(b.getBrandId());
+        dto.setBrandName(b.getBrandName());
+        dto.setCountry(b.getCountry());
+        dto.setFoundedYear(b.getFoundedYear());
+        return dto;
+    }
+
+    private VehicleModelDTO toModelDTO(VehicleModel m) {
+        VehicleModelDTO dto = new VehicleModelDTO();
+        dto.setModelId(m.getModelId());
+        dto.setBrandId(m.getBrand() != null ? m.getBrand().getBrandId() : null);
+        dto.setModelName(m.getModelName());
+        dto.setModelYear(m.getModelYear());
+        dto.setVehicleType(m.getVehicleType());
+        return dto;
+    }
+
+    private VehicleVariantDTO toVariantDTO(VehicleVariant v) {
+        VehicleVariantDTO dto = new VehicleVariantDTO();
+        dto.setVariantId(v.getVariantId());
+        dto.setModelId(v.getModel() != null ? v.getModel().getModelId() : null);
+        dto.setVariantName(v.getVariantName());
+        dto.setPriceBase(v.getPriceBase());
+        dto.setRangeKm(v.getRangeKm());
+        return dto;
+    }
+
+    private VehicleColorDTO toColorDTO(VehicleColor c) {
+        VehicleColorDTO dto = new VehicleColorDTO();
+        dto.setColorId(c.getColorId());
+        dto.setColorName(c.getColorName());
+        dto.setColorCode(c.getColorCode());
+        return dto;
+    }
+
+    private VehicleInventoryDTO toInventoryDTO(VehicleInventory inv) {
+        VehicleInventoryDTO dto = new VehicleInventoryDTO();
+        dto.setInventoryId(inv.getInventoryId());
+        dto.setVariantId(inv.getVariant() != null ? inv.getVariant().getVariantId() : null);
+        dto.setColorId(inv.getColor() != null ? inv.getColor().getColorId() : null);
+        dto.setWarehouseId(inv.getWarehouse() != null ? inv.getWarehouse().getWarehouseId() : null);
+        dto.setStatus(inv.getStatus());
+        dto.setVin(inv.getVin());
+        dto.setArrivalDate(inv.getArrivalDate());
+        dto.setSellingPrice(inv.getSellingPrice());
+        return dto;
+    }
+
+    private PromotionDTO toPromotionDTO(Promotion p) {
+        PromotionDTO dto = new PromotionDTO();
+        dto.setPromotionId(p.getPromotionId());
+        dto.setVariantId(p.getVariant() != null ? p.getVariant().getVariantId() : null);
+        dto.setTitle(p.getTitle());
+        dto.setDiscountPercent(p.getDiscountPercent());
+        dto.setDiscountAmount(p.getDiscountAmount());
+        dto.setStartDate(p.getStartDate());
+        dto.setEndDate(p.getEndDate());
+        return dto;
     }
 }

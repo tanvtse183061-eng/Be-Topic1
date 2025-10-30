@@ -197,7 +197,8 @@ public class UserController {
             System.out.println("User ID: " + userId);
             System.out.println("Username: " + userUpdateRequest.getUsername());
             System.out.println("Email: " + userUpdateRequest.getEmail());
-            System.out.println("Role: " + userUpdateRequest.getRole());
+            System.out.println("User Type: " + userUpdateRequest.getUserType());
+            System.out.println("Status: " + userUpdateRequest.getStatus());
             System.out.println("Is Active: " + userUpdateRequest.getIsActive());
             System.out.println("=========================");
             

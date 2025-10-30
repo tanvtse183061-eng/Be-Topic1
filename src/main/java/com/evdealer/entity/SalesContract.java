@@ -10,7 +10,16 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "sales_contracts")
+@Table(
+    name = "sales_contracts",
+    indexes = {
+        @Index(name = "idx_sales_contracts_order", columnList = "order_id"),
+        @Index(name = "idx_sales_contracts_customer", columnList = "customer_id"),
+        @Index(name = "idx_sales_contracts_user", columnList = "user_id"),
+        @Index(name = "idx_sales_contracts_contract_date", columnList = "contract_date"),
+        @Index(name = "idx_sales_contracts_status", columnList = "contract_status")
+    }
+)
 public class SalesContract {
     
     @Id
@@ -21,15 +30,15 @@ public class SalesContract {
     @Column(name = "contract_number", nullable = false, unique = true, length = 100)
     private String contractNumber;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = true)
     private Order order;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = true)
     private Customer customer;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = true)
     private User user;
     
@@ -218,5 +227,18 @@ public class SalesContract {
     
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        SalesContract that = (SalesContract) o;
+        return java.util.Objects.equals(contractId, that.contractId);
+    }
+
+    @Override
+    public int hashCode() {
+        return contractId != null ? contractId.hashCode() : 0;
     }
 }

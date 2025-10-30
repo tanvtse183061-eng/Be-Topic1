@@ -1,5 +1,8 @@
 package com.evdealer.dto;
 
+import com.evdealer.enums.OrderType;
+import com.evdealer.enums.PaymentStatus;
+import com.evdealer.enums.DeliveryStatus;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -26,8 +29,20 @@ public class OrderRequest {
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate orderDate;
     
-    @Schema(description = "Status", example = "pending", allowableValues = {"pending", "confirmed", "processing", "shipped", "delivered", "cancelled"})
-    private String status;
+    @Schema(description = "Order type", example = "RETAIL", allowableValues = {"RETAIL", "WHOLESALE", "DEMO", "TEST_DRIVE"})
+    private OrderType orderType;
+    
+    @Schema(description = "Payment status", example = "PENDING", allowableValues = {"PENDING", "PARTIAL", "PAID", "OVERDUE", "REFUNDED"})
+    private PaymentStatus paymentStatus;
+    
+    @Schema(description = "Delivery status", example = "PENDING", allowableValues = {"PENDING", "SCHEDULED", "IN_TRANSIT", "DELIVERED", "CANCELLED"})
+    private DeliveryStatus deliveryStatus;
+    
+    @Schema(description = "Fulfillment status", example = "pending")
+    private String fulfillmentStatus;
+    
+    @Schema(description = "Fulfillment method", example = "direct_shipment")
+    private String fulfillmentMethod;
     
     @Schema(description = "Total amount", example = "1200000000")
     private BigDecimal totalAmount;
@@ -95,12 +110,44 @@ public class OrderRequest {
         this.orderDate = orderDate;
     }
     
-    public String getStatus() {
-        return status;
+    public OrderType getOrderType() {
+        return orderType;
     }
     
-    public void setStatus(String status) {
-        this.status = status;
+    public void setOrderType(OrderType orderType) {
+        this.orderType = orderType;
+    }
+    
+    public PaymentStatus getPaymentStatus() {
+        return paymentStatus;
+    }
+    
+    public void setPaymentStatus(PaymentStatus paymentStatus) {
+        this.paymentStatus = paymentStatus;
+    }
+    
+    public DeliveryStatus getDeliveryStatus() {
+        return deliveryStatus;
+    }
+    
+    public void setDeliveryStatus(DeliveryStatus deliveryStatus) {
+        this.deliveryStatus = deliveryStatus;
+    }
+    
+    public String getFulfillmentStatus() {
+        return fulfillmentStatus;
+    }
+    
+    public void setFulfillmentStatus(String fulfillmentStatus) {
+        this.fulfillmentStatus = fulfillmentStatus;
+    }
+    
+    public String getFulfillmentMethod() {
+        return fulfillmentMethod;
+    }
+    
+    public void setFulfillmentMethod(String fulfillmentMethod) {
+        this.fulfillmentMethod = fulfillmentMethod;
     }
     
     public BigDecimal getTotalAmount() {

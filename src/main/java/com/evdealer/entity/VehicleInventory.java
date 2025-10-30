@@ -1,5 +1,6 @@
 package com.evdealer.entity;
 
+import com.evdealer.enums.VehicleCondition;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -12,7 +13,15 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "vehicle_inventory")
+@Table(
+    name = "vehicle_inventory",
+    indexes = {
+        @Index(name = "idx_vehicle_inventory_variant", columnList = "variant_id"),
+        @Index(name = "idx_vehicle_inventory_color", columnList = "color_id"),
+        @Index(name = "idx_vehicle_inventory_warehouse", columnList = "warehouse_id"),
+        @Index(name = "idx_vehicle_inventory_status", columnList = "status")
+    }
+)
 public class VehicleInventory {
     
     @Id
@@ -20,15 +29,15 @@ public class VehicleInventory {
     @Column(name = "inventory_id")
     private UUID inventoryId;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "variant_id", nullable = true)
     private VehicleVariant variant;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "color_id", nullable = true)
     private VehicleColor color;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "warehouse_id", nullable = true)
     private Warehouse warehouse;
     
@@ -68,6 +77,24 @@ public class VehicleInventory {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "exterior_images", columnDefinition = "jsonb")
     private String exteriorImages;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reserved_for_dealer")
+    private Dealer reservedForDealer;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reserved_for_customer")
+    private Customer reservedForCustomer;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "condition", length = 20)
+    private VehicleCondition condition = VehicleCondition.NEW;
+    
+    @Column(name = "reserved_date")
+    private LocalDateTime reservedDate;
+    
+    @Column(name = "reserved_expiry_date")
+    private LocalDateTime reservedExpiryDate;
     
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -223,5 +250,58 @@ public class VehicleInventory {
     
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+    
+    public Dealer getReservedForDealer() {
+        return reservedForDealer;
+    }
+    
+    public void setReservedForDealer(Dealer reservedForDealer) {
+        this.reservedForDealer = reservedForDealer;
+    }
+    
+    public Customer getReservedForCustomer() {
+        return reservedForCustomer;
+    }
+    
+    public void setReservedForCustomer(Customer reservedForCustomer) {
+        this.reservedForCustomer = reservedForCustomer;
+    }
+    
+    public VehicleCondition getCondition() {
+        return condition;
+    }
+    
+    public void setCondition(VehicleCondition condition) {
+        this.condition = condition;
+    }
+    
+    public LocalDateTime getReservedDate() {
+        return reservedDate;
+    }
+    
+    public void setReservedDate(LocalDateTime reservedDate) {
+        this.reservedDate = reservedDate;
+    }
+    
+    public LocalDateTime getReservedExpiryDate() {
+        return reservedExpiryDate;
+    }
+    
+    public void setReservedExpiryDate(LocalDateTime reservedExpiryDate) {
+        this.reservedExpiryDate = reservedExpiryDate;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        VehicleInventory that = (VehicleInventory) o;
+        return java.util.Objects.equals(inventoryId, that.inventoryId);
+    }
+
+    @Override
+    public int hashCode() {
+        return inventoryId != null ? inventoryId.hashCode() : 0;
     }
 }

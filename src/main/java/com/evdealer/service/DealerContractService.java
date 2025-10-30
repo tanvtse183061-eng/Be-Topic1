@@ -96,7 +96,7 @@ public class DealerContractService {
     public DealerContract updateContractStatus(UUID contractId, String status) {
         DealerContract contract = dealerContractRepository.findById(contractId)
                 .orElseThrow(() -> new RuntimeException("Dealer contract not found with id: " + contractId));
-        contract.setContractStatus(status);
+        contract.setContractStatus(com.evdealer.enums.ContractStatus.valueOf(status.toUpperCase()));
         return dealerContractRepository.save(contract);
     }
     
@@ -104,7 +104,7 @@ public class DealerContractService {
         DealerContract contract = dealerContractRepository.findById(contractId)
                 .orElseThrow(() -> new RuntimeException("Dealer contract not found with id: " + contractId));
         contract.setSignedDate(signedDate);
-        contract.setContractStatus("signed");
+        contract.setContractStatus(com.evdealer.enums.ContractStatus.ACTIVE);
         return dealerContractRepository.save(contract);
     }
 }

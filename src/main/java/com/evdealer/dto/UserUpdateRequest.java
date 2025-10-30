@@ -1,5 +1,7 @@
 package com.evdealer.dto;
 
+import com.evdealer.enums.UserType;
+import com.evdealer.enums.UserStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDate;
@@ -35,8 +37,11 @@ public class UserUpdateRequest {
     @Schema(description = "Profile image path", example = "/uploads/profile.jpg")
     private String profileImagePath;
     
-    @Schema(description = "Role string", example = "admin", allowableValues = {"DEALER_STAFF", "DEALER_MANAGER", "EVM_STAFF", "ADMIN"})
-    private String role;
+    @Schema(description = "User type", example = "ADMIN", allowableValues = {"ADMIN", "EVM_STAFF", "DEALER_MANAGER", "DEALER_STAFF"})
+    private UserType userType;
+    
+    @Schema(description = "User status", example = "ACTIVE", allowableValues = {"ACTIVE", "INACTIVE", "SUSPENDED"})
+    private UserStatus status;
     
     @Schema(description = "Dealer ID", example = "78fe7eb0-ceb8-4793-a8af-187a3fe26f67")
     private UUID dealerId;
@@ -47,13 +52,14 @@ public class UserUpdateRequest {
     // Constructors
     public UserUpdateRequest() {}
     
-    public UserUpdateRequest(String username, String firstName, String lastName, String email, String phone, String role, Boolean isActive) {
+    public UserUpdateRequest(String username, String firstName, String lastName, String email, String phone, UserType userType, UserStatus status, Boolean isActive) {
         this.username = username;
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.phone = phone;
-        this.role = role;
+        this.userType = userType;
+        this.status = status;
         this.isActive = isActive;
     }
     
@@ -130,12 +136,20 @@ public class UserUpdateRequest {
         this.profileImagePath = profileImagePath;
     }
     
-    public String getRole() {
-        return role;
+    public UserType getUserType() {
+        return userType;
     }
     
-    public void setRole(String role) {
-        this.role = role;
+    public void setUserType(UserType userType) {
+        this.userType = userType;
+    }
+    
+    public UserStatus getStatus() {
+        return status;
+    }
+    
+    public void setStatus(UserStatus status) {
+        this.status = status;
     }
     
     public UUID getDealerId() {

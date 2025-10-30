@@ -17,7 +17,7 @@ public class DealerInstallmentPlan {
     @Column(name = "plan_id")
     private UUID planId;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "invoice_id", nullable = true)
     private DealerInvoice invoice;
     
@@ -182,6 +182,19 @@ public class DealerInstallmentPlan {
     
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DealerInstallmentPlan that = (DealerInstallmentPlan) o;
+        return java.util.Objects.equals(planId, that.planId);
+    }
+
+    @Override
+    public int hashCode() {
+        return planId != null ? planId.hashCode() : 0;
     }
 }
 

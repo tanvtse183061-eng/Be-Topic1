@@ -1,9 +1,11 @@
 package com.evdealer.entity;
 
+import com.evdealer.enums.DealerStatus;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -61,11 +63,24 @@ public class Dealer {
     @Column(name = "commission_rate", precision = 5, scale = 2)
     private java.math.BigDecimal commissionRate;
     
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 50, nullable = false)
-    private String status = "active";
+    private DealerStatus status = DealerStatus.ACTIVE;
     
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
+    
+    @Column(name = "contract_start_date")
+    private LocalDate contractStartDate;
+    
+    @Column(name = "contract_end_date")
+    private LocalDate contractEndDate;
+    
+    @Column(name = "monthly_sales_target", precision = 15, scale = 2)
+    private java.math.BigDecimal monthlySalesTarget;
+    
+    @Column(name = "yearly_sales_target", precision = 15, scale = 2)
+    private java.math.BigDecimal yearlySalesTarget;
     
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -213,11 +228,11 @@ public class Dealer {
         this.commissionRate = commissionRate;
     }
     
-    public String getStatus() {
+    public DealerStatus getStatus() {
         return status;
     }
     
-    public void setStatus(String status) {
+    public void setStatus(DealerStatus status) {
         this.status = status;
     }
     
@@ -243,6 +258,51 @@ public class Dealer {
     
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+    
+    public LocalDate getContractStartDate() {
+        return contractStartDate;
+    }
+    
+    public void setContractStartDate(LocalDate contractStartDate) {
+        this.contractStartDate = contractStartDate;
+    }
+    
+    public LocalDate getContractEndDate() {
+        return contractEndDate;
+    }
+    
+    public void setContractEndDate(LocalDate contractEndDate) {
+        this.contractEndDate = contractEndDate;
+    }
+    
+    public java.math.BigDecimal getMonthlySalesTarget() {
+        return monthlySalesTarget;
+    }
+    
+    public void setMonthlySalesTarget(java.math.BigDecimal monthlySalesTarget) {
+        this.monthlySalesTarget = monthlySalesTarget;
+    }
+    
+    public java.math.BigDecimal getYearlySalesTarget() {
+        return yearlySalesTarget;
+    }
+    
+    public void setYearlySalesTarget(java.math.BigDecimal yearlySalesTarget) {
+        this.yearlySalesTarget = yearlySalesTarget;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Dealer that = (Dealer) o;
+        return java.util.Objects.equals(dealerId, that.dealerId);
+    }
+
+    @Override
+    public int hashCode() {
+        return dealerId != null ? dealerId.hashCode() : 0;
     }
 }
 

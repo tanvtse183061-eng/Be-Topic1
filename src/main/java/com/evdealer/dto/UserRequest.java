@@ -1,5 +1,7 @@
 package com.evdealer.dto;
 
+import com.evdealer.enums.UserType;
+import com.evdealer.enums.UserStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.UUID;
@@ -25,8 +27,11 @@ public class UserRequest {
     @Schema(description = "Password", example = "password123", required = true)
     private String password;
     
-    @Schema(description = "Role string", example = "DEALER_STAFF", allowableValues = {"DEALER_STAFF", "DEALER_MANAGER", "EVM_STAFF", "ADMIN"})
-    private String roleString;
+    @Schema(description = "User type", example = "DEALER_STAFF", allowableValues = {"ADMIN", "EVM_STAFF", "DEALER_MANAGER", "DEALER_STAFF"})
+    private UserType userType;
+    
+    @Schema(description = "User status", example = "ACTIVE", allowableValues = {"ACTIVE", "INACTIVE", "SUSPENDED"})
+    private UserStatus status;
     
     @Schema(description = "Dealer ID", example = "78fe7eb0-ceb8-4793-a8af-187a3fe26f67")
     private UUID dealerId;
@@ -40,21 +45,21 @@ public class UserRequest {
     // Constructors
     public UserRequest() {}
     
-    public UserRequest(String firstName, String lastName, String email, String password, String roleString) {
+    public UserRequest(String firstName, String lastName, String email, String password, UserType userType) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.password = password;
-        this.roleString = roleString;
+        this.userType = userType;
     }
     
-    public UserRequest(String firstName, String lastName, String username, String email, String password, String roleString) {
+    public UserRequest(String firstName, String lastName, String username, String email, String password, UserType userType) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.username = username;
         this.email = email;
         this.password = password;
-        this.roleString = roleString;
+        this.userType = userType;
     }
     
     // Getters and Setters
@@ -106,12 +111,20 @@ public class UserRequest {
         this.password = password;
     }
     
-    public String getRoleString() {
-        return roleString;
+    public UserType getUserType() {
+        return userType;
     }
     
-    public void setRoleString(String roleString) {
-        this.roleString = roleString;
+    public void setUserType(UserType userType) {
+        this.userType = userType;
+    }
+    
+    public UserStatus getStatus() {
+        return status;
+    }
+    
+    public void setStatus(UserStatus status) {
+        this.status = status;
     }
     
     public UUID getDealerId() {

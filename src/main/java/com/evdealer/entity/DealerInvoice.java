@@ -21,11 +21,11 @@ public class DealerInvoice {
     @Column(name = "invoice_number", nullable = false, unique = true, length = 100)
     private String invoiceNumber;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dealer_order_id", nullable = true)
     private DealerOrder dealerOrder;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "evm_staff_id", nullable = true)
     private User evmStaff;
     
@@ -196,6 +196,19 @@ public class DealerInvoice {
     
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DealerInvoice that = (DealerInvoice) o;
+        return java.util.Objects.equals(invoiceId, that.invoiceId);
+    }
+
+    @Override
+    public int hashCode() {
+        return invoiceId != null ? invoiceId.hashCode() : 0;
     }
 }
 

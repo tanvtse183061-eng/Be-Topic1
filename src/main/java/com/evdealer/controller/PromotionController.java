@@ -1,5 +1,6 @@
 package com.evdealer.controller;
 
+import com.evdealer.dto.PromotionDTO;
 import com.evdealer.entity.Promotion;
 import com.evdealer.service.PromotionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,87 +22,87 @@ public class PromotionController {
     private PromotionService promotionService;
     
     @GetMapping
-    public ResponseEntity<List<Promotion>> getAllPromotions() {
+    public ResponseEntity<List<PromotionDTO>> getAllPromotions() {
         List<Promotion> promotions = promotionService.getAllPromotions();
-        return ResponseEntity.ok(promotions);
+        return ResponseEntity.ok(promotions.stream().map(this::toDTO).toList());
     }
     
     @GetMapping("/{promotionId}")
-    public ResponseEntity<Promotion> getPromotionById(@PathVariable UUID promotionId) {
+    public ResponseEntity<PromotionDTO> getPromotionById(@PathVariable UUID promotionId) {
         return promotionService.getPromotionById(promotionId)
-                .map(promotion -> ResponseEntity.ok(promotion))
+                .map(promotion -> ResponseEntity.ok(toDTO(promotion)))
                 .orElse(ResponseEntity.notFound().build());
     }
     
     @GetMapping("/variant/{variantId}")
-    public ResponseEntity<List<Promotion>> getPromotionsByVariant(@PathVariable Integer variantId) {
+    public ResponseEntity<List<PromotionDTO>> getPromotionsByVariant(@PathVariable Integer variantId) {
         List<Promotion> promotions = promotionService.getPromotionsByVariant(variantId);
-        return ResponseEntity.ok(promotions);
+        return ResponseEntity.ok(promotions.stream().map(this::toDTO).toList());
     }
     
     @GetMapping("/status/{status}")
-    public ResponseEntity<List<Promotion>> getPromotionsByStatus(@PathVariable String status) {
+    public ResponseEntity<List<PromotionDTO>> getPromotionsByStatus(@PathVariable String status) {
         List<Promotion> promotions = promotionService.getPromotionsByStatus(status);
-        return ResponseEntity.ok(promotions);
+        return ResponseEntity.ok(promotions.stream().map(this::toDTO).toList());
     }
     
     @GetMapping("/active")
-    public ResponseEntity<List<Promotion>> getActivePromotions() {
+    public ResponseEntity<List<PromotionDTO>> getActivePromotions() {
         List<Promotion> promotions = promotionService.getActivePromotions();
-        return ResponseEntity.ok(promotions);
+        return ResponseEntity.ok(promotions.stream().map(this::toDTO).toList());
     }
     
     @GetMapping("/active/date/{date}")
-    public ResponseEntity<List<Promotion>> getActivePromotionsByDate(@PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+    public ResponseEntity<List<PromotionDTO>> getActivePromotionsByDate(@PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         List<Promotion> promotions = promotionService.getActivePromotionsByDate(date);
-        return ResponseEntity.ok(promotions);
+        return ResponseEntity.ok(promotions.stream().map(this::toDTO).toList());
     }
     
     @GetMapping("/active/variant/{variantId}")
-    public ResponseEntity<List<Promotion>> getActivePromotionsByVariant(@PathVariable Integer variantId) {
+    public ResponseEntity<List<PromotionDTO>> getActivePromotionsByVariant(@PathVariable Integer variantId) {
         List<Promotion> promotions = promotionService.getActivePromotionsByVariant(variantId);
-        return ResponseEntity.ok(promotions);
+        return ResponseEntity.ok(promotions.stream().map(this::toDTO).toList());
     }
     
     @GetMapping("/active/variant/{variantId}/date/{date}")
-    public ResponseEntity<List<Promotion>> getActivePromotionsByVariantAndDate(
+    public ResponseEntity<List<PromotionDTO>> getActivePromotionsByVariantAndDate(
             @PathVariable Integer variantId, 
             @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         List<Promotion> promotions = promotionService.getActivePromotionsByVariantAndDate(variantId, date);
-        return ResponseEntity.ok(promotions);
+        return ResponseEntity.ok(promotions.stream().map(this::toDTO).toList());
     }
     
     @GetMapping("/search")
-    public ResponseEntity<List<Promotion>> getPromotionsByTitle(@RequestParam String title) {
+    public ResponseEntity<List<PromotionDTO>> getPromotionsByTitle(@RequestParam String title) {
         List<Promotion> promotions = promotionService.getPromotionsByTitle(title);
-        return ResponseEntity.ok(promotions);
+        return ResponseEntity.ok(promotions.stream().map(this::toDTO).toList());
     }
     
     @PostMapping
-    public ResponseEntity<Promotion> createPromotion(@RequestBody Promotion promotion) {
+    public ResponseEntity<PromotionDTO> createPromotion(@RequestBody Promotion promotion) {
         try {
             Promotion createdPromotion = promotionService.createPromotion(promotion);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdPromotion);
+            return ResponseEntity.status(HttpStatus.CREATED).body(toDTO(createdPromotion));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
         }
     }
     
     @PutMapping("/{promotionId}")
-    public ResponseEntity<Promotion> updatePromotion(@PathVariable UUID promotionId, @RequestBody Promotion promotionDetails) {
+    public ResponseEntity<PromotionDTO> updatePromotion(@PathVariable UUID promotionId, @RequestBody Promotion promotionDetails) {
         try {
             Promotion updatedPromotion = promotionService.updatePromotion(promotionId, promotionDetails);
-            return ResponseEntity.ok(updatedPromotion);
+            return ResponseEntity.ok(toDTO(updatedPromotion));
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
     }
     
     @PutMapping("/{promotionId}/status")
-    public ResponseEntity<Promotion> updatePromotionStatus(@PathVariable UUID promotionId, @RequestParam String status) {
+    public ResponseEntity<PromotionDTO> updatePromotionStatus(@PathVariable UUID promotionId, @RequestParam String status) {
         try {
             Promotion updatedPromotion = promotionService.updatePromotionStatus(promotionId, status);
-            return ResponseEntity.ok(updatedPromotion);
+            return ResponseEntity.ok(toDTO(updatedPromotion));
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
@@ -115,6 +116,18 @@ public class PromotionController {
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    private PromotionDTO toDTO(Promotion p) {
+        PromotionDTO dto = new PromotionDTO();
+        dto.setPromotionId(p.getPromotionId());
+        dto.setVariantId(p.getVariant() != null ? p.getVariant().getVariantId() : null);
+        dto.setTitle(p.getTitle());
+        dto.setDiscountPercent(p.getDiscountPercent());
+        dto.setDiscountAmount(p.getDiscountAmount());
+        dto.setStartDate(p.getStartDate());
+        dto.setEndDate(p.getEndDate());
+        return dto;
     }
 }
 

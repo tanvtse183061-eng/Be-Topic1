@@ -15,8 +15,8 @@ public class VehicleVariant {
     @Column(name = "variant_id")
     private Integer variantId;
     
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "model_id", nullable = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "model_id", nullable = false)
     private VehicleModel model;
     
     @Column(name = "variant_name", nullable = false, length = 100)
@@ -187,6 +187,19 @@ public class VehicleVariant {
     
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        VehicleVariant that = (VehicleVariant) o;
+        return java.util.Objects.equals(variantId, that.variantId);
+    }
+
+    @Override
+    public int hashCode() {
+        return variantId != null ? variantId.hashCode() : 0;
     }
 }
 

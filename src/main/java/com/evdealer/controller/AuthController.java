@@ -107,7 +107,7 @@ public class AuthController {
             }
             
             // Generate JWT token
-            String role = user.getRole() != null ? user.getRole().getRoleName() : "USER";
+            String role = user.getUserType() != null ? user.getUserType().toString() : "USER";
             String token = jwtUtil.generateToken(user.getUsername(), role, user.getUserId().toString());
             
             // Create login response

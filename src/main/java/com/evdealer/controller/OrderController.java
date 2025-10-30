@@ -1,5 +1,6 @@
 package com.evdealer.controller;
 
+import com.evdealer.dto.OrderDTO;
 import com.evdealer.dto.OrderRequest;
 import com.evdealer.entity.Order;
 import com.evdealer.service.OrderService;
@@ -26,67 +27,67 @@ public class OrderController {
     
     @GetMapping
     @Operation(summary = "Lấy danh sách đơn hàng", description = "Lấy tất cả đơn hàng")
-    public ResponseEntity<List<Order>> getAllOrders() {
+    public ResponseEntity<List<OrderDTO>> getAllOrders() {
         List<Order> orders = orderService.getAllOrders();
-        return ResponseEntity.ok(orders);
+        return ResponseEntity.ok(orders.stream().map(this::toDTO).toList());
     }
     
     @GetMapping("/{orderId}")
     @Operation(summary = "Lấy đơn hàng theo ID", description = "Lấy thông tin đơn hàng theo ID")
-    public ResponseEntity<Order> getOrderById(@PathVariable UUID orderId) {
+    public ResponseEntity<OrderDTO> getOrderById(@PathVariable UUID orderId) {
         return orderService.getOrderById(orderId)
-                .map(order -> ResponseEntity.ok(order))
+                .map(order -> ResponseEntity.ok(toDTO(order)))
                 .orElse(ResponseEntity.notFound().build());
     }
     
     @GetMapping("/order-number/{orderNumber}")
     @Operation(summary = "Lấy đơn hàng theo số đơn", description = "Lấy thông tin đơn hàng theo số đơn hàng")
-    public ResponseEntity<Order> getOrderByOrderNumber(@PathVariable String orderNumber) {
+    public ResponseEntity<OrderDTO> getOrderByOrderNumber(@PathVariable String orderNumber) {
         return orderService.getOrderByOrderNumber(orderNumber)
-                .map(order -> ResponseEntity.ok(order))
+                .map(order -> ResponseEntity.ok(toDTO(order)))
                 .orElse(ResponseEntity.notFound().build());
     }
     
     @GetMapping("/customer/{customerId}")
     @Operation(summary = "Lấy đơn hàng theo khách hàng", description = "Lấy danh sách đơn hàng theo khách hàng")
-    public ResponseEntity<List<Order>> getOrdersByCustomer(@PathVariable UUID customerId) {
+    public ResponseEntity<List<OrderDTO>> getOrdersByCustomer(@PathVariable UUID customerId) {
         List<Order> orders = orderService.getOrdersByCustomer(customerId);
-        return ResponseEntity.ok(orders);
+        return ResponseEntity.ok(orders.stream().map(this::toDTO).toList());
     }
     
     
     @GetMapping("/status/{status}")
     @Operation(summary = "Lấy đơn hàng theo trạng thái", description = "Lấy danh sách đơn hàng theo trạng thái")
-    public ResponseEntity<List<Order>> getOrdersByStatus(@PathVariable String status) {
+    public ResponseEntity<List<OrderDTO>> getOrdersByStatus(@PathVariable String status) {
         List<Order> orders = orderService.getOrdersByStatus(status);
-        return ResponseEntity.ok(orders);
+        return ResponseEntity.ok(orders.stream().map(this::toDTO).toList());
     }
     
     @GetMapping("/date-range")
     @Operation(summary = "Lấy đơn hàng theo khoảng ngày", description = "Lấy đơn hàng theo khoảng ngày")
-    public ResponseEntity<List<Order>> getOrdersByDateRange(
+    public ResponseEntity<List<OrderDTO>> getOrdersByDateRange(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         List<Order> orders = orderService.getOrdersByDateRange(startDate, endDate);
-        return ResponseEntity.ok(orders);
+        return ResponseEntity.ok(orders.stream().map(this::toDTO).toList());
     }
     
     @GetMapping("/customer/{customerId}/status/{status}")
     @Operation(summary = "Lấy đơn hàng theo khách hàng và trạng thái", description = "Lấy đơn hàng theo khách hàng và trạng thái")
-    public ResponseEntity<List<Order>> getOrdersByCustomerAndStatus(
+    public ResponseEntity<List<OrderDTO>> getOrdersByCustomerAndStatus(
             @PathVariable UUID customerId, 
             @PathVariable String status) {
         List<Order> orders = orderService.getOrdersByCustomerAndStatus(customerId, status);
-        return ResponseEntity.ok(orders);
+        return ResponseEntity.ok(orders.stream().map(this::toDTO).toList());
     }
     
     
     @PostMapping
     @Operation(summary = "Tạo đơn hàng mới", description = "Tạo đơn hàng mới từ OrderRequest DTO")
-    public ResponseEntity<Order> createOrder(@RequestBody OrderRequest request) {
+    public ResponseEntity<OrderDTO> createOrder(@RequestBody OrderRequest request) {
         try {
             Order createdOrder = orderService.createOrderFromRequest(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdOrder);
+            return ResponseEntity.status(HttpStatus.CREATED).body(toDTO(createdOrder));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
         }
@@ -94,10 +95,10 @@ public class OrderController {
     
     @PostMapping("/legacy")
     @Operation(summary = "Tạo đơn hàng mới (Legacy)", description = "Tạo đơn hàng mới từ Order entity (legacy method)")
-    public ResponseEntity<Order> createOrderLegacy(@RequestBody Order order) {
+    public ResponseEntity<OrderDTO> createOrderLegacy(@RequestBody Order order) {
         try {
             Order createdOrder = orderService.createOrder(order);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdOrder);
+            return ResponseEntity.status(HttpStatus.CREATED).body(toDTO(createdOrder));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
         }
@@ -105,10 +106,10 @@ public class OrderController {
     
     @PutMapping("/{orderId}")
     @Operation(summary = "Cập nhật đơn hàng", description = "Cập nhật thông tin đơn hàng")
-    public ResponseEntity<Order> updateOrder(@PathVariable UUID orderId, @RequestBody Order orderDetails) {
+    public ResponseEntity<OrderDTO> updateOrder(@PathVariable UUID orderId, @RequestBody Order orderDetails) {
         try {
             Order updatedOrder = orderService.updateOrder(orderId, orderDetails);
-            return ResponseEntity.ok(updatedOrder);
+            return ResponseEntity.ok(toDTO(updatedOrder));
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
@@ -116,10 +117,10 @@ public class OrderController {
     
     @PutMapping("/{orderId}/status")
     @Operation(summary = "Cập nhật trạng thái đơn hàng", description = "Cập nhật trạng thái đơn hàng")
-    public ResponseEntity<Order> updateOrderStatus(@PathVariable UUID orderId, @RequestParam String status) {
+    public ResponseEntity<OrderDTO> updateOrderStatus(@PathVariable UUID orderId, @RequestParam String status) {
         try {
             Order updatedOrder = orderService.updateOrderStatus(orderId, status);
-            return ResponseEntity.ok(updatedOrder);
+            return ResponseEntity.ok(toDTO(updatedOrder));
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
@@ -134,5 +135,18 @@ public class OrderController {
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    private OrderDTO toDTO(Order o) {
+        OrderDTO dto = new OrderDTO();
+        dto.setOrderId(o.getOrderId());
+        dto.setOrderNumber(o.getOrderNumber());
+        dto.setCustomerId(o.getCustomer() != null ? o.getCustomer().getCustomerId() : null);
+        dto.setUserId(o.getUser() != null ? o.getUser().getUserId() : null);
+        dto.setInventoryId(o.getInventory() != null ? o.getInventory().getInventoryId() : null);
+        dto.setOrderDate(o.getOrderDate());
+        dto.setStatus(o.getStatus());
+        dto.setTotalAmount(o.getTotalAmount());
+        return dto;
     }
 }
