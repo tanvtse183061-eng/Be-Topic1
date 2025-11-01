@@ -1005,11 +1005,6 @@ ALTER TABLE ONLY public.vehicle_variants ALTER COLUMN variant_id SET DEFAULT nex
 --
 
 COPY public.appointments (appointment_id, customer_id, staff_id, appointment_type, title, description, appointment_date, duration_minutes, location, status, notes, created_at, updated_at, variant_id) FROM stdin;
-a0bb45f0-e026-4548-ac0e-7e531a611525	23c800a2-5903-4b5e-bb41-c86e0e4a5107	\N	test_drive	Test Drive - Standard Range	\N	2024-03-20 10:00:00	60	\N	pending	\N	2025-10-14 23:14:45.443104	2025-10-14 23:14:45.443104	1
-ab2e7251-dcab-46e1-be82-bf42178dc8af	bc295b71-4784-42bb-8711-573b48d28101	\N	test_drive	Test Drive - VF 5 Standard	\N	2024-03-20 10:00:00	60	\N	pending	\N	2025-10-14 23:15:14.855996	2025-10-14 23:15:14.855996	8
-0bbd5116-4504-4304-8a7d-fec50a78b666	0766234c-d354-476c-a8f9-200cd74f2d9e	\N	test_drive	Test Drive - Model 3 Standard Range	\N	2024-03-25 14:00:00	60	\N	pending	\N	2025-10-14 23:15:14.855996	2025-10-14 23:15:14.855996	3
-1d956e90-14db-4927-a883-8a8bd53994c8	\N	\N	test_drive	Lái thử xe - Test Customer	\N	2024-12-20 03:00:00	60	\N	scheduled	Test appointment\nCustomer: Test Customer (test@example.com, 0123456789), Variant ID: 1	2025-10-26 15:24:30.955333	2025-10-26 15:24:30.955333	\N
-af293c23-38d8-4106-b37b-f7195dcde0ed	\N	\N	delivery	Nhận xe - Test Customer	\N	2024-12-25 07:00:00	60	\N	scheduled	Test delivery appointment\nCustomer: Test Customer (test@example.com, 0123456789), Order ID: 48bbd74e-ce34-4f48-9b26-eb9e0c9de16a, Address: 123 Test Street, Ho Chi Minh City	2025-10-26 15:29:47.056141	2025-10-26 15:29:47.056141	\N
 \.
 
 
@@ -1018,10 +1013,6 @@ af293c23-38d8-4106-b37b-f7195dcde0ed	\N	\N	delivery	Nhận xe - Test Customer	\N
 --
 
 COPY public.customer_feedbacks (feedback_id, customer_id, order_id, rating, feedback_type, message, response, status, created_at, updated_at) FROM stdin;
-3512230a-8c44-46d8-b4c1-c10e2199936a	e9c41a60-f600-4188-80fb-55fbc60ae128	1a242971-a5d8-41ae-9681-0b4081c6a5da	5	general	Dịch vụ tốt, giao xe đúng hẹn	\N	resolved	2025-10-14 23:14:45.443104	2025-10-14 23:14:45.443104
-ecba9a9d-180c-41b8-9ca5-d08d413c2c70	23c800a2-5903-4b5e-bb41-c86e0e4a5107	f574227f-d7c9-4145-91bd-a3b2bf409b6a	4	service	Nhân viên tư vấn nhiệt tình	\N	resolved	2025-10-14 23:15:14.855996	2025-10-14 23:15:14.855996
-7ee1382a-090d-4aec-81a1-d2034e4c38e6	\N	\N	5	compliment	I love this car!\n\nCustomer Info: Test Customer (test@example.com, 0123456789), Subject: Great service	\N	pending	2025-10-26 15:24:24.914978	2025-10-26 15:24:24.914978
-68ff9047-6820-4e42-bde1-9371d821d90d	\N	\N	5	compliment	I love this car!\n\nCustomer Info: Test Customer (test@example.com, 0123456789), Variant ID: 1, Subject: Great service	\N	pending	2025-10-26 15:25:21.827458	2025-10-26 15:25:21.827458
 \.
 
 
@@ -1030,10 +1021,6 @@ ecba9a9d-180c-41b8-9ca5-d08d413c2c70	23c800a2-5903-4b5e-bb41-c86e0e4a5107	f57422
 --
 
 COPY public.customer_payments (payment_id, order_id, customer_id, payment_number, payment_date, amount, payment_type, payment_method, reference_number, status, processed_by, notes, created_at) FROM stdin;
-7f52485c-db0b-4fbf-970d-10cadeeb4472	1a242971-a5d8-41ae-9681-0b4081c6a5da	e9c41a60-f600-4188-80fb-55fbc60ae128	CUST-PAY-2024-001	2024-02-15	236000000.00	down_payment	bank_transfer	\N	completed	bdfccab5-9e07-49c7-bb2a-9b2f69521eeb	\N	2025-10-14 23:14:45.443104
-5427f291-b31a-48dc-855a-79f269cb4ab7	f574227f-d7c9-4145-91bd-a3b2bf409b6a	23c800a2-5903-4b5e-bb41-c86e0e4a5107	CUST-PAY-2024-002	2024-02-16	800000000.00	full_payment	bank_transfer	\N	completed	bdfccab5-9e07-49c7-bb2a-9b2f69521eeb	\N	2025-10-14 23:15:14.855996
-32c9ee85-fd3a-4b07-a9e9-f8145ec12cc9	48bbd74e-ce34-4f48-9b26-eb9e0c9de16a	\N	PAY-1761492535661	2025-10-26	100000000.00	deposit	bank_transfer	\N	pending	\N	Test deposit payment	2025-10-26 15:28:55.667017
-941f3463-4521-4c0f-bca0-552cd2e875ca	48bbd74e-ce34-4f48-9b26-eb9e0c9de16a	\N	PAY-1761492593226	2025-10-26	1000000000.00	full	credit_card	\N	pending	\N	Test full payment	2025-10-26 15:29:53.227518
 \.
 
 
@@ -1050,7 +1037,6 @@ COPY public.customers (customer_id, first_name, last_name, email, phone, date_of
 --
 
 COPY public.dealer_contracts (contract_id, contract_number, contract_type, start_date, end_date, territory, commission_rate, minimum_sales_target, contract_status, signed_date, contract_file_url, contract_file_path, terms_and_conditions, created_at, updated_at, dealer_id, monthly_target, yearly_target) FROM stdin;
-f1abe2b8-c6b0-4e1e-b54e-d2f27a349f5d	DC-2024-001	exclusive	2024-01-01	2024-12-31	Ho Chi Minh City	3.50	50000000000.00	ACTIVE	2023-12-15	https://example.com/contracts/DC-2024-001.pdf	\N	Hợp đồng đại lý độc quyền tại TP.HCM	2025-10-14 23:14:45.443104	2025-10-29 16:15:11.727302	\N	\N	\N
 \.
 
 
@@ -1083,7 +1069,6 @@ COPY public.dealer_installment_schedules (schedule_id, amount, created_at, due_d
 --
 
 COPY public.dealer_invoices (invoice_id, invoice_number, dealer_order_id, evm_staff_id, invoice_date, due_date, subtotal, tax_amount, discount_amount, total_amount, status, payment_terms_days, notes, created_at, updated_at) FROM stdin;
-c3f451ff-60cd-42b7-aac0-87dfe80e2275	TEST-INVOICE-001	e31c5e36-4bd6-4708-b4c8-fa59d161a5b8	\N	2025-10-29	2025-11-28	1000000000.00	0.00	0.00	1000000000.00	issued	30	\N	2025-10-29 16:58:33.656844	2025-10-29 16:58:33.656844
 \.
 
 
@@ -1100,7 +1085,6 @@ COPY public.dealer_order_items (item_id, created_at, discount_amount, discount_p
 --
 
 COPY public.dealer_orders (dealer_order_id, dealer_order_number, evm_staff_id, order_date, expected_delivery_date, total_quantity, total_amount, status, priority, notes, created_at, updated_at, approved_at, approved_by, rejection_reason, dealer_id, order_type, approval_status, payment_terms, delivery_terms, discount_applied, discount_reason) FROM stdin;
-e31c5e36-4bd6-4708-b4c8-fa59d161a5b8	TEST-DEALER-ORDER-001	\N	2025-10-29	\N	1	1000000000.00	pending	normal	\N	2025-10-29 16:58:33.656844	2025-10-29 16:58:33.656844	\N	\N	\N	\N	PURCHASE	APPROVED	NET_30	FOB_FACTORY	0.00	\N
 \.
 
 
@@ -1117,9 +1101,6 @@ COPY public.dealer_payments (payment_id, invoice_id, payment_number, payment_dat
 --
 
 COPY public.dealer_targets (target_id, target_year, target_month, target_type, target_amount, target_quantity, achieved_amount, achieved_quantity, target_status, notes, created_at, updated_at, dealer_id, target_scope) FROM stdin;
-36888548-0f6e-4d2e-9dce-b2960a110dbf	2024	1	monthly	5000000000.00	4	1200000000.00	1	active	Chỉ tiêu tháng 1/2024	2025-10-14 23:14:45.443104	2025-10-14 23:14:45.443104	\N	dealer
-ca72dcc3-ea16-4c19-91b1-7b98b9a9e836	2024	2	monthly	6000000000.00	5	1180000000.00	1	active	Chỉ tiêu tháng 2/2024	2025-10-14 23:14:45.443104	2025-10-14 23:14:45.443104	\N	dealer
-87aa5aed-6157-4f80-9e78-90fddf847c42	2024	\N	yearly	60000000000.00	50	2380000000.00	2	active	Chỉ tiêu cả năm 2024	2025-10-14 23:14:45.443104	2025-10-14 23:14:45.443104	\N	dealer
 \.
 
 
@@ -1136,9 +1117,6 @@ COPY public.dealers (dealer_id, dealer_code, dealer_name, contact_person, email,
 --
 
 COPY public.installment_plans (plan_id, order_id, customer_id, total_amount, down_payment_amount, loan_amount, interest_rate, loan_term_months, monthly_payment_amount, first_payment_date, last_payment_date, plan_status, finance_company, contract_number, created_at, invoice_id, dealer_id, plan_type) FROM stdin;
-569515c4-22c0-40f6-be0d-d4191e1045bc	1a242971-a5d8-41ae-9681-0b4081c6a5da	e9c41a60-f600-4188-80fb-55fbc60ae128	1180000000.00	236000000.00	944000000.00	8.50	36	30000000.00	2024-03-15	2027-02-15	active	Vietcombank	VCB-INST-2024-001	2025-10-14 23:14:45.443104	\N	\N	customer
-d5696832-b27a-4a2c-9d86-62d25826bdfd	c6544d05-f1e6-4842-a1cc-3a6af4a873e7	bc295b71-4784-42bb-8711-573b48d28101	350000000.00	0.00	350000000.00	9.00	24	16000000.00	2024-03-17	2026-02-17	active	BIDV	BIDV-INST-2024-001	2025-10-14 23:15:14.855996	\N	\N	customer
-37516889-d4c8-4118-a715-321e3b53016f	\N	\N	2000000000.00	400000000.00	1600000000.00	7.50	24	75000000.00	2024-03-01	2026-02-01	active	EV Finance	EVF-DEALER-2024-001	2025-10-14 23:14:45.443104	7578326c-b3cb-4c79-99fb-61118f0494e0	\N	dealer
 \.
 
 
@@ -1155,7 +1133,6 @@ COPY public.installment_schedules (schedule_id, plan_id, installment_number, due
 --
 
 COPY public.orders (order_id, order_number, quotation_id, customer_id, user_id, inventory_id, order_date, status, total_amount, deposit_amount, balance_amount, payment_method, notes, created_at, updated_at, delivery_date, special_requests, order_type, payment_status, delivery_status, fulfillment_status, fulfillment_method, fulfillment_reference_id) FROM stdin;
-6dfe1afc-b82f-4d18-8954-bfca67a311d7	TEST-ORDER-001	\N	\N	\N	\N	2025-10-29	pending	1000000000.00	\N	\N	\N	\N	2025-10-29 16:58:33.656844	2025-10-29 16:58:33.656844	\N	\N	RETAIL	PENDING	PENDING	IN_PROGRESS	DEALER_ORDER	c3f451ff-60cd-42b7-aac0-87dfe80e2275
 \.
 
 
@@ -1172,9 +1149,6 @@ COPY public.pricing_policies (policy_id, policy_name, description, policy_type, 
 --
 
 COPY public.promotions (promotion_id, variant_id, title, description, discount_percent, discount_amount, start_date, end_date, status, created_at, updated_at) FROM stdin;
-55db5285-efe6-4e12-9f6e-36919bd61bfe	1	Khuyến mãi mùa hè	Giảm giá 5% cho Tesla Model 3	5.00	\N	2024-06-01	2024-07-01	active	2025-10-14 23:14:45.443104	2025-10-14 23:14:45.443104
-534f600d-f319-4b62-8fff-a8655c5d2430	3	Khuyến mãi mùa hè Tesla	Giảm giá 5% cho Tesla Model 3 Standard Range	5.00	\N	2024-06-01	2024-07-01	active	2025-10-14 23:15:14.855996	2025-10-14 23:15:14.855996
-99942c2c-c1e5-4ad2-9dee-6580d286bf7f	8	Khuyến mãi VinFast VF 5	Giảm giá 10% cho VinFast VF 5 Standard	10.00	\N	2024-03-01	2024-04-01	active	2025-10-14 23:15:14.855996	2025-10-14 23:15:14.855996
 \.
 
 
@@ -1183,18 +1157,6 @@ COPY public.promotions (promotion_id, variant_id, title, description, discount_p
 --
 
 COPY public.quotations (quotation_id, quotation_number, customer_id, user_id, variant_id, color_id, quotation_date, total_price, discount_amount, final_price, validity_days, status, notes, created_at, updated_at) FROM stdin;
-e13dea70-2661-4527-ab52-13284fa3eff9	QT-2024-001	e9c41a60-f600-4188-80fb-55fbc60ae128	bdfccab5-9e07-49c7-bb2a-9b2f69521eeb	1	1	2025-10-14	1200000000.00	20000000.00	1180000000.00	7	pending	Báo giá Tesla Model 3 Standard Range màu trắng	2025-10-14 23:14:45.443104	2025-10-20 19:13:56.50184
-869777a2-80ac-4996-a9cb-d7707d4d678b	QT-2024-002	23c800a2-5903-4b5e-bb41-c86e0e4a5107	bdfccab5-9e07-49c7-bb2a-9b2f69521eeb	6	4	2025-10-14	800000000.00	0.00	800000000.00	7	pending	Báo giá BYD Atto 3 Standard màu xanh dương	2025-10-14 23:15:14.855996	2025-10-20 19:14:01.794677
-2cf9b2c9-db82-40fc-9629-fcee4ddf0c8d	QT-2024-003	bc295b71-4784-42bb-8711-573b48d28101	52b27bc0-f457-4f96-bcaf-d20daadf9f56	8	1	2025-10-14	350000000.00	0.00	350000000.00	7	pending	Báo giá VinFast VF 5 Standard màu trắng	2025-10-14 23:15:14.855996	2025-10-20 19:14:07.461984
-9910249d-a3bd-4e4d-a22b-c04225da94a5	QT-2024-004	e9c41a60-f600-4188-80fb-55fbc60ae128	bdfccab5-9e07-49c7-bb2a-9b2f69521eeb	\N	\N	2024-02-18	1900000000.00	100000000.00	1800000000.00	7	pending	Báo giá cho khách hàng Nguyễn Thị Thu	2025-10-14 23:18:22.035186	2025-10-20 19:14:12.781567
-d3ad4833-c0b2-49dd-b40c-6040853e5772	QT-2024-005	e9c41a60-f600-4188-80fb-55fbc60ae128	52b27bc0-f457-4f96-bcaf-d20daadf9f56	11	\N	2024-02-20	2300000000.00	100000000.00	2200000000.00	7	pending	Báo giá cho khách hàng Phạm Văn Đức	2025-10-14 23:18:22.035186	2025-10-20 19:14:17.873351
-5dfe0c7a-0d44-467f-b815-79adedd33f2c	QT-2024-006	e9c41a60-f600-4188-80fb-55fbc60ae128	bdfccab5-9e07-49c7-bb2a-9b2f69521eeb	\N	1	2024-02-22	1250000000.00	50000000.00	1200000000.00	7	pending	Báo giá cho khách hàng Trần Thị Mai	2025-10-14 23:18:22.035186	2025-10-20 19:14:23.335086
-e22ada09-2477-41df-ac3a-85058b3fe516	QT-2024-007	e9c41a60-f600-4188-80fb-55fbc60ae128	bdfccab5-9e07-49c7-bb2a-9b2f69521eeb	21	1	2024-03-01	2500000000.00	100000000.00	2400000000.00	7	pending	Báo giá cho Tesla Model S Plaid	2025-10-14 23:46:18.12036	2025-10-20 19:14:28.313952
-9b82e51f-30a5-4237-9a21-a7223926c08b	QT-2024-008	23c800a2-5903-4b5e-bb41-c86e0e4a5107	52b27bc0-f457-4f96-bcaf-d20daadf9f56	22	3	2024-03-02	2800000000.00	150000000.00	2650000000.00	7	pending	Báo giá cho Tesla Model X Plaid	2025-10-14 23:46:18.12036	2025-10-20 19:14:35.110954
-9bd78eb4-3700-48e3-8e72-84a09aaa3c9e	QT-2024-010	2d374584-fb65-472d-83a5-c1136f26bc38	52b27bc0-f457-4f96-bcaf-d20daadf9f56	24	\N	2024-03-04	2000000000.00	100000000.00	1900000000.00	7	pending	Báo giá cho BMW iX3 xDrive30	2025-10-14 23:46:18.12036	2025-10-20 19:14:40.314095
-81661b71-7b3c-43bb-8171-0cd6af2762fc	QT-2024-009	80ff5c2e-f596-4638-9f14-733ae515bbeb	bdfccab5-9e07-49c7-bb2a-9b2f69521eeb	23	1	2024-03-03	1200000000.00	50000000.00	1150000000.00	7	pending	Báo giá cho BYD Atto 3 Extended Range	2025-10-14 23:46:18.12036	2025-10-20 19:14:47.996452
-e913b770-4755-4375-9744-ff97ff827c7a	QUO-20251023-3448	78fe7eb0-ceb8-4793-a8af-187a3fe26f67	6f2431b7-10c9-4d61-b612-33e11b923752	1	1	2025-10-23	1200000000.00	0.00	1200000000.00	7	accepted	test	2025-10-23 10:31:25.24992	2025-10-23 10:31:25.24992
-0565564e-0656-4716-a799-a57c5f7bb17c	QUO-20251023-7976	78fe7eb0-ceb8-4793-a8af-187a3fe26f67	6f2431b7-10c9-4d61-b612-33e11b923752	1	1	2025-10-23	1200000000.00	0.00	1200000000.00	7	accepted	test	2025-10-23 10:36:28.973223	2025-10-23 10:36:28.973223
 \.
 
 
@@ -1203,14 +1165,6 @@ e913b770-4755-4375-9744-ff97ff827c7a	QUO-20251023-3448	78fe7eb0-ceb8-4793-a8af-1
 --
 
 COPY public.sales_contracts (contract_id, contract_number, order_id, customer_id, user_id, contract_date, delivery_date, contract_value, payment_terms, warranty_period_months, contract_status, signed_date, contract_file_url, contract_file_path, notes, created_at, updated_at) FROM stdin;
-8a6c521b-8618-4416-ab3e-54911a58ed2a	SC-2024-001	1a242971-a5d8-41ae-9681-0b4081c6a5da	e9c41a60-f600-4188-80fb-55fbc60ae128	bdfccab5-9e07-49c7-bb2a-9b2f69521eeb	2024-02-16	2024-03-01	1180000000.00	Trả góp 36 tháng, lãi suất 8.5%/năm	24	signed	2024-02-16	https://example.com/contracts/SC-2024-001.pdf	\N	\N	2025-10-14 23:14:45.443104	2025-10-14 23:14:45.443104
-4e153212-9b59-47bb-b801-f02421a259f2	SC-2024-002	f574227f-d7c9-4145-91bd-a3b2bf409b6a	23c800a2-5903-4b5e-bb41-c86e0e4a5107	bdfccab5-9e07-49c7-bb2a-9b2f69521eeb	2024-02-17	2024-02-20	800000000.00	Thanh toán một lần	24	signed	2024-02-17	https://example.com/contracts/SC-2024-002.pdf	\N	\N	2025-10-14 23:15:14.855996	2025-10-14 23:15:14.855996
-db5615f4-c7f7-4b51-8098-ce1b4680297d	SC-2024-003	c6544d05-f1e6-4842-a1cc-3a6af4a873e7	\N	52b27bc0-f457-4f96-bcaf-d20daadf9f56	2024-02-18	2024-03-05	950000000.00	Trả góp 24 tháng, lãi suất 7.5%/năm	24	signed	2024-02-18	https://example.com/contracts/SC-2024-003.pdf	\N	\N	2025-10-14 23:18:22.035186	2025-10-14 23:18:22.035186
-c6b5b1af-b84f-482c-a4ee-a69a66c8ba94	SC-2024-004	1a242971-a5d8-41ae-9681-0b4081c6a5da	\N	bdfccab5-9e07-49c7-bb2a-9b2f69521eeb	2024-02-20	2024-03-08	1800000000.00	Trả góp 48 tháng, lãi suất 8.0%/năm	36	signed	2024-02-20	https://example.com/contracts/SC-2024-004.pdf	\N	\N	2025-10-14 23:18:22.035186	2025-10-14 23:18:42.729405
-762eaafe-5dc5-4044-887a-b2d9d9065844	SC-2024-005	1a242971-a5d8-41ae-9681-0b4081c6a5da	\N	52b27bc0-f457-4f96-bcaf-d20daadf9f56	2024-02-22	2024-03-10	2200000000.00	Trả góp 60 tháng, lãi suất 8.5%/năm	48	signed	2024-02-22	https://example.com/contracts/SC-2024-005.pdf	\N	\N	2025-10-14 23:18:22.035186	2025-10-14 23:18:42.729405
-27794eed-3af2-4b75-8c35-eabd1ee43871	SC-2024-006	1a242971-a5d8-41ae-9681-0b4081c6a5da	\N	bdfccab5-9e07-49c7-bb2a-9b2f69521eeb	2024-02-25	2024-03-15	1200000000.00	Trả góp 36 tháng, lãi suất 8.5%/năm	24	pending	\N	https://example.com/contracts/SC-2024-006.pdf	\N	\N	2025-10-14 23:18:22.035186	2025-10-14 23:18:42.729405
-879f3482-1b58-417e-8da9-7d5871e60d34	SC-2024-007	9d035558-89e5-4a9d-a6d9-1b6462f36ab4	e9c41a60-f600-4188-80fb-55fbc60ae128	bdfccab5-9e07-49c7-bb2a-9b2f69521eeb	2024-03-01	2024-03-15	2400000000.00	Trả góp 48 tháng, lãi suất 8.0%/năm	36	signed	2024-03-01	https://example.com/contracts/SC-2024-007.pdf	\N	\N	2025-10-14 23:46:18.12036	2025-10-14 23:46:18.12036
-32e4457e-8c48-434a-9f38-8ce4578f752c	SC-2024-008	5993dd7a-c68d-4f13-bf12-d97f4fa8b28b	23c800a2-5903-4b5e-bb41-c86e0e4a5107	52b27bc0-f457-4f96-bcaf-d20daadf9f56	2024-03-02	2024-03-16	2650000000.00	Trả góp 60 tháng, lãi suất 8.5%/năm	48	signed	2024-03-02	https://example.com/contracts/SC-2024-008.pdf	\N	\N	2025-10-14 23:46:18.12036	2025-10-14 23:46:18.12036
 \.
 
 
@@ -1303,35 +1257,35 @@ COPY public.warehouse (warehouse_id, warehouse_name, warehouse_code, address, ci
 -- Name: user_roles_role_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.user_roles_role_id_seq', 7, true);
+SELECT pg_catalog.setval('public.user_roles_role_id_seq', 4, true);
 
 
 --
 -- Name: vehicle_brands_brand_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.vehicle_brands_brand_id_seq', 7, true);
+SELECT pg_catalog.setval('public.vehicle_brands_brand_id_seq', 1, false);
 
 
 --
 -- Name: vehicle_colors_color_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.vehicle_colors_color_id_seq', 8, true);
+SELECT pg_catalog.setval('public.vehicle_colors_color_id_seq', 1, false);
 
 
 --
 -- Name: vehicle_models_model_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.vehicle_models_model_id_seq', 21, true);
+SELECT pg_catalog.setval('public.vehicle_models_model_id_seq', 1, false);
 
 
 --
 -- Name: vehicle_variants_variant_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.vehicle_variants_variant_id_seq', 42, true);
+SELECT pg_catalog.setval('public.vehicle_variants_variant_id_seq', 1, false);
 
 
 --
