@@ -109,5 +109,18 @@ public class VehicleBrand {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        VehicleBrand that = (VehicleBrand) o;
+        return java.util.Objects.equals(brandId, that.brandId);
+    }
+
+    @Override
+    public int hashCode() {
+        return brandId != null ? brandId.hashCode() : 0;
+    }
 }
 

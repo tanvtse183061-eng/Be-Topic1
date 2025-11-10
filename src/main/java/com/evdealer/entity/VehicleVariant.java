@@ -1,5 +1,6 @@
 package com.evdealer.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -15,8 +16,9 @@ public class VehicleVariant {
     @Column(name = "variant_id")
     private Integer variantId;
     
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "model_id", nullable = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "model_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private VehicleModel model;
     
     @Column(name = "variant_name", nullable = false, length = 100)
@@ -43,7 +45,7 @@ public class VehicleVariant {
     @Column(name = "charging_time_slow")
     private Integer chargingTimeSlow;
     
-    @Column(name = "price_base", precision = 12, scale = 2)
+    @Column(name = "price_base", precision = 15, scale = 2)
     private BigDecimal priceBase;
     
     @Column(name = "variant_image_url", length = 500)
@@ -187,6 +189,19 @@ public class VehicleVariant {
     
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        VehicleVariant that = (VehicleVariant) o;
+        return java.util.Objects.equals(variantId, that.variantId);
+    }
+
+    @Override
+    public int hashCode() {
+        return variantId != null ? variantId.hashCode() : 0;
     }
 }
 

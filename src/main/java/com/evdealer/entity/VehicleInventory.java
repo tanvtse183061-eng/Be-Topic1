@@ -1,9 +1,14 @@
 package com.evdealer.entity;
 
+import com.evdealer.enums.VehicleCondition;
+import com.evdealer.enums.VehicleStatus;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
@@ -12,7 +17,15 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "vehicle_inventory")
+@Table(
+    name = "vehicle_inventory",
+    indexes = {
+        @Index(name = "idx_vehicle_inventory_variant", columnList = "variant_id"),
+        @Index(name = "idx_vehicle_inventory_color", columnList = "color_id"),
+        @Index(name = "idx_vehicle_inventory_warehouse", columnList = "warehouse_id"),
+        @Index(name = "idx_vehicle_inventory_status", columnList = "status")
+    }
+)
 public class VehicleInventory {
     
     @Id
@@ -20,16 +33,19 @@ public class VehicleInventory {
     @Column(name = "inventory_id")
     private UUID inventoryId;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "variant_id", nullable = true)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private VehicleVariant variant;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "color_id", nullable = true)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private VehicleColor color;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "warehouse_id", nullable = true)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Warehouse warehouse;
     
     @Column(name = "warehouse_location", length = 100)
@@ -47,14 +63,18 @@ public class VehicleInventory {
     @Column(name = "arrival_date")
     private LocalDate arrivalDate;
     
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 50, nullable = false)
-    private String status = "available";
+    private VehicleStatus status = VehicleStatus.AVAILABLE;
     
+    @Version
+    @Column(name = "version")
+    private Long version;
     
-    @Column(name = "cost_price", precision = 12, scale = 2)
+    @Column(name = "cost_price", precision = 15, scale = 2)
     private BigDecimal costPrice;
     
-    @Column(name = "selling_price", precision = 12, scale = 2)
+    @Column(name = "selling_price", precision = 15, scale = 2)
     private BigDecimal sellingPrice;
     
     @JdbcTypeCode(SqlTypes.JSON)
@@ -68,6 +88,24 @@ public class VehicleInventory {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "exterior_images", columnDefinition = "jsonb")
     private String exteriorImages;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reserved_for_dealer")
+    private Dealer reservedForDealer;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reserved_for_customer")
+    private Customer reservedForCustomer;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "condition", length = 20)
+    private VehicleCondition condition = VehicleCondition.NEW;
+    
+    @Column(name = "reserved_date")
+    private LocalDateTime reservedDate;
+    
+    @Column(name = "reserved_expiry_date")
+    private LocalDateTime reservedExpiryDate;
     
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -160,12 +198,19 @@ public class VehicleInventory {
         this.arrivalDate = arrivalDate;
     }
     
-    public String getStatus() {
+    public VehicleStatus getStatus() {
         return status;
     }
     
-    public void setStatus(String status) {
+    public void setStatus(VehicleStatus status) {
         this.status = status;
+    }
+    
+    /**
+     * Set status from String (backward compatibility)
+     */
+    public void setStatus(String status) {
+        this.status = VehicleStatus.fromString(status);
     }
     
     
@@ -223,5 +268,87 @@ public class VehicleInventory {
     
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+    
+    public Dealer getReservedForDealer() {
+        return reservedForDealer;
+    }
+    
+    public void setReservedForDealer(Dealer reservedForDealer) {
+        this.reservedForDealer = reservedForDealer;
+    }
+    
+    public Customer getReservedForCustomer() {
+        return reservedForCustomer;
+    }
+    
+    public void setReservedForCustomer(Customer reservedForCustomer) {
+        this.reservedForCustomer = reservedForCustomer;
+    }
+    
+    public VehicleCondition getCondition() {
+        return condition;
+    }
+    
+    public void setCondition(VehicleCondition condition) {
+        this.condition = condition;
+    }
+    
+    public LocalDateTime getReservedDate() {
+        return reservedDate;
+    }
+    
+    public void setReservedDate(LocalDateTime reservedDate) {
+        this.reservedDate = reservedDate;
+    }
+    
+    public LocalDateTime getReservedExpiryDate() {
+        return reservedExpiryDate;
+    }
+
+    public void setReservedExpiryDate(LocalDateTime reservedExpiryDate) {
+        this.reservedExpiryDate = reservedExpiryDate;
+    }
+    
+    public Long getVersion() {
+        return version;
+    }
+    
+    public void setVersion(Long version) {
+        this.version = version;
+    }
+
+    // Helper getters to expose foreign key IDs in JSON response
+    // These are not persisted fields but computed from relationships
+    // Always include these fields in JSON, even if null
+    @JsonProperty("variantId")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    public Integer getVariantId() {
+        return variant != null ? variant.getVariantId() : null;
+    }
+
+    @JsonProperty("colorId")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    public Integer getColorId() {
+        return color != null ? color.getColorId() : null;
+    }
+
+    @JsonProperty("warehouseId")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    public UUID getWarehouseId() {
+        return warehouse != null ? warehouse.getWarehouseId() : null;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        VehicleInventory that = (VehicleInventory) o;
+        return java.util.Objects.equals(inventoryId, that.inventoryId);
+    }
+
+    @Override
+    public int hashCode() {
+        return inventoryId != null ? inventoryId.hashCode() : 0;
     }
 }

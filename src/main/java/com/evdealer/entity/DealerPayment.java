@@ -1,7 +1,8 @@
 package com.evdealer.entity;
 
-import com.evdealer.enums.CustomerPaymentStatus;
+import com.evdealer.enums.DealerPaymentStatus;
 import com.evdealer.enums.PaymentMethod;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -11,8 +12,8 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "customer_payments")
-public class CustomerPayment {
+@Table(name = "dealer_payments")
+public class DealerPayment {
     
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -20,12 +21,9 @@ public class CustomerPayment {
     private UUID paymentId;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = true)
-    private Order order;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "customer_id", nullable = true)
-    private Customer customer;
+    @JoinColumn(name = "invoice_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "items", "quotations", "evmStaff", "dealerOrder"})
+    private DealerInvoice invoice;
     
     @Column(name = "payment_number", nullable = false, unique = true, length = 100)
     private String paymentNumber;
@@ -36,11 +34,8 @@ public class CustomerPayment {
     @Column(name = "amount", nullable = false, precision = 15, scale = 2)
     private BigDecimal amount;
     
-    @Column(name = "payment_type", length = 50)
-    private String paymentType;
-    
     @Enumerated(EnumType.STRING)
-    @Column(name = "payment_method", length = 100)
+    @Column(name = "payment_type", length = 50)
     private PaymentMethod paymentMethod;
     
     @Column(name = "reference_number", length = 100)
@@ -48,11 +43,7 @@ public class CustomerPayment {
     
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 50, nullable = false)
-    private CustomerPaymentStatus status = CustomerPaymentStatus.PENDING;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "processed_by")
-    private User processedBy;
+    private DealerPaymentStatus status = DealerPaymentStatus.PENDING;
     
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
@@ -62,11 +53,10 @@ public class CustomerPayment {
     private LocalDateTime createdAt;
     
     // Constructors
-    public CustomerPayment() {}
+    public DealerPayment() {}
     
-    public CustomerPayment(Order order, Customer customer, String paymentNumber, LocalDate paymentDate, BigDecimal amount) {
-        this.order = order;
-        this.customer = customer;
+    public DealerPayment(DealerInvoice invoice, String paymentNumber, LocalDate paymentDate, BigDecimal amount) {
+        this.invoice = invoice;
         this.paymentNumber = paymentNumber;
         this.paymentDate = paymentDate;
         this.amount = amount;
@@ -81,20 +71,12 @@ public class CustomerPayment {
         this.paymentId = paymentId;
     }
     
-    public Order getOrder() {
-        return order;
+    public DealerInvoice getInvoice() {
+        return invoice;
     }
     
-    public void setOrder(Order order) {
-        this.order = order;
-    }
-    
-    public Customer getCustomer() {
-        return customer;
-    }
-    
-    public void setCustomer(Customer customer) {
-        this.customer = customer;
+    public void setInvoice(DealerInvoice invoice) {
+        this.invoice = invoice;
     }
     
     public String getPaymentNumber() {
@@ -121,27 +103,37 @@ public class CustomerPayment {
         this.amount = amount;
     }
     
-    public String getPaymentType() {
-        return paymentType;
-    }
-    
-    public void setPaymentType(String paymentType) {
-        this.paymentType = paymentType;
-    }
-    
     public PaymentMethod getPaymentMethod() {
         return paymentMethod;
     }
-    
+
     public void setPaymentMethod(PaymentMethod paymentMethod) {
         this.paymentMethod = paymentMethod;
     }
-    
+
     /**
      * Set paymentMethod from String (backward compatibility)
      */
     public void setPaymentMethod(String paymentMethod) {
         this.paymentMethod = PaymentMethod.fromString(paymentMethod);
+    }
+
+    /**
+     * Get paymentType (backward compatibility - returns enum value)
+     * @deprecated Use getPaymentMethod() instead
+     */
+    @Deprecated
+    public String getPaymentType() {
+        return paymentMethod != null ? paymentMethod.getValue() : null;
+    }
+
+    /**
+     * Set paymentType (backward compatibility)
+     * @deprecated Use setPaymentMethod() instead
+     */
+    @Deprecated
+    public void setPaymentType(String paymentType) {
+        this.paymentMethod = PaymentMethod.fromString(paymentType);
     }
     
     public String getReferenceNumber() {
@@ -152,11 +144,11 @@ public class CustomerPayment {
         this.referenceNumber = referenceNumber;
     }
     
-    public CustomerPaymentStatus getStatus() {
+    public DealerPaymentStatus getStatus() {
         return status;
     }
     
-    public void setStatus(CustomerPaymentStatus status) {
+    public void setStatus(DealerPaymentStatus status) {
         this.status = status;
     }
     
@@ -164,15 +156,7 @@ public class CustomerPayment {
      * Set status from String (backward compatibility)
      */
     public void setStatus(String status) {
-        this.status = CustomerPaymentStatus.fromString(status);
-    }
-    
-    public User getProcessedBy() {
-        return processedBy;
-    }
-    
-    public void setProcessedBy(User processedBy) {
-        this.processedBy = processedBy;
+        this.status = DealerPaymentStatus.fromString(status);
     }
     
     public String getNotes() {
@@ -189,6 +173,19 @@ public class CustomerPayment {
     
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DealerPayment that = (DealerPayment) o;
+        return java.util.Objects.equals(paymentId, that.paymentId);
+    }
+
+    @Override
+    public int hashCode() {
+        return paymentId != null ? paymentId.hashCode() : 0;
     }
 }
 
