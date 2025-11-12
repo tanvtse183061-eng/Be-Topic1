@@ -1,0 +1,216 @@
+/* ==================================================
+   FOOTER STYLES
+   ================================================== */
+
+.footer {
+  background-color: #000000;
+  color: white;
+  padding: 3rem 0 1rem;
+  margin-top: 4rem;
+  font-family: 'Inter', sans-serif;
+}
+
+.footer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2rem;
+}
+
+.footer-column h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.footer-column ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-column li {
+  margin-bottom: 0.8rem;
+}
+
+.footer-column a {
+  color: #cccccc;
+  text-decoration: none;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  transition: color 0.3s ease;
+}
+
+.footer-column a:hover {
+  color: #ffffff;
+}
+
+/* Contact info styling */
+.contact-info p {
+  color: #cccccc;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 0.8rem;
+}
+
+/* Footer bottom section */
+.footer-bottom {
+  border-top: 1px solid #333333;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 2rem;
+  padding-right: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.footer-logo img {
+  height: 40px;
+  width: auto;
+}
+
+.footer-info {
+  flex: 1;
+  text-align: center;
+}
+
+.footer-info p {
+  color: #cccccc;
+  font-size: 0.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.stats {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.stats span {
+  color: #999999;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  border-right: 1px solid #333333;
+}
+
+.stats span:last-child {
+  border-right: none;
+}
+
+/* Call button */
+.call-button {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 1000;
+}
+
+.call-button a {
+  background-color: #ff4444;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 25px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 12px rgba(255, 68, 68, 0.4);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.call-button a:hover {
+  background-color: #ff3333;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 68, 68, 0.6);
+}
+
+/* ==================================================
+   RESPONSIVE DESIGN
+   ================================================== */
+
+/* Tablet (dưới 768px) */
+@media (max-width: 768px) {
+  .footer-container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    padding: 0 1rem;
+  }
+  
+  .footer-bottom {
+    flex-direction: column;
+    text-align: center;
+    padding: 1rem;
+  }
+  
+  .stats {
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  
+  .stats span {
+    font-size: 0.6rem;
+    padding: 0.1rem 0.3rem;
+  }
+}
+
+/* Mobile (dưới 480px) */
+@media (max-width: 480px) {
+  .footer {
+    padding: 2rem 0 1rem;
+  }
+  
+  .footer-container {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    padding: 0 1rem;
+  }
+  
+  .footer-column h3 {
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+  
+  .footer-column a,
+  .contact-info p {
+    font-size: 0.8rem;
+  }
+  
+  .call-button {
+    bottom: 15px;
+    left: 15px;
+  }
+  
+  .call-button a {
+    padding: 10px 16px;
+    font-size: 0.8rem;
+  }
+  
+  .stats {
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+  
+  .stats span {
+    border-right: none;
+    border-bottom: 1px solid #333333;
+    padding-bottom: 0.2rem;
+  }
+  
+  .stats span:last-child {
+    border-bottom: none;
+  }
+}
