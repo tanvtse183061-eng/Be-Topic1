@@ -1,0 +1,705 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+html,
+body {
+    overflow-y: auto;
+    height: 100%;
+}
+
+main {
+    overflow-y: auto;
+    height: 100vh;
+}
+
+.customer {
+    padding: 24px 32px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    position: relative;
+    width: 100%;
+}
+
+/* --- Tiêu đề chính --- */
+.title-customer {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 24px 32px;
+    border-radius: 16px;
+    font-size: 28px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    letter-spacing: -0.5px;
+}
+
+.title-icon {
+    font-size: 32px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+}
+
+/* --- Thanh chứa tiêu đề phụ & nút thêm --- */
+.title2-customer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px 28px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    margin-bottom: 20px;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.title2-customer h2 {
+    font-size: 22px;
+    color: #1e293b;
+    font-weight: 700;
+    margin: 0 0 4px 0;
+    letter-spacing: -0.3px;
+}
+
+.title2-customer .subtitle {
+    font-size: 14px;
+    color: #64748b;
+    margin: 0;
+    font-weight: 500;
+}
+
+/* --- Nút thêm --- */
+.btn-add {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 24px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
+}
+
+.btn-add:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.35);
+}
+
+.btn-add:active {
+    transform: translateY(0);
+}
+
+.btn-icon {
+    font-size: 14px;
+}
+
+/* --- Thanh tìm kiếm --- */
+.title3-customer {
+    display: flex;
+    align-items: center;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 12px 20px;
+    max-width: 500px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border: 2px solid #e2e8f0;
+    margin-bottom: 24px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.title3-customer:focus-within {
+    border-color: #667eea;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+.search-icon {
+    color: #667eea;
+    font-size: 16px;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.search-input {
+    border: none;
+    outline: none;
+    flex: 1;
+    font-size: 15px;
+    color: #1e293b;
+    background: transparent;
+    font-weight: 500;
+}
+
+.search-input::placeholder {
+    color: #94a3b8;
+    font-weight: 400;
+}
+
+.search-clear {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 4px;
+    margin-left: 8px;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s;
+}
+
+.search-clear:hover {
+    color: #64748b;
+}
+
+/* --- Error Banner --- */
+.error-banner {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border-left: 4px solid #ef4444;
+    color: #991b1b;
+    padding: 16px 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.1);
+}
+
+.error-banner button {
+    margin-left: auto;
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.error-banner button:hover {
+    background: #dc2626;
+}
+
+/* --- Loading State --- */
+.loading-container {
+    background: #fff;
+    border-radius: 12px;
+    padding: 60px 20px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.spinner {
+    font-size: 32px;
+    color: #667eea;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.loading-container p {
+    color: #64748b;
+    font-size: 15px;
+    margin: 0;
+}
+
+/* --- Empty State --- */
+.empty-state {
+    background: #fff;
+    border-radius: 12px;
+    padding: 60px 20px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.empty-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+    opacity: 0.6;
+}
+
+.empty-state h3 {
+    font-size: 20px;
+    color: #1e293b;
+    margin: 0 0 8px 0;
+    font-weight: 600;
+}
+
+.empty-state p {
+    color: #64748b;
+    font-size: 15px;
+    margin: 0 0 24px 0;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.35);
+}
+
+/* --- Bảng khách hàng --- */
+.customer-table-container {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    overflow-x: auto;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.customer-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    text-align: left;
+}
+
+.customer-table th {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    color: #475569;
+    font-weight: 700;
+    padding: 16px 20px;
+    border-bottom: 2px solid #e2e8f0;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.customer-table td {
+    padding: 18px 20px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #334155;
+    font-size: 14px;
+    vertical-align: middle;
+}
+
+.customer-table tr.table-row {
+    transition: all 0.2s ease;
+}
+
+.customer-table tr.table-row:hover {
+    background-color: #f8fafc;
+    transform: scale(1.001);
+}
+
+/* Table Content Styles */
+.order-number {
+    font-weight: 700;
+    color: #667eea;
+    font-family: 'Courier New', monospace;
+}
+
+.customer-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.customer-name {
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.customer-email {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.vehicle-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.vehicle-brand {
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.vehicle-model {
+    font-size: 13px;
+    color: #64748b;
+}
+
+.price-amount {
+    font-weight: 700;
+    color: #059669;
+    font-size: 15px;
+}
+
+.date-text {
+    color: #64748b;
+    font-size: 13px;
+}
+
+/* Status Badges */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.status-badge svg {
+    font-size: 12px;
+}
+
+.status-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-confirmed {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.status-paid {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-delivered {
+    background: #e0e7ff;
+    color: #3730a3;
+}
+
+.status-completed {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-cancelled {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.status-default {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+/* --- Nút thao tác --- */
+.btn-edit {
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 10px;
+    margin-right: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: 0.3s;
+}
+
+.btn-edit:hover {
+    background-color: #2563eb;
+}
+
+.btn-delete {
+    background-color: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: 0.3s;
+}
+
+.btn-delete:hover {
+    background-color: #dc2626;
+}
+
+/* --- Responsive cho màn nhỏ --- */
+@media (max-width: 768px) {
+    .customer-table-container {
+        padding: 10px;
+    }
+
+    .title2-customer {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .title3-customer {
+        width: 100%;
+    }
+}
+
+/* --- Popup Overlay --- */
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.popup-box {
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow: hidden;
+    animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.detail-popup {
+    width: 600px;
+}
+
+.popup-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 28px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.popup-header h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+.popup-close {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px;
+    transition: all 0.2s;
+    border-radius: 6px;
+}
+
+.popup-close:hover {
+    color: #64748b;
+    background: #f1f5f9;
+}
+
+.popup-content {
+    padding: 24px 28px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.detail-section {
+    margin-bottom: 28px;
+}
+
+.detail-section:last-child {
+    margin-bottom: 0;
+}
+
+.detail-section h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #475569;
+    margin: 0 0 16px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 12px;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.detail-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.detail-value {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.price-highlight {
+    color: #059669;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.popup-footer {
+    padding: 20px 28px;
+    border-top: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.popup-footer .btn-primary {
+    min-width: 120px;
+}
+
+.btn-close {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
+}
+
+.btn-close:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.35);
+}
+
+.btn-view {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    margin-right: 5px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn-view:hover {
+    background-color: #2980b9;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+}
+
+.icon-btn {
+    border: none;
+    border-radius: 12px;
+    padding: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
+}
+
+/* Màu từng nút */
+.icon-btn.view {
+    background-color: #e0ebff;
+    /* xanh nhạt */
+    color: #3b82f6;
+}
+
+.icon-btn.edit {
+    background-color: #fff6d8;
+    /* vàng nhạt */
+    color: #eab308;
+}
+
+.icon-btn.activate {
+    background-color: #fff9e5;
+    color: #6b4a00;
+    font-weight: 500;
+    font-size: 12px;
+    width: auto;
+    padding: 8px 12px;
+    border-radius: 10px;
+}
+
+.icon-btn.delete {
+    background-color: #fde2e1;
+    /* đỏ nhạt */
+    color: #dc2626;
+}
+
+.icon-btn:hover {
+    transform: scale(1.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.icon-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.spinner-small {
+    animation: spin 0.8s linear infinite;
+}

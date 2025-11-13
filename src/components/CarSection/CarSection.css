@@ -1,0 +1,441 @@
+/* ==================================================
+   CAR SECTION STYLES - OPTIMIZED
+   ================================================== */
+
+/* Main Container */
+.body {
+  margin: 40px auto;
+  padding: 0 20px;
+  max-width: 1400px;
+  width: 100%;
+}
+
+/* Section Title */
+.te {
+  text-align: center;
+  margin-bottom: 50px;
+  padding: 0 20px;
+}
+
+.te a {
+  color: #1a1a1a;
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-decoration: none;
+  position: relative;
+  display: inline-block;
+  padding-bottom: 15px;
+}
+
+.te a::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 4px;
+  background: linear-gradient(90deg, #e74c3c, #c0392b);
+  border-radius: 2px;
+}
+
+/* Cars Grid Container */
+.car-body,
+.car-body2,
+.car-body3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 30px;
+  margin-bottom: 40px;
+  padding: 0;
+}
+
+/* Car Card */
+.herio,
+.limo,
+.vf6,
+.minio,
+.vf7,
+.vf3,
+.macanxanh,
+.macantim4 {
+  background: white;
+  border-radius: 16px;
+  padding: 0;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+}
+
+.herio::before,
+.limo::before,
+.vf6::before,
+.minio::before,
+.vf7::before,
+.vf3::before,
+.macanxanh::before,
+.macantim4::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(231, 76, 60, 0.05), rgba(192, 57, 43, 0.05));
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Hover Effects */
+.herio:hover,
+.limo:hover,
+.vf6:hover,
+.minio:hover,
+.vf7:hover,
+.vf3:hover,
+.macanxanh:hover,
+.macantim4:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.herio:hover::before,
+.limo:hover::before,
+.vf6:hover::before,
+.minio:hover::before,
+.vf7:hover::before,
+.vf3:hover::before,
+.macanxanh:hover::before,
+.macantim4:hover::before {
+  opacity: 1;
+}
+
+/* Image Container Wrapper */
+.herio>a,
+.herio>img,
+.limo>a,
+.limo>img,
+.vf6>a,
+.vf6>img,
+.minio>a,
+.minio>img,
+.vf7>a,
+.vf7>img,
+.vf3>a,
+.vf3>img,
+.macanxanh>a,
+.macanxanh>img,
+.macantim4>a,
+.macantim4>img {
+  display: block;
+  width: 100%;
+  position: relative;
+  z-index: 2;
+}
+
+/* Car Images */
+.car-body img,
+.car-body2 img,
+.car-body3 img {
+  width: 100%;
+  height: 280px;
+  object-fit: cover;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  display: block;
+}
+
+.herio:hover img,
+.limo:hover img,
+.vf6:hover img,
+.minio:hover img,
+.vf7:hover img,
+.vf3:hover img,
+.macanxanh:hover img,
+.macantim4:hover img {
+  transform: scale(1.08);
+}
+
+/* Car Info Section */
+.herio .name-car,
+.limo .name-car,
+.vf6 .name-car,
+.minio .name-car,
+.vf7 .name-car,
+.vf3 .name-car,
+.macanxanh .name-car,
+.macantim4 .name-car,
+.herio .price-car,
+.limo .price-car,
+.vf6 .price-car,
+.minio .price-car,
+.vf7 .price-car,
+.vf3 .price-car,
+.macanxanh .price-car,
+.macantim4 .price-car {
+  padding: 0 24px;
+  position: relative;
+  z-index: 2;
+}
+
+/* Car Name */
+.name-car {
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 20px 0 10px;
+  text-align: center;
+  line-height: 1.3;
+}
+
+/* Car Price */
+.price-car {
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #e74c3c;
+  margin: 0 0 24px;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+/* ==================================================
+   RESPONSIVE DESIGN
+   ================================================== */
+
+/* Extra Large Desktop (1400px+) */
+@media (min-width: 1400px) {
+
+  .car-body,
+  .car-body2,
+  .car-body3 {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 40px;
+  }
+
+  .car-body img,
+  .car-body2 img,
+  .car-body3 img {
+    height: 320px;
+  }
+}
+
+/* Large Desktop (1200px - 1399px) */
+@media (min-width: 1200px) and (max-width: 1399px) {
+
+  .car-body,
+  .car-body2,
+  .car-body3 {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 35px;
+  }
+
+  .car-body img,
+  .car-body2 img,
+  .car-body3 img {
+    height: 300px;
+  }
+}
+
+/* Medium Desktop (992px - 1199px) */
+@media (min-width: 992px) and (max-width: 1199px) {
+
+  .car-body,
+  .car-body2,
+  .car-body3 {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px;
+  }
+
+  .car-body img,
+  .car-body2 img,
+  .car-body3 img {
+    height: 260px;
+  }
+
+  .name-car {
+    font-size: 1.25rem;
+  }
+
+  .price-car {
+    font-size: 1rem;
+  }
+}
+
+/* Tablet (768px - 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+  .body {
+    margin: 30px auto;
+  }
+
+  .te {
+    margin-bottom: 40px;
+  }
+
+  .car-body,
+  .car-body2,
+  .car-body3 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 25px;
+    margin-bottom: 30px;
+  }
+
+  .car-body img,
+  .car-body2 img,
+  .car-body3 img {
+    height: 240px;
+  }
+
+  .name-car {
+    font-size: 1.25rem;
+    margin: 16px 0 8px;
+  }
+
+  .price-car {
+    font-size: 1rem;
+    margin-bottom: 20px;
+  }
+}
+
+/* Mobile Large (576px - 767px) */
+@media (min-width: 576px) and (max-width: 767px) {
+  .body {
+    margin: 20px auto;
+    padding: 0 15px;
+  }
+
+  .te {
+    margin-bottom: 30px;
+  }
+
+  .car-body,
+  .car-body2,
+  .car-body3 {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    margin-bottom: 25px;
+  }
+
+  .herio,
+  .limo,
+  .vf6,
+  .minio,
+  .vf7,
+  .vf3,
+  .macanxanh,
+  .macantim4 {
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  .car-body img,
+  .car-body2 img,
+  .car-body3 img {
+    height: 220px;
+  }
+
+  .name-car {
+    font-size: 1.25rem;
+    margin: 16px 0 8px;
+  }
+
+  .price-car {
+    font-size: 1rem;
+    margin-bottom: 20px;
+  }
+}
+
+/* Mobile Small (max 575px) */
+@media (max-width: 575px) {
+  .body {
+    margin: 15px auto;
+    padding: 0 10px;
+  }
+
+  .te {
+    margin-bottom: 25px;
+  }
+
+  .te a::after {
+    width: 60px;
+    height: 3px;
+  }
+
+  .car-body,
+  .car-body2,
+  .car-body3 {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  .herio,
+  .limo,
+  .vf6,
+  .minio,
+  .vf7,
+  .vf3,
+  .macanxanh,
+  .macantim4 {
+    border-radius: 12px;
+  }
+
+  .car-body img,
+  .car-body2 img,
+  .car-body3 img {
+    height: 200px;
+  }
+
+  .name-car {
+    font-size: 1.125rem;
+    margin: 14px 0 8px;
+  }
+
+  .price-car {
+    font-size: 0.9375rem;
+    margin-bottom: 18px;
+  }
+
+  .herio .name-car,
+  .limo .name-car,
+  .vf6 .name-car,
+  .minio .name-car,
+  .vf7 .name-car,
+  .vf3 .name-car,
+  .macanxanh .name-car,
+  .macantim4 .name-car,
+  .herio .price-car,
+  .limo .price-car,
+  .vf6 .price-car,
+  .minio .price-car,
+  .vf7 .price-car,
+  .vf3 .price-car,
+  .macanxanh .price-car,
+  .macantim4 .price-car {
+    padding: 0 16px;
+  }
+}
+
+/* Extra Small Mobile (max 375px) */
+@media (max-width: 375px) {
+
+  .car-body img,
+  .car-body2 img,
+  .car-body3 img {
+    height: 180px;
+  }
+
+  .name-car {
+    font-size: 1rem;
+  }
+
+  .price-car {
+    font-size: 0.875rem;
+  }
+}

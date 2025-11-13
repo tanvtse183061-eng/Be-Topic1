@@ -1,0 +1,65 @@
+.homepage-actions {
+  padding: 60px 20px;
+  background: #f8f9fa;
+}
+
+.actions-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.actions-container h2 {
+  text-align: center;
+  font-size: 32px;
+  margin-bottom: 40px;
+  color: #333;
+}
+
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+}
+
+.action-card {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.3s, box-shadow 0.3s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.action-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.action-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.action-card h3 {
+  font-size: 20px;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.action-card p {
+  color: #666;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .actions-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .actions-container h2 {
+    font-size: 24px;
+  }
+}
+
