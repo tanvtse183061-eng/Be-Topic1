@@ -143,9 +143,6 @@ export default function Minio() {
           <CreateOrderFromCar
             show={showOrderModal}
             onClose={() => setShowOrderModal(false)}
-            carName="Minio Green"
-            carColor={getCurrentColor()}
-            carPrice={269000000}
           />
         )}
       </div>

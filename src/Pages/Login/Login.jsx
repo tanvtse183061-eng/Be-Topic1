@@ -1,5 +1,5 @@
 import "./Login.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCircleUser,
@@ -18,6 +18,26 @@ export default function Login() {
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Kiểm tra nếu đã đăng nhập thì redirect
+  useEffect(() => {
+    const savedUser = localStorage.getItem("username");
+    const savedRole = localStorage.getItem("role");
+    const savedToken = localStorage.getItem("token");
+    
+    if (savedUser && savedRole && savedToken) {
+      // Đã đăng nhập, redirect theo role
+      if (savedRole === "ADMIN") {
+        navigate("/admin", { replace: true });
+      } else if (savedRole === "EVM_STAFF") {
+        navigate("/evmstaff", { replace: true });
+      } else if (savedRole === "MANAGER" || savedRole === "DEALER_MANAGER") {
+        navigate("/dealermanager", { replace: true });
+      } else if (savedRole === "STAFF" || savedRole === "DEALER_STAFF") {
+        navigate("/dealerstaff", { replace: true });
+      }
+    }
+  }, [navigate]);
 
   // ✅ Kiểm tra giá trị trống
   const isEmpty = (val) => !val || val.trim() === "";
@@ -94,26 +114,22 @@ export default function Login() {
         console.log("✅ Role từ login response:", roleToSave);
         console.log("✅ Username:", data.username);
         
-        alert("Đăng nhập thành công!");
-        
-        // Redirect theo role
+        // Redirect theo role - sử dụng replace: true để tránh duplicate navigation
         const role = roleToSave;
         console.log("🔄 Redirect theo role:", role);
         
+        // Redirect ngay lập tức - localStorage đã được set synchronously
         if (role === "ADMIN") {
-          navigate("/admin");
+          navigate("/admin", { replace: true });
         } else if (role === "EVM_STAFF") {
-          navigate("/evmstaff");
+          navigate("/evmstaff", { replace: true });
         } else if (role === "MANAGER" || role === "DEALER_MANAGER") {
-          // Xử lý cả MANAGER và DEALER_MANAGER
-          navigate("/dealermanager");
+          navigate("/dealermanager", { replace: true });
         } else if (role === "STAFF" || role === "DEALER_STAFF") {
-          // Xử lý cả STAFF và DEALER_STAFF
-          navigate("/dealerstaff");
+          navigate("/dealerstaff", { replace: true });
         } else {
-          // Default fallback - nếu role không khớp, thử redirect theo role name
           console.warn("⚠️ Role không khớp, dùng fallback:", role);
-          navigate("/dealerstaff");
+          navigate("/dealerstaff", { replace: true });
         }
       } else {
         alert("Sai tài khoản hoặc mật khẩu!");

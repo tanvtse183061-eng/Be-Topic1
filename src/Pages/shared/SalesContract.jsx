@@ -286,8 +286,7 @@ export default function SalesContract() {
             </table>
           ) : (
             <div className="empty-state">
-              <div className="empty-icon">📭</div>
-              <h3>{searchTerm ? 'Không tìm thấy hợp đồng' : 'Chưa có hợp đồng nào'}</h3>
+              <h3>{searchTerm ? 'Không tìm thấy' : 'Chưa có hợp đồng'}</h3>
             </div>
           )}
         </div>

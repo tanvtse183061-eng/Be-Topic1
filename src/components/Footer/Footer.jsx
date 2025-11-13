@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import './Footer.css';
 
 
@@ -32,6 +33,7 @@ const Footer = () => {
             <li><a href="#">Dự toán</a></li>
             <li><a href="#">Lái thử</a></li>
             <li><a href="#">Khuyến mãi</a></li>
+            <li><Link to="/order/track">Theo dõi đơn hàng</Link></li>
           </ul>
         </div>
 

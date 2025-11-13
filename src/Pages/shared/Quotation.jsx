@@ -1,6 +1,8 @@
 import '../Admin/Order.css';
-import { FaSearch, FaEye, FaCheck, FaTimes, FaPaperPlane, FaPlus, FaEdit, FaTrash } from "react-icons/fa";
+import { FaSearch, FaEye, FaCheck, FaTimes, FaPaperPlane, FaPlus, FaEdit, FaTrash, FaCopy, FaExternalLinkAlt } from "react-icons/fa";
 import { useEffect, useState } from "react";
+// API cần đăng nhập - dùng cho quản lý báo giá khách hàng (Admin/Staff)
+// publicVehicleAPI: API công khai để lấy thông tin xe (không cần đăng nhập)
 import { quotationAPI, customerAPI, publicVehicleAPI } from "../../services/API";
 
 export default function Quotation() {
@@ -199,13 +201,25 @@ export default function Quotation() {
     if (!window.confirm("Bạn có chắc chắn muốn gửi báo giá này cho khách hàng không?")) return;
     try {
       await quotationAPI.sendQuotation(quotationId);
-      alert("Gửi báo giá thành công!");
+      const publicLink = `${window.location.origin}/quotation/${quotationId}`;
+      const message = `Gửi báo giá thành công!\n\nLink báo giá công khai:\n${publicLink}\n\nBạn có muốn copy link này không?`;
+      if (window.confirm(message)) {
+        navigator.clipboard.writeText(publicLink);
+        alert("Đã copy link báo giá!");
+      }
       fetchQuotations();
     } catch (err) {
       console.error("Lỗi khi gửi báo giá:", err);
       const errorMsg = err.response?.data?.error || err.response?.data?.message || err.message || "Không thể gửi báo giá!";
       alert(`Gửi báo giá thất bại!\n${errorMsg}`);
     }
+  };
+
+  // Copy link public quotation
+  const copyQuotationLink = (quotationId) => {
+    const publicLink = `${window.location.origin}/quotation/${quotationId}`;
+    navigator.clipboard.writeText(publicLink);
+    alert("Đã copy link báo giá!");
   };
 
   // Xóa báo giá
@@ -359,7 +373,7 @@ export default function Quotation() {
 
   return (
     <div className="customer">
-      <div className="title-customer">Quản lý báo giá khách hàng</div>
+      <div className="title-customer">Báo giá khách hàng</div>
 
       <div className="title2-customer">
         <h2>Danh sách báo giá khách hàng</h2>
@@ -437,6 +451,11 @@ export default function Quotation() {
                           {(q.status?.toUpperCase() === "PENDING" || q.status?.toLowerCase() === "pending") && (
                             <button className="icon-btn send" onClick={() => handleSendQuotation(quotationId)} title="Gửi báo giá">
                               <FaPaperPlane />
+                            </button>
+                          )}
+                          {(q.status?.toUpperCase() === "SENT" || q.status?.toLowerCase() === "sent") && (
+                            <button className="icon-btn copy" onClick={() => copyQuotationLink(quotationId)} title="Copy link báo giá">
+                              <FaCopy />
                             </button>
                           )}
                           <button className="icon-btn delete" onClick={() => handleDeleteQuotation(quotationId)} title="Xóa">
@@ -639,7 +658,7 @@ export default function Quotation() {
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   rows="3"
-                  placeholder="Ghi chú cho báo giá..."
+                  placeholder="Ghi chú"
                 />
               </div>
 
@@ -679,6 +698,69 @@ export default function Quotation() {
               <p><b>Ngày hết hạn:</b> {formatDate(selectedQuotation.expiryDate)}</p>
               {selectedQuotation.notes && (
                 <p><b>Ghi chú:</b> {selectedQuotation.notes}</p>
+              )}
+              {(selectedQuotation.status?.toUpperCase() === "SENT" || selectedQuotation.status?.toLowerCase() === "sent") && (
+                <div style={{ marginTop: "20px", padding: "16px", background: "#f0f4ff", borderRadius: "8px", border: "1px solid #667eea" }}>
+                  <p style={{ margin: "0 0 12px 0", fontWeight: "600", color: "#1e293b" }}>
+                    <FaExternalLinkAlt style={{ marginRight: "8px" }} />
+                    Link báo giá công khai:
+                  </p>
+                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                    <input
+                      type="text"
+                      readOnly
+                      value={`${window.location.origin}/quotation/${selectedQuotation.quotationId || selectedQuotation.id}`}
+                      style={{
+                        flex: 1,
+                        padding: "8px 12px",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: "6px",
+                        background: "white",
+                        fontSize: "14px"
+                      }}
+                    />
+                    <button
+                      onClick={() => copyQuotationLink(selectedQuotation.quotationId || selectedQuotation.id)}
+                      style={{
+                        padding: "8px 16px",
+                        background: "#667eea",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "6px",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        fontWeight: "600"
+                      }}
+                      title="Copy link"
+                    >
+                      <FaCopy />
+                      Copy
+                    </button>
+                    <a
+                      href={`/quotation/${selectedQuotation.quotationId || selectedQuotation.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        padding: "8px 16px",
+                        background: "#10b981",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "6px",
+                        cursor: "pointer",
+                        textDecoration: "none",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        fontWeight: "600"
+                      }}
+                    >
+                      <FaExternalLinkAlt />
+                      Mở
+                    </a>
+                  </div>
+                </div>
               )}
             </div>
             <button className="btn-close" onClick={() => setShowDetail(false)}>Đóng</button>

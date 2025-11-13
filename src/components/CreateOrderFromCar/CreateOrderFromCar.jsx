@@ -4,10 +4,8 @@ import "./CreateOrderFromCar.css";
 
 export default function CreateOrderFromCar({ 
   show, 
-  onClose, 
-  carName, 
-  carColor, 
-  carPrice 
+  onClose,
+  preselectedInventoryId = null
 }) {
   const [step, setStep] = useState(1); // 1: Tạo khách hàng, 2: Tạo đơn hàng
   const [customerId, setCustomerId] = useState(null);
@@ -15,33 +13,28 @@ export default function CreateOrderFromCar({
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  // Form khách hàng
+  // Form khách hàng - chỉ giữ các field theo báo cáo
   const [customerForm, setCustomerForm] = useState({
     firstName: "",
     lastName: "",
     email: "",
     phone: "",
-    dateOfBirth: "",
     address: "",
     city: "",
     province: "",
-    postalCode: "",
-    preferredContactMethod: "",
-    creditScore: 750,
-    notes: "",
   });
 
   // Form đơn hàng
   const [orderForm, setOrderForm] = useState({
-    variantId: "",
-    colorId: "",
-    price: carPrice || "",
+    inventoryId: "",
+    orderDate: new Date().toISOString().split('T')[0],
     notes: "",
   });
 
-  // Danh sách variants và colors
-  const [variants, setVariants] = useState([]);
-  const [colors, setColors] = useState([]);
+  // Danh sách vehicle inventory (available)
+  const [inventoryList, setInventoryList] = useState([]);
+  // Thông tin xe đã chọn (khi có preselectedInventoryId)
+  const [selectedInventory, setSelectedInventory] = useState(null);
 
   // Reset form khi đóng modal
   useEffect(() => {
@@ -55,88 +48,123 @@ export default function CreateOrderFromCar({
         lastName: "",
         email: "",
         phone: "",
-        dateOfBirth: "",
         address: "",
         city: "",
         province: "",
-        postalCode: "",
-        preferredContactMethod: "",
-        creditScore: 750,
-        notes: "",
       });
       setOrderForm({
-        variantId: "",
-        colorId: "",
-        price: carPrice || "",
+        inventoryId: "",
+        orderDate: new Date().toISOString().split('T')[0],
         notes: "",
       });
+      setInventoryList([]);
+      setSelectedInventory(null);
     }
-  }, [show, carPrice]);
+  }, [show]);
 
-  // Load variants và colors khi bước 2
+  // Load vehicle inventory (available) khi bước 2
   useEffect(() => {
     if (step === 2 && show) {
-      loadVariantsAndColors();
+      loadVehicleInventory();
     }
   }, [step, show]);
 
-  const loadVariantsAndColors = async () => {
+  // Set preselected inventory ID nếu có và load thông tin xe
+  useEffect(() => {
+    if (preselectedInventoryId && step === 2) {
+      setOrderForm(prev => ({
+        ...prev,
+        inventoryId: preselectedInventoryId
+      }));
+      // Load thông tin xe đã chọn
+      loadSelectedInventory();
+    }
+  }, [preselectedInventoryId, step]);
+
+  // Load thông tin xe đã chọn từ API
+  const loadSelectedInventory = async () => {
+    if (!preselectedInventoryId) return;
+    
     try {
-      setLoading(true);
-      const [variantsRes, colorsRes] = await Promise.all([
-        publicVehicleAPI.getVariants(),
-        publicVehicleAPI.getColors(),
-      ]);
-      setVariants(variantsRes.data || []);
-      setColors(colorsRes.data || []);
-
-      // Tự động tìm variant và color dựa trên tên xe và màu
-      if (carName) {
-        const matchedVariant = (variantsRes.data || []).find(
-          (v) =>
-            v.variantName?.toLowerCase().includes(carName.toLowerCase()) ||
-            v.model?.modelName?.toLowerCase().includes(carName.toLowerCase())
-        );
-        if (matchedVariant) {
-          setOrderForm((prev) => ({
-            ...prev,
-            variantId: matchedVariant.variantId || matchedVariant.id,
-          }));
-        }
-      }
-
-      if (carColor) {
-        const matchedColor = (colorsRes.data || []).find(
-          (c) =>
-            c.colorName?.toLowerCase().includes(carColor.toLowerCase()) ||
-            c.name?.toLowerCase().includes(carColor.toLowerCase())
-        );
-        if (matchedColor) {
-          setOrderForm((prev) => ({
-            ...prev,
-            colorId: matchedColor.colorId || matchedColor.id,
-          }));
-        }
+      console.log("📡 Loading selected inventory:", preselectedInventoryId);
+      // Thử public API trước
+      try {
+        const res = await publicVehicleAPI.getInventoryById(preselectedInventoryId);
+        const inventory = res.data || res;
+        setSelectedInventory(inventory);
+        console.log("✅ Loaded selected inventory from public API:", inventory);
+      } catch (err) {
+        console.warn("⚠️ Public API failed, trying inventoryAPI...");
+        // Fallback: thử inventoryAPI (có auth)
+        const { inventoryAPI } = await import("../../services/API.js");
+        const res = await inventoryAPI.getInventoryById(preselectedInventoryId);
+        const inventory = res.data || res;
+        setSelectedInventory(inventory);
+        console.log("✅ Loaded selected inventory from inventoryAPI:", inventory);
       }
     } catch (err) {
-      console.error("Lỗi khi load variants/colors:", err);
-      console.error("Chi tiết lỗi:", {
+      console.error("❌ Error loading selected inventory:", err);
+      // Không set error, vẫn cho phép tạo order với ID
+    }
+  };
+
+  const loadVehicleInventory = async () => {
+    try {
+      setLoading(true);
+      // Load dữ liệu thực từ API - không dùng dữ liệu ảo
+      const inventoryRes = await publicVehicleAPI.getInventory();
+      const allInventory = inventoryRes.data || [];
+      
+      console.log("📦 Tất cả inventory từ API:", allInventory);
+      
+      // Chỉ lấy các xe có status = "available" (lowercase theo báo cáo)
+      const availableInventory = allInventory.filter(
+        (inv) => inv.status === "available"
+      );
+      
+      console.log("✅ Xe có sẵn (available):", availableInventory);
+      
+      setInventoryList(availableInventory);
+      
+      if (availableInventory.length === 0) {
+        setError("Hiện tại không có xe nào có sẵn. Vui lòng thử lại sau.");
+      }
+    } catch (err) {
+      console.error("❌ Lỗi khi load vehicle inventory:", err);
+      console.error("❌ Chi tiết lỗi:", {
         status: err.response?.status,
         statusText: err.response?.statusText,
         data: err.response?.data,
         message: err.message,
       });
       
-      // Hiển thị thông báo lỗi cho người dùng
-      const errorMessage = err.response?.data?.error || 
-                          err.response?.data?.message || 
-                          err.message || 
-                          "Không thể tải danh sách biến thể và màu sắc. Vui lòng thử lại sau.";
-      setError(errorMessage);
-      
-      // Nếu lỗi 500, có thể là lỗi server
-      if (err.response?.status === 500) {
-        setError("Lỗi máy chủ: Không thể kết nối đến server. Vui lòng kiểm tra kết nối hoặc liên hệ quản trị viên.");
+      // Nếu có preselectedInventoryId, không hiển thị lỗi và cho phép tạo order
+      if (preselectedInventoryId) {
+        console.log("ℹ️ Error loading inventory, but preselectedInventoryId exists, allowing order creation");
+        setError(""); // Không hiển thị lỗi
+        setInventoryList([]); // Set empty để không hiển thị dropdown
+      } else {
+        // Fallback: thử inventoryAPI.getAvailableInventory() (endpoint có auth)
+        try {
+          console.log("📡 Trying inventoryAPI.getAvailableInventory() as fallback...");
+          const { inventoryAPI } = await import("../../services/API.js");
+          const inventoryRes = await inventoryAPI.getAvailableInventory();
+          const allInventory = inventoryRes.data || [];
+          const availableInventory = allInventory.filter(
+            (inv) => inv.status === "available" || inv.status === "AVAILABLE"
+          );
+          setInventoryList(availableInventory);
+          if (availableInventory.length === 0) {
+            setError("Hiện tại không có xe nào có sẵn. Vui lòng thử lại sau.");
+          }
+        } catch (err2) {
+          console.error("❌ Both endpoints failed:", err2);
+          const errorMessage = err.response?.data?.error || 
+                              err.response?.data?.message || 
+                              err.message || 
+                              "Lỗi máy chủ: Không thể kết nối đến server. Vui lòng kiểm tra kết nối hoặc liên hệ quản trị viên.";
+          setError(errorMessage);
+        }
       }
     } finally {
       setLoading(false);
@@ -177,12 +205,30 @@ export default function CreateOrderFromCar({
 
     setLoading(true);
     try {
+      // Format theo báo cáo: firstName, lastName, email, phone, address, city, province
       const payload = {
-        ...customerForm,
-        creditScore: Number(customerForm.creditScore),
+        firstName: customerForm.firstName.trim(),
+        lastName: customerForm.lastName.trim(),
+        email: customerForm.email.trim(),
+        phone: customerForm.phone.trim(),
+        address: customerForm.address?.trim() || "",
+        city: customerForm.city?.trim() || "",
+        province: customerForm.province?.trim() || "",
       };
 
+      // Xóa các field empty (trừ required fields)
+      Object.keys(payload).forEach(key => {
+        if (key !== "firstName" && key !== "lastName" && key !== "email" && key !== "phone" && 
+            (payload[key] === "" || payload[key] === null || payload[key] === undefined)) {
+          delete payload[key];
+        }
+      });
+
+      console.log("📤 Payload tạo customer:", payload);
+
       const res = await publicCustomerAPI.createCustomer(payload);
+      console.log("✅ Response từ createCustomer:", res);
+      
       const newCustomerId = res.data?.customerId || res.data?.id;
       
       if (newCustomerId) {
@@ -193,6 +239,7 @@ export default function CreateOrderFromCar({
       }
     } catch (err) {
       console.error("Lỗi khi tạo khách hàng:", err);
+      console.error("Error response:", err.response?.data);
       setError(
         err.response?.data?.message ||
           err.response?.data?.error ||
@@ -208,35 +255,37 @@ export default function CreateOrderFromCar({
     e.preventDefault();
     setError("");
 
-    if (!orderForm.variantId) {
-      setError("Vui lòng chọn biến thể xe.");
+    if (!orderForm.inventoryId) {
+      setError("Vui lòng chọn xe có sẵn.");
+      return;
+    }
+
+    if (!orderForm.orderDate) {
+      setError("Vui lòng chọn ngày đặt hàng.");
       return;
     }
 
     setLoading(true);
     try {
-      // Tạo order với quotation data
-      // Backend có thể yêu cầu quotation với customer, variant, color, và finalPrice
-      const finalPrice = orderForm.price ? Number(orderForm.price) : null;
-      
+      // Format theo báo cáo: customerId, inventoryId, orderDate, notes
       const orderPayload = {
         customerId: customerId,
-        variantId: Number(orderForm.variantId),
-        colorId: orderForm.colorId ? Number(orderForm.colorId) : null,
-        finalPrice: finalPrice,
+        inventoryId: orderForm.inventoryId,
+        orderDate: orderForm.orderDate,
         notes: orderForm.notes || "",
-        status: "PENDING",
       };
 
+      console.log("📤 Payload tạo order:", orderPayload);
+
       // Sử dụng public API để tạo order
-      await publicOrderAPI.createOrder(orderPayload);
+      const res = await publicOrderAPI.createOrder(orderPayload);
+      console.log("✅ Response từ createOrder:", res);
+      
       setSuccess(true);
       
       // Đóng modal sau 2 giây
       setTimeout(() => {
         onClose();
-        // Refresh trang quản lý khách hàng nếu cần
-        // Không reload toàn bộ trang, chỉ refresh nếu đang ở trang Customer
         if (window.location.pathname.includes("customer")) {
           window.location.reload();
         }
@@ -245,42 +294,11 @@ export default function CreateOrderFromCar({
       console.error("Lỗi khi tạo đơn hàng:", err);
       console.error("Error response:", err.response?.data);
       
-      // Thử với cấu trúc quotation nếu lỗi
-      if (err.response?.status === 400) {
-        try {
-          // Thử tạo với quotation object
-          const quotationPayload = {
-            quotation: {
-              customerId: customerId,
-              variantId: Number(orderForm.variantId),
-              colorId: orderForm.colorId ? Number(orderForm.colorId) : null,
-              finalPrice: orderForm.price ? Number(orderForm.price) : null,
-              notes: orderForm.notes || "",
-            },
-            status: "PENDING",
-          };
-          await publicOrderAPI.createOrder(quotationPayload);
-          setSuccess(true);
-          setTimeout(() => {
-            onClose();
-            if (window.location.pathname.includes("customer")) {
-              window.location.reload();
-            }
-          }, 2000);
-        } catch (err2) {
-          setError(
-            err2.response?.data?.message ||
-              err2.response?.data?.error ||
-              "Không thể tạo đơn hàng! Vui lòng kiểm tra lại thông tin."
-          );
-        }
-      } else {
-        setError(
-          err.response?.data?.message ||
-            err.response?.data?.error ||
-            "Không thể tạo đơn hàng!"
-        );
-      }
+      setError(
+        err.response?.data?.message ||
+          err.response?.data?.error ||
+          "Không thể tạo đơn hàng! Vui lòng kiểm tra lại thông tin."
+      );
     } finally {
       setLoading(false);
     }
@@ -297,8 +315,8 @@ export default function CreateOrderFromCar({
         <div className="create-order-modal-header">
           <h2>
             {step === 1
-              ? "Bước 1: Tạo khách hàng"
-              : "Bước 2: Tạo đơn hàng"}
+              ? "Tạo khách hàng"
+              : "Tạo đơn hàng"}
           </h2>
           <button className="close-btn" onClick={onClose}>
             ×
@@ -307,29 +325,12 @@ export default function CreateOrderFromCar({
 
         {success ? (
           <div className="success-message">
-            <h3>✅ Thành công!</h3>
+            <h3>Thành công!</h3>
             <p>Đã tạo khách hàng và đơn hàng thành công.</p>
-            <p>Khách hàng đã được thêm vào danh sách quản lý khách hàng.</p>
           </div>
         ) : (
           <>
-            {/* Thông tin xe */}
-            <div className="car-info-box">
-              <h4>Thông tin xe đặt mua:</h4>
-              <p>
-                <strong>Xe:</strong> {carName || "—"}
-              </p>
-              <p>
-                <strong>Màu:</strong> {carColor || "—"}
-              </p>
-              {carPrice && (
-                <p>
-                  <strong>Giá:</strong> {carPrice.toLocaleString()} ₫
-                </p>
-              )}
-            </div>
-
-            {error && <div className="error-message">{error}</div>}
+            {error && !preselectedInventoryId && <div className="error-message">{error}</div>}
 
             {step === 1 ? (
               // Form tạo khách hàng
@@ -385,18 +386,6 @@ export default function CreateOrderFromCar({
                     required
                   />
                   <input
-                    name="dateOfBirth"
-                    type="date"
-                    placeholder="Ngày sinh"
-                    value={customerForm.dateOfBirth}
-                    onChange={(e) =>
-                      setCustomerForm({
-                        ...customerForm,
-                        dateOfBirth: e.target.value,
-                      })
-                    }
-                  />
-                  <input
                     name="address"
                     placeholder="Địa chỉ"
                     value={customerForm.address}
@@ -444,64 +433,109 @@ export default function CreateOrderFromCar({
               <form onSubmit={handleCreateOrder}>
                 <div className="form-grid">
                   <label>
-                    Biến thể xe *
+                    Chọn xe có sẵn *
                     <select
-                      value={orderForm.variantId}
+                      value={orderForm.inventoryId}
                       onChange={(e) =>
                         setOrderForm({
                           ...orderForm,
-                          variantId: e.target.value,
+                          inventoryId: e.target.value,
                         })
                       }
                       required
+                      disabled={!!preselectedInventoryId}
                     >
-                      <option value="">-- Chọn biến thể --</option>
-                      {variants.map((v) => (
+                      <option value="">-- Chọn xe có sẵn --</option>
+                      {/* Hiển thị xe đã chọn nếu có (khi có preselectedInventoryId) */}
+                      {selectedInventory && (
                         <option
-                          key={v.variantId || v.id}
-                          value={v.variantId || v.id}
+                          key={selectedInventory.inventoryId || selectedInventory.id}
+                          value={selectedInventory.inventoryId || selectedInventory.id}
                         >
-                          {v.variantName ||
-                            `${v.model?.brand?.brandName || ""} ${
-                              v.model?.modelName || ""
-                            } ${v.variantName || ""}`}
+                          {(() => {
+                            const variantName = selectedInventory.variant?.variantName || 
+                                              selectedInventory.variantName || 
+                                              selectedInventory.variant?.model?.modelName || 
+                                              "";
+                            const colorName = selectedInventory.color?.colorName || 
+                                           selectedInventory.colorName || 
+                                           "";
+                            const price = selectedInventory.sellingPrice || selectedInventory.price || selectedInventory.priceBase;
+                            const priceText = price ? `(${Number(price).toLocaleString('vi-VN')} ₫)` : "";
+                            const vin = selectedInventory.vin || "";
+                            const brandName = selectedInventory.variant?.model?.brand?.brandName || 
+                                            selectedInventory.variant?.brandName || 
+                                            "";
+                            
+                            // Hiển thị: Brand Model Variant - Color (Price) [VIN]
+                            const displayText = [
+                              brandName,
+                              variantName,
+                              colorName ? `- ${colorName}` : "",
+                              priceText,
+                              vin ? `[VIN: ${vin}]` : ""
+                            ].filter(Boolean).join(" ");
+                            
+                            return displayText || `Xe ID: ${selectedInventory.inventoryId || selectedInventory.id}`;
+                          })()}
                         </option>
-                      ))}
+                      )}
+                      {/* Hiển thị danh sách xe có sẵn */}
+                      {inventoryList.map((inv) => {
+                        // Bỏ qua nếu đã hiển thị trong selectedInventory
+                        if (selectedInventory && (inv.inventoryId || inv.id) === (selectedInventory.inventoryId || selectedInventory.id)) {
+                          return null;
+                        }
+                        
+                        // Lấy thông tin từ dữ liệu thực tế từ API
+                        const variantName = inv.variant?.variantName || 
+                                          inv.variantName || 
+                                          inv.variant?.model?.modelName || 
+                                          "";
+                        const colorName = inv.color?.colorName || 
+                                       inv.colorName || 
+                                       "";
+                        const price = inv.sellingPrice || inv.price || inv.priceBase;
+                        const priceText = price ? `(${Number(price).toLocaleString('vi-VN')} ₫)` : "";
+                        const vin = inv.vin || "";
+                        const brandName = inv.variant?.model?.brand?.brandName || 
+                                        inv.variant?.brandName || 
+                                        "";
+                        
+                        // Hiển thị: Brand Model Variant - Color (Price) [VIN]
+                        const displayText = [
+                          brandName,
+                          variantName,
+                          colorName ? `- ${colorName}` : "",
+                          priceText,
+                          vin ? `[VIN: ${vin}]` : ""
+                        ].filter(Boolean).join(" ");
+                        
+                        return (
+                          <option
+                            key={inv.inventoryId || inv.id}
+                            value={inv.inventoryId || inv.id}
+                          >
+                            {displayText || `Xe ID: ${inv.inventoryId || inv.id}`}
+                          </option>
+                        );
+                      })}
                     </select>
                   </label>
                   <label>
-                    Màu sắc
-                    <select
-                      value={orderForm.colorId}
+                    Ngày đặt hàng *
+                    <input
+                      type="date"
+                      value={orderForm.orderDate}
                       onChange={(e) =>
                         setOrderForm({
                           ...orderForm,
-                          colorId: e.target.value,
+                          orderDate: e.target.value,
                         })
                       }
-                    >
-                      <option value="">-- Chọn màu --</option>
-                      {colors.map((c) => (
-                        <option
-                          key={c.colorId || c.id}
-                          value={c.colorId || c.id}
-                        >
-                          {c.colorName || c.name}
-                        </option>
-                      ))}
-                    </select>
+                      required
+                    />
                   </label>
-                  <input
-                    type="number"
-                    placeholder="Giá (VNĐ)"
-                    value={orderForm.price}
-                    onChange={(e) =>
-                      setOrderForm({
-                        ...orderForm,
-                        price: e.target.value,
-                      })
-                    }
-                  />
                   <textarea
                     placeholder="Ghi chú"
                     value={orderForm.notes}
@@ -514,6 +548,16 @@ export default function CreateOrderFromCar({
                     rows="3"
                   />
                 </div>
+                {preselectedInventoryId && (
+                  <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#e8f5e9', borderRadius: '4px', color: '#2e7d32' }}>
+                    Xe đã được chọn từ trang chi tiết.
+                  </div>
+                )}
+                {inventoryList.length === 0 && !loading && !preselectedInventoryId && (
+                  <div className="error-message" style={{ marginTop: '10px' }}>
+                    Không có xe nào có sẵn. Vui lòng thử lại sau.
+                  </div>
+                )}
                 <div className="form-actions">
                   <button type="button" onClick={() => setStep(1)}>
                     ← Quay lại
@@ -521,7 +565,7 @@ export default function CreateOrderFromCar({
                   <button type="button" onClick={onClose}>
                     Hủy
                   </button>
-                  <button type="submit" disabled={loading}>
+                  <button type="submit" disabled={loading || (!preselectedInventoryId && inventoryList.length === 0)}>
                     {loading ? "Đang tạo..." : "Tạo đơn hàng"}
                   </button>
                 </div>

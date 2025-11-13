@@ -14,6 +14,7 @@ import Customer from './Pages/Admin/Customer';
 import Order from './Pages/Admin/Order';
 import Cardelivery from './Pages/Admin/Cardelivery';
 import Paymentcustomer from './Pages/Admin/Paymentcustomer';
+import Invoice from './Pages/Admin/Invoice';
 // Vehicle components - dùng chung từ shared
 import VehicleBrand from './Pages/shared/VehicleBrand';
 import VehicleModel from './Pages/Admin/VehicleModel';
@@ -64,6 +65,11 @@ import Appointment from './Pages/shared/Appointment';
 import Feedback from './Pages/shared/Feedback';
 import SalesContract from './Pages/shared/SalesContract';
 import Promotion from './Pages/shared/Promotion';
+import CustomerShared from './Pages/shared/Customer';
+// Public pages
+import ViewQuotation from './Pages/public/ViewQuotation';
+import Payment from './Pages/public/Payment';
+import TrackOrder from './Pages/public/TrackOrder';
 import DealerTarget from './Pages/Admin/DealerTarget';
 import DealerContract from './Pages/Admin/DealerContract';
 import PricingPolicy from './Pages/Admin/PricingPolicy';
@@ -80,6 +86,7 @@ import Vinfast6 from './components/CarSection/Vinfast6';
 import Vinfast7 from './components/CarSection/Vinfast7';
 import Macan from './components/CarSection/Macan';
 import Macan4 from './components/CarSection/Macan4';
+import CarDetail from './components/CarSection/CarDetail';
 
 function App() {
   return (
@@ -87,6 +94,7 @@ function App() {
       <BrowserRouter>
      
         <Routes>
+          <Route path="/car/:inventoryId" element={<CarDetail />} />
           <Route path="/heriogreen" element={<HerioGreen />} />
           <Route path="/limo" element={<Limo />} />
           <Route path="/minio" element={<Minio />} />
@@ -96,6 +104,28 @@ function App() {
           <Route path="/macan" element={<Macan />} />
           <Route path="/macan4" element={<Macan4 />} />
           <Route path="/login" element={<Login />} />
+          
+          {/* Public routes for customers */}
+          <Route path="/quotation/:quotationId" element={
+            <MainLayout>
+              <ViewQuotation />
+            </MainLayout>
+          } />
+          <Route path="/payment/:orderId" element={
+            <MainLayout>
+              <Payment />
+            </MainLayout>
+          } />
+          <Route path="/order/track" element={
+            <MainLayout>
+              <TrackOrder />
+            </MainLayout>
+          } />
+          <Route path="/order/track/:orderNumber" element={
+            <MainLayout>
+              <TrackOrder />
+            </MainLayout>
+          } />
           
           <Route path="/" element={
             <MainLayout>
@@ -116,6 +146,7 @@ function App() {
             <Route path='order' element={<Order />} />
             <Route path='cardelivery' element={<Cardelivery />} />
             <Route path='paymentcustomer' element={<Paymentcustomer />} />
+            <Route path='invoice' element={<Invoice />} />
             <Route path='vehiclebrand' element={<VehicleBrand />} />
             <Route path='vehiclemodel' element={<VehicleModel />} />
             <Route path='vehiclevariant' element={<VehicleVariant />} />
@@ -186,6 +217,8 @@ function App() {
             <Route path='vehiclcolor' element={<VehicleColorEVMStaff />} />
             <Route path='warehouse' element={<Warehouse />} />
             <Route path='vehicleinventory' element={<VehicleInventory />} />
+            <Route path='quotation' element={<Quotation />} />
+            <Route path='customer' element={<CustomerShared />} />
             <Route path='dealerorder' element={<DealerOrder />} />
             <Route path='dealerquotation' element={<DealerQuotation />} />
             <Route path='dealerinvoice' element={<DealerInvoice />} />

@@ -321,7 +321,7 @@ export default function Quotation() {
 
   return (
     <div className="customer">
-      <div className="title-customer">Quản lý báo giá khách hàng</div>
+      <div className="title-customer">Báo giá khách hàng</div>
 
       <div className="title2-customer">
         <h2>Danh sách báo giá khách hàng</h2>
@@ -527,7 +527,7 @@ export default function Quotation() {
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   rows="3"
-                  placeholder="Ghi chú cho báo giá..."
+                  placeholder="Ghi chú"
                 />
               </div>
 

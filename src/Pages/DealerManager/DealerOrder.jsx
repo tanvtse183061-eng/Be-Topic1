@@ -503,7 +503,7 @@ export default function DealerOrder() {
 
   return (
     <div className="customer">
-      <div className="title-customer">Quản lý đơn hàng đại lý</div>
+      <div className="title-customer">Đơn hàng đại lý</div>
 
       <div className="title2-customer">
         <h2>Danh sách đơn hàng đại lý</h2>
@@ -593,11 +593,11 @@ export default function DealerOrder() {
         </table>
       </div>
 
-      {/* Popup tạo đơn hàng - Bước 1 */}
+      {/* Popup tạo đơn hàng */}
       {showPopup && (
         <div className="popup-overlay" onClick={() => setShowPopup(false)}>
           <div className="popup-box large" onClick={(e) => e.stopPropagation()}>
-            <h2>Tạo đơn hàng đại lý (Bước 1)</h2>
+            <h2>Tạo đơn hàng đại lý</h2>
             {error && <div className="error-message">{error}</div>}
             <form onSubmit={handleCreateOrder}>
               <div style={{ marginBottom: "15px" }}>

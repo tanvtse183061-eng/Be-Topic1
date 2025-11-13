@@ -54,7 +54,7 @@ export default function PaymentCustomer() {
 
   return (
     <div className="customer">
-      <div className="title-customer">Quản lý thanh toán</div>
+      <div className="title-customer">Thanh toán khách hàng</div>
 
       <div className="title2-customer">
         <h2>Danh sách thanh toán</h2>

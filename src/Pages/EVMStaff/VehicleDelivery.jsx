@@ -169,14 +169,10 @@ export default function VehicleDelivery() {
 
   return (
     <div className="customer">
-      <div className="title-customer">Quản lý giao hàng đại lý</div>
+      <div className="title-customer">Giao hàng đại lý</div>
 
       <div className="title2-customer">
         <h2>Danh sách giao hàng đại lý</h2>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <FaTruck style={{ fontSize: "20px", color: "#5b4bdf" }} />
-          <small style={{ color: "#666" }}>Giao hàng được tạo tự động sau khi thanh toán đủ hóa đơn</small>
-        </div>
       </div>
 
       <div className="title3-customer">

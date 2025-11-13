@@ -71,31 +71,6 @@ body {
   font-weight: 500;
 }
 
-.btn-add {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 10px;
-  padding: 12px 24px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
-}
-
-.btn-add:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.35);
-}
-
-.btn-icon {
-  font-size: 14px;
-}
-
 /* ===== THANH TÌM KIẾM ===== */
 .title3-customer {
   display: flex;
@@ -315,13 +290,6 @@ body {
   box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25);
 }
 
-.no-data {
-  text-align: center;
-  color: #94a3b8;
-  padding: 24px !important;
-  font-style: italic;
-}
-
 /* ===== NÚT THAO TÁC ===== */
 .action-buttons {
   display: flex;
@@ -348,16 +316,6 @@ body {
   color: #2563eb;
 }
 
-.icon-btn.edit {
-  background: #fef3c7;
-  color: #d97706;
-}
-
-.icon-btn.delete {
-  background: #fee2e2;
-  color: #dc2626;
-}
-
 .icon-btn:hover {
   transform: scale(1.1);
 }
@@ -366,33 +324,7 @@ body {
   background: #bfdbfe;
 }
 
-.icon-btn.edit:hover {
-  background: #fde68a;
-}
-
-.icon-btn.delete:hover {
-  background: #fecaca;
-}
-
-.icon-btn.confirm {
-  background: #d1fae5;
-  color: #059669;
-}
-
-.icon-btn.confirm:hover {
-  background: #a7f3d0;
-}
-
-.icon-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.spinner-small {
-  animation: spin 0.8s linear infinite;
-}
-
-/* ===== POPUP (OVERRIDE) ===== */
+/* ===== POPUP ===== */
 .popup-overlay {
   position: fixed;
   inset: 0;
@@ -410,13 +342,11 @@ body {
   from {
     opacity: 0;
   }
-
   to {
     opacity: 1;
   }
 }
 
-/* Popup box: size, shadow, rounded like mẫu */
 .popup-box {
   width: 600px;
   max-width: calc(100% - 40px);
@@ -431,10 +361,6 @@ body {
   flex-direction: column;
 }
 
-.popup-form {
-  width: 600px;
-}
-
 .detail-popup {
   width: 600px;
 }
@@ -444,14 +370,12 @@ body {
     transform: translateY(18px);
     opacity: 0;
   }
-
   to {
     transform: translateY(0);
     opacity: 1;
   }
 }
 
-/* Popup header */
 .popup-header {
   display: flex;
   align-items: center;
@@ -489,215 +413,21 @@ body {
   flex: 1;
 }
 
-.popup-form form {
-  padding: 0 24px 20px 24px;
+.detail-section {
+  margin-bottom: 24px;
 }
 
-/* ===== Form Grid & Inputs (match hình: dark inputs) ===== */
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px 12px;
-  margin-bottom: 14px;
-  align-items: center;
+.detail-section:last-child {
+  margin-bottom: 0;
 }
 
-/* form-group wrapper (used if you want labels) */
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.error-text {
-  color: #dc2626;
-  font-size: 12px;
-  font-weight: 500;
-  margin-top: -4px;
-  margin-left: 4px;
-}
-
-/* Input / select / textarea style - modern design */
-.form-grid input[type="text"],
-.form-grid input[type="email"],
-.form-grid input[type="date"],
-.form-grid input[type="number"],
-.form-grid select,
-.form-grid textarea {
-  width: 100%;
-  min-height: 42px;
-  padding: 11px 16px;
-  border-radius: 10px;
-  border: 2px solid #e2e8f0;
-  outline: none;
-  background: #ffffff;
+.detail-section h3 {
+  font-size: 18px;
+  font-weight: 600;
   color: #1e293b;
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  font-family: 'Inter', sans-serif;
-}
-
-.form-grid input.error,
-.form-grid select.error,
-.form-grid textarea.error {
-  border-color: #ef4444;
-  background: #fef2f2;
-}
-
-/* Make textarea same height as image example */
-.form-grid textarea {
-  min-height: 90px;
-  resize: vertical;
-  font-family: 'Inter', sans-serif;
-}
-
-/* Placeholder color */
-.form-grid input::placeholder,
-.form-grid textarea::placeholder {
-  color: #94a3b8;
-  font-weight: 400;
-}
-
-/* Focus ring for inputs */
-.form-grid input:focus,
-.form-grid select:focus,
-.form-grid textarea:focus {
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-  transform: translateY(-1px);
-}
-
-/* Select arrow tweak */
-.form-grid select {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  padding-right: 40px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
-  background-position: calc(100% - 12px) center;
-  background-repeat: no-repeat;
-  background-size: 12px;
-  cursor: pointer;
-}
-
-/* If you want notes full width instead, uncomment below */
-/* .form-grid textarea { grid-column: 1 / -1; } */
-
-/* Error text small under inputs (if needed) */
-.error {
-  color: #f97316;
-  font-size: 12px;
-}
-
-/* Divider line subtle */
-.popup-box .divider {
-  height: 1px;
-  background: linear-gradient(90deg, rgba(0, 0, 0, 0.03), rgba(0, 0, 0, 0.06));
-  margin: 12px 0;
-}
-
-/* ===== Buttons - match image: blue rounded main, ghost cancel ===== */
-.form-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-start;
-  align-items: center;
-  padding-top: 6px;
-  border-top: 1px solid rgba(15, 23, 42, 0.03);
-}
-
-/* Primary (Tạo mới) */
-.form-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 8px;
-  padding-top: 20px;
-  border-top: 1px solid #f1f5f9;
-}
-
-.form-actions .btn-submit {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #fff;
-  border: none;
-  padding: 12px 28px;
-  font-weight: 600;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
-  cursor: pointer;
-  font-size: 15px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.3s ease;
-  flex: 1;
-}
-
-/* Secondary (Hủy) */
-.form-actions .btn-cancel {
-  background: #fff;
-  color: #374151;
-  border: 1px solid rgba(15, 23, 42, 0.06);
-  padding: 10px 22px;
-  border-radius: 12px;
-  cursor: pointer;
-}
-
-/* Hover states */
-.form-actions .btn-submit:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.35);
-}
-
-.form-actions .btn-submit:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.form-actions .btn-cancel:hover {
-  background: #f8fafc;
-}
-
-.popup-footer {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  padding: 20px 24px;
-  border-top: 1px solid #f1f5f9;
-}
-
-.btn-confirm {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
-  border: none;
-  padding: 12px 28px;
-  font-weight: 600;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
-  cursor: pointer;
-  font-size: 15px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.3s ease;
-}
-
-.btn-confirm:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
-}
-
-.btn-confirm:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* ===== Popup detail (view) override to match style) ===== */
-.popup-detail {
-  width: 560px;
-  padding: 16px 20px;
+  margin: 0 0 16px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e2e8f0;
 }
 
 .detail-grid {
@@ -711,11 +441,18 @@ body {
   grid-column: 1 / -1;
 }
 
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .detail-label {
   font-size: 12px;
   font-weight: 700;
   color: #9ca3af;
   text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .detail-value {
@@ -724,18 +461,11 @@ body {
   color: #0f172a;
 }
 
-/* Close button (full width) */
-.btn-close {
-  width: 100%;
-  padding: 12px;
-  border: none;
-  border-radius: 10px;
-  background: linear-gradient(180deg, #2f7bff, #1f66ff);
-  color: #fff;
-  font-weight: 700;
-  font-size: 15px;
-  cursor: pointer;
-  margin-top: 8px;
+.popup-footer {
+  padding: 20px 24px;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: flex-end;
 }
 
 /* ===== RESPONSIVE ===== */
@@ -744,25 +474,13 @@ body {
     width: 96%;
   }
 
-  .form-grid {
+  .detail-grid {
     grid-template-columns: 1fr;
     gap: 10px;
   }
 
-  .form-grid textarea {
+  .detail-item.full-width {
     grid-column: 1;
-  }
-
-  .popup-form {
-    padding: 16px;
-  }
-
-  .popup-box h2 {
-    font-size: 22px;
-  }
-
-  .form-actions {
-    justify-content: center;
   }
 }
 
@@ -783,3 +501,4 @@ body {
 .popup-box::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+

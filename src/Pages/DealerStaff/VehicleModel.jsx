@@ -2,7 +2,8 @@
 import './Customer.css';
 import { FaSearch, FaEye, FaPen, FaTrash, FaPlus } from "react-icons/fa";
 import { useEffect, useState } from "react";
-import { vehicleAPI } from "../../services/API";
+import { vehicleAPI, imageAPI } from "../../services/API";
+import { getModelImageUrl } from "../../utils/imageUtils";
 
 export default function VehicleModel() {
   const [models, setModels] = useState([]);
@@ -13,6 +14,9 @@ export default function VehicleModel() {
   const [isEdit, setIsEdit] = useState(false);
   const [selectedModel, setSelectedModel] = useState(null);
   const [error, setError] = useState("");
+  const [selectedImageFile, setSelectedImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const [formData, setFormData] = useState({
     modelName: "",
@@ -84,6 +88,8 @@ export default function VehicleModel() {
       modelYear: new Date().getFullYear(),
       year: new Date().getFullYear()
     });
+    setSelectedImageFile(null);
+    setImagePreview(null);
     setError("");
     setShowPopup(true);
   };
@@ -103,6 +109,8 @@ export default function VehicleModel() {
       modelYear: m.modelYear ?? (m.year ?? new Date().getFullYear()),
       year: m.year ?? (m.modelYear ?? new Date().getFullYear())
     });
+    setSelectedImageFile(null);
+    setImagePreview(getModelImageUrl(m));
     setError("");
     setShowPopup(true);
   };
@@ -149,6 +157,23 @@ export default function VehicleModel() {
     }
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        setError("Vui lòng chọn file ảnh!");
+        return;
+      }
+      setSelectedImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+      setError("");
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -159,13 +184,36 @@ export default function VehicleModel() {
       return;
     }
 
+    // Upload ảnh trước nếu có file mới
+    let imageUrl = formData.modelImageUrl || "";
+    let imagePath = formData.modelImagePath || "";
+    
+    if (selectedImageFile) {
+      try {
+        setUploadingImage(true);
+        const formDataUpload = new FormData();
+        formDataUpload.append('file', selectedImageFile);
+        const uploadRes = await imageAPI.uploadVehicleModel(formDataUpload);
+        // Lấy URL từ response
+        imageUrl = uploadRes.data?.url || uploadRes.data?.imageUrl || uploadRes.data?.filename || uploadRes.data?.path || "";
+        imagePath = uploadRes.data?.path || uploadRes.data?.imagePath || uploadRes.data?.filename || "";
+      } catch (err) {
+        console.error("Lỗi khi upload ảnh:", err);
+        setError("Lỗi khi upload ảnh: " + (err.response?.data?.message || err.message));
+        setUploadingImage(false);
+        return;
+      } finally {
+        setUploadingImage(false);
+      }
+    }
+
     // chuẩn hóa payload giống mẫu backend
     const payload = {
       modelName: formData.modelName,
       vehicleType: formData.vehicleType || null,
       description: formData.description || "",
-      modelImageUrl: formData.modelImageUrl || "",
-      modelImagePath: formData.modelImagePath || "",
+      modelImageUrl: imageUrl,
+      modelImagePath: imagePath,
       isActive: formData.isActive ?? true,
       effectiveModelYear: formData.effectiveModelYear ?? 0,
       brandId: Number(formData.brandId),
@@ -312,19 +360,31 @@ export default function VehicleModel() {
                   onChange={(e) => setFormData({ ...formData, effectiveModelYear: Number(e.target.value) })}
                 />
 
-                <input
-                  name="modelImageUrl"
-                  placeholder="URL ảnh (modelImageUrl)"
-                  value={formData.modelImageUrl}
-                  onChange={(e) => setFormData({ ...formData, modelImageUrl: e.target.value })}
-                />
-
-                <input
-                  name="modelImagePath"
-                  placeholder="Đường dẫn file (modelImagePath)"
-                  value={formData.modelImagePath}
-                  onChange={(e) => setFormData({ ...formData, modelImagePath: e.target.value })}
-                />
+                <div style={{ gridColumn: 'span 2' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
+                    Hình ảnh
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    style={{ marginBottom: '10px' }}
+                  />
+                  {imagePreview && (
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      style={{
+                        width: '200px',
+                        height: '150px',
+                        objectFit: 'cover',
+                        borderRadius: '8px',
+                        border: '1px solid #ddd',
+                        marginTop: '10px'
+                      }}
+                    />
+                  )}
+                </div>
 
                 <textarea
                   name="description"
@@ -346,9 +406,17 @@ export default function VehicleModel() {
 
               {error && <div className="error" style={{ color: 'red', marginTop: 8 }}>{error}</div>}
 
+              {uploadingImage && (
+                <div style={{ color: '#666', marginTop: '10px', marginBottom: '10px' }}>
+                  Đang upload ảnh...
+                </div>
+              )}
+
               <div className="form-actions">
-                <button type="submit">{isEdit ? "Cập nhật" : "Tạo mới"}</button>
-                <button type="button" onClick={() => setShowPopup(false)}>Hủy</button>
+                <button type="submit" disabled={uploadingImage}>
+                  {uploadingImage ? "Đang xử lý..." : (isEdit ? "Cập nhật" : "Tạo mới")}
+                </button>
+                <button type="button" onClick={() => setShowPopup(false)} disabled={uploadingImage}>Hủy</button>
               </div>
             </form>
           </div>
@@ -372,10 +440,10 @@ export default function VehicleModel() {
             <p><b>Mô tả:</b> {selectedModel.description || "—"}</p>
             <div>
               <b>Ảnh:</b> {
-                (selectedModel.modelImageUrl || selectedModel.modelImagePath) ? (
+                getModelImageUrl(selectedModel) ? (
                   <div style={{ marginTop: "10px" }}>
                     <img 
-                      src={selectedModel.modelImageUrl || selectedModel.modelImagePath} 
+                      src={getModelImageUrl(selectedModel)} 
                       alt={selectedModel.modelName || "Model image"}
                       style={{ 
                         maxWidth: "100%", 
@@ -385,11 +453,11 @@ export default function VehicleModel() {
                       }}
                       onError={(e) => {
                         e.target.style.display = "none";
-                        e.target.nextSibling.style.display = "block";
+                        e.target.nextElementSibling.style.display = "block";
                       }}
                     />
                     <span style={{ display: "none", color: "#666" }}>
-                      {selectedModel.modelImageUrl || selectedModel.modelImagePath}
+                      {selectedModel.modelImageUrl || selectedModel.modelImagePath || "—"}
                     </span>
                   </div>
                 ) : "—"

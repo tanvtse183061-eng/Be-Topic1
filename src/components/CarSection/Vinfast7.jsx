@@ -143,9 +143,6 @@ export default function Vinfast7() {
           <CreateOrderFromCar
             show={showOrderModal}
             onClose={() => setShowOrderModal(false)}
-            carName="VinFast VF 7"
-            carColor={getCurrentColor()}
-            carPrice={799000000}
           />
         )}
       </div>

@@ -55,7 +55,7 @@ export default function Cardelivery() {
 
   return (
     <div className="customer">
-      <div className="title-customer">Quản lý giao xe</div>
+      <div className="title-customer">Giao xe khách hàng</div>
 
       <div className="title2-customer">
         <h2>Danh sách giao xe</h2>

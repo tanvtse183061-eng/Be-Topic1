@@ -300,7 +300,7 @@ export default function DealerQuotation() {
 
   return (
     <div className="customer">
-      <div className="title-customer">Quản lý báo giá đại lý</div>
+      <div className="title-customer">Báo giá đại lý</div>
 
       <div className="title2-customer">
         <h2>Danh sách báo giá đại lý</h2>
@@ -391,11 +391,11 @@ export default function DealerQuotation() {
         </table>
       </div>
 
-      {/* Popup tạo báo giá - Bước 3 */}
+      {/* Popup tạo báo giá */}
       {showPopup && (isEVMStaff || isAdmin) && (
         <div className="popup-overlay" onClick={() => setShowPopup(false)}>
           <div className="popup-box" onClick={(e) => e.stopPropagation()}>
-            <h2>Tạo báo giá từ đơn hàng (Bước 3)</h2>
+            <h2>Tạo báo giá từ đơn hàng</h2>
             {error && <div className="error-message">{error}</div>}
             <form onSubmit={handleCreateQuotation}>
               <div style={{ marginBottom: "15px" }}>
@@ -413,7 +413,7 @@ export default function DealerQuotation() {
                   ))}
                 </select>
                 {orders.length === 0 && (
-                  <small style={{ color: "red" }}>Không có đơn hàng nào đã được duyệt</small>
+                  <small style={{ color: "red" }}>Chưa có đơn hàng đã duyệt</small>
                 )}
               </div>
 
@@ -436,7 +436,7 @@ export default function DealerQuotation() {
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   rows="3"
-                  placeholder="Ghi chú cho báo giá..."
+                  placeholder="Ghi chú"
                 />
               </div>
 

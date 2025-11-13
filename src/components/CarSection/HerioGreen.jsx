@@ -129,9 +129,6 @@ export default function HerioGreen() {
           <CreateOrderFromCar
             show={showOrderModal}
             onClose={() => setShowOrderModal(false)}
-            carName="Herio Green"
-            carColor={getCurrentColor()}
-            carPrice={499000000}
           />
         )}
       </div>

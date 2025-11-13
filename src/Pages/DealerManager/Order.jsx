@@ -137,6 +137,19 @@ export default function Order() {
     }
   }, [showPopup]);
 
+  // Tìm kiếm realtime với debounce (giống Dealer.jsx)
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      const trimmed = searchTerm.trim();
+      if (trimmed === "") {
+        fetchOrder();
+        return;
+      }
+      // Filter local data - trong thực tế có thể gọi API search
+    }, 400);
+    return () => clearTimeout(delay);
+  }, [searchTerm]);
+
   // Xóa đơn hàng
   const handleDelete = async (orderId) => {
     if (!window.confirm("Bạn có chắc chắn muốn xóa đơn hàng này không?")) return;
@@ -331,7 +344,7 @@ export default function Order() {
 
   return (
     <div className="customer">
-      <div className="title-customer">Quản lý đơn hàng</div>
+      <div className="title-customer">Đơn hàng khách hàng</div>
 
       <div className="title2-customer">
         <h2>Danh sách đơn hàng</h2>

@@ -8,7 +8,7 @@ import {
 import { InputGroup, FormControl, Badge } from "react-bootstrap";
 import { Outlet, useNavigate } from "react-router-dom";
 import { useEffect, useState } from 'react';
-import { getMenuItemsByRole, getRoleDisplayName } from '../../config/roleMenus';
+import { getMenuItemsByRole, getRoleDisplayName, groupMenuItemsByCategory } from '../../config/roleMenus';
 
 export default function EVMStaff() {
  const navigate = useNavigate();
@@ -29,29 +29,31 @@ const [selectedAction, setSelectedAction] = useState(null);
   useEffect(() => {
     const savedUser = localStorage.getItem("username");
     const savedRole = localStorage.getItem("role");
+    const savedToken = localStorage.getItem("token");
     
-    if (savedUser && savedRole) {
-      // Kiểm tra role có đúng với route không
-      if (savedRole !== "EVM_STAFF") {
-        // Redirect về đúng route theo role
-        if (savedRole === "ADMIN") {
-          navigate("/admin");
-        } else if (savedRole === "MANAGER" || savedRole === "DEALER_MANAGER") {
-          navigate("/dealermanager");
-        } else if (savedRole === "STAFF" || savedRole === "DEALER_STAFF") {
-          navigate("/dealerstaff");
-        } else {
-          navigate("/login");
-        }
-        return;
-      }
-      
-      setUsername(savedUser);
-      setUserRole(savedRole);
-      setMenuItems(getMenuItemsByRole(savedRole));
-    } else {
-      navigate("/login");
+    if (!savedUser || !savedRole || !savedToken) {
+      navigate("/login", { replace: true });
+      return;
     }
+    
+    // Kiểm tra role có đúng với route không
+    if (savedRole !== "EVM_STAFF") {
+      // Redirect về đúng route theo role
+      if (savedRole === "ADMIN") {
+        navigate("/admin", { replace: true });
+      } else if (savedRole === "MANAGER" || savedRole === "DEALER_MANAGER") {
+        navigate("/dealermanager", { replace: true });
+      } else if (savedRole === "STAFF" || savedRole === "DEALER_STAFF") {
+        navigate("/dealerstaff", { replace: true });
+      } else {
+        navigate("/login", { replace: true });
+      }
+      return;
+    }
+    
+    setUsername(savedUser);
+    setUserRole(savedRole);
+    setMenuItems(getMenuItemsByRole(savedRole));
   }, [navigate]);
 
   const handleLogout = () => {
@@ -125,80 +127,99 @@ const [selectedAction, setSelectedAction] = useState(null);
           )}
         </div>
 
-        <div className="p-3">
-          {!isCollapsed && (
-            <p className="text-muted small fw-semibold mb-3 text-uppercase">Chức năng</p>
-          )}
-          <ul className="list-unstyled">
-            {menuItems
-              .filter(item => !item.disabled) // Ẩn các menu item bị disabled
-              .map((item) => {
-              // Icon mapping
-              const iconMap = {
-                faGrip: faGrip,
-                faCar: faCar,
-                faUserPlus: faUserPlus,
-                faUserCog: faUserCog,
-                faWarehouse: faWarehouse,
-                faBoxes: faBoxes,
-                faTags: faTags,
-                faFileAlt: faFileAlt,
-                faUsers: faUsers,
-                faShoppingCart: faShoppingCart,
-                faTruck: faTruck,
-                faMoneyCheckDollar: faMoneyCheckDollar,
-                faChartBar: faChartBar,
-                faCalendarCheck: faCalendarCheck,
-                faComments: faComments,
-                faFileContract: faFileContract,
-                faFileInvoice: faFileInvoice
-              };
-              
-              const icon = iconMap[item.icon] || faFileAlt;
-              
-              // Nếu có children (submenu)
-              if (item.children) {
-                return (
-                  <li key={item.id}>
-                    <div
-                      className="d-flex align-items-center gap-2 py-2 px-3 rounded mb-1 cursor-pointer"
-                      onClick={() => setSelectedAction(selectedAction === item.id ? null : item.id)}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      <FontAwesomeIcon icon={icon} className={item.color || "text-primary"} />
-                      {!isCollapsed && <span>{item.label}</span>}
-                    </div>
-                    {selectedAction === item.id && !isCollapsed && (
-                      <ul className="list-unstyled ms-4 ps-3 border-start border-primary">
-                        {item.children.map((child) => (
-                          <li 
-                            key={child.id}
-                            className="py-2 cursor-pointer"
-                            onClick={() => navigate(child.path)}
+        <div className="p-3" style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 200px)' }}>
+          {(() => {
+            const groupedMenu = groupMenuItemsByCategory(menuItems);
+            const categories = Object.keys(groupedMenu);
+            
+            // Icon mapping
+            const iconMap = {
+              faGrip: faGrip,
+              faCar: faCar,
+              faUserPlus: faUserPlus,
+              faUserCog: faUserCog,
+              faWarehouse: faWarehouse,
+              faBoxes: faBoxes,
+              faTags: faTags,
+              faFileAlt: faFileAlt,
+              faUsers: faUsers,
+              faShoppingCart: faShoppingCart,
+              faTruck: faTruck,
+              faMoneyCheckDollar: faMoneyCheckDollar,
+              faChartBar: faChartBar,
+              faCalendarCheck: faCalendarCheck,
+              faComments: faComments,
+              faFileContract: faFileContract,
+              faFileInvoice: faFileInvoice
+            };
+            
+            return categories.map((category, categoryIndex) => (
+              <div key={category} style={{ marginBottom: categoryIndex < categories.length - 1 ? '20px' : '0' }}>
+                {!isCollapsed && (
+                  <div 
+                    className="text-muted small fw-semibold mb-2 px-2"
+                    style={{ 
+                      fontSize: '11px', 
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      color: '#6c757d',
+                      paddingTop: categoryIndex > 0 ? '12px' : '0',
+                      borderTop: categoryIndex > 0 ? '1px solid rgba(0,0,0,0.1)' : 'none'
+                    }}
+                  >
+                    {category}
+                  </div>
+                )}
+                <ul className="list-unstyled">
+                  {groupedMenu[category].map((item) => {
+                    const icon = iconMap[item.icon] || faFileAlt;
+                    
+                    // Nếu có children (submenu)
+                    if (item.children) {
+                      return (
+                        <li key={item.id}>
+                          <div
+                            className="d-flex align-items-center gap-2 py-2 px-3 rounded mb-1 cursor-pointer"
+                            onClick={() => setSelectedAction(selectedAction === item.id ? null : item.id)}
                             style={{ cursor: 'pointer' }}
                           >
-                            {child.label}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </li>
-                );
-              }
-              
-              return (
-                <li 
-                  key={item.id}
-                  className="d-flex align-items-center gap-2 py-2 px-3 rounded mb-1 cursor-pointer"
-                  onClick={() => item.path && navigate(item.path)}
-                  style={{ cursor: item.path ? 'pointer' : 'default' }}
-                >
-                  <FontAwesomeIcon icon={icon} className={item.color || "text-secondary"} />
-                  {!isCollapsed && <span>{item.label}</span>}
-                </li>
-              );
-            })}
-          </ul>
+                            <FontAwesomeIcon icon={icon} className={item.color || "text-primary"} />
+                            {!isCollapsed && <span>{item.label}</span>}
+                          </div>
+                          {selectedAction === item.id && !isCollapsed && (
+                            <ul className="list-unstyled ms-4 ps-3 border-start border-primary">
+                              {item.children.map((child) => (
+                                <li 
+                                  key={child.id}
+                                  className="py-2 cursor-pointer"
+                                  onClick={() => navigate(child.path)}
+                                  style={{ cursor: 'pointer' }}
+                                >
+                                  {child.label}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </li>
+                      );
+                    }
+                    
+                    return (
+                      <li 
+                        key={item.id}
+                        className="d-flex align-items-center gap-2 py-2 px-3 rounded mb-1 cursor-pointer"
+                        onClick={() => item.path && navigate(item.path)}
+                        style={{ cursor: item.path ? 'pointer' : 'default' }}
+                      >
+                        <FontAwesomeIcon icon={icon} className={item.color || "text-secondary"} />
+                        {!isCollapsed && <span>{item.label}</span>}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ));
+          })()}
         </div>
       </div>
 

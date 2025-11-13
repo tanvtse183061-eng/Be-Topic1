@@ -1,11 +1,13 @@
-import { FaSearch, FaEye, FaPen, FaTrash, FaSpinner, FaExclamationCircle, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import { FaSearch, FaEye, FaPen, FaTrash, FaSpinner, FaExclamationCircle, FaCheckCircle, FaTimesCircle, FaEdit } from "react-icons/fa";
 import { useEffect, useState } from "react";
-import { vehicleDeliveryAPI, orderAPI } from "../../services/API";
+// API cần đăng nhập - dùng cho quản lý giao hàng khách hàng (Admin/Staff)
+import { vehicleDeliveryAPI, orderAPI, inventoryAPI } from "../../services/API";
 import "./Order.css";
 
 export default function Cardelivery() {
   const [deliveries, setDeliveries] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [inventories, setInventories] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showPopup, setShowPopup] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
@@ -13,6 +15,15 @@ export default function Cardelivery() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [deleting, setDeleting] = useState(null);
+  const [isEdit, setIsEdit] = useState(false);
+  const [formData, setFormData] = useState({
+    orderId: "",
+    inventoryId: "",
+    deliveryAddress: "",
+    scheduledDate: "",
+    status: "PENDING",
+    notes: ""
+  });
 
   // 🔹 Lấy danh sách giao xe
   const fetchDeliveries = async () => {
@@ -36,12 +47,23 @@ export default function Cardelivery() {
       const ordersData = res.data || [];
       // Chỉ lấy đơn hàng đã thanh toán và chưa có giao hàng
       const eligibleOrders = ordersData.filter(o => 
-        (o.status === 'paid' || o.status === 'PAID') && 
-        !deliveries.some(d => d.order?.orderId === o.orderId)
+        (o.status === 'paid' || o.status === 'PAID' || o.paymentStatus === 'PAID') && 
+        !deliveries.some(d => d.order?.orderId === o.orderId || d.orderId === o.orderId)
       );
       setOrders(eligibleOrders);
     } catch (err) {
       console.error("Lỗi khi lấy đơn hàng:", err);
+    }
+  };
+
+  // Lấy danh sách tồn kho
+  const fetchInventories = async () => {
+    try {
+      const res = await inventoryAPI.getInventories();
+      const inventoriesData = res.data || [];
+      setInventories(inventoriesData);
+    } catch (err) {
+      console.error("Lỗi khi lấy tồn kho:", err);
     }
   };
 
@@ -52,6 +74,7 @@ export default function Cardelivery() {
   useEffect(() => {
     if (showPopup) {
       fetchOrders();
+      fetchInventories();
     }
   }, [showPopup]);
 
@@ -110,17 +133,135 @@ export default function Cardelivery() {
     return 'status-default';
   };
 
-  // 🔹 Xử lý khi nhấn “Xem”
-  const handleView = (delivery) => {
-    setSelectedDelivery(delivery);
-    setShowDetail(true);
+  // Helper functions
+  const getCustomerName = (order) => {
+    if (order?.customer) {
+      const customer = order.customer;
+      if (customer.firstName && customer.lastName) {
+        return `${customer.firstName} ${customer.lastName}`;
+      }
+      return customer.fullName || customer.name || "—";
+    }
+    if (order?.quotation?.customer) {
+      const customer = order.quotation.customer;
+      if (customer.firstName && customer.lastName) {
+        return `${customer.firstName} ${customer.lastName}`;
+      }
+      return customer.fullName || customer.name || "—";
+    }
+    return "—";
+  };
+
+  const formatPrice = (price) => {
+    if (!price) return "0 ₫";
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(price);
+  };
+
+  // 🔹 Xử lý khi nhấn "Xem"
+  const handleView = async (delivery) => {
+    try {
+      const res = await vehicleDeliveryAPI.getDelivery(delivery.deliveryId);
+      setSelectedDelivery(res.data || delivery);
+      setShowDetail(true);
+    } catch (err) {
+      console.error("Lỗi khi lấy chi tiết giao hàng:", err);
+      setSelectedDelivery(delivery);
+      setShowDetail(true);
+    }
+  };
+
+  // Mở form thêm mới
+  const handleOpenAdd = () => {
+    setIsEdit(false);
+    setFormData({
+      orderId: "",
+      inventoryId: "",
+      deliveryAddress: "",
+      scheduledDate: "",
+      status: "PENDING",
+      notes: ""
+    });
+    setError(null);
+    setShowPopup(true);
+  };
+
+  // Mở form sửa
+  const handleEdit = async (delivery) => {
+    try {
+      setIsEdit(true);
+      const res = await vehicleDeliveryAPI.getDelivery(delivery.deliveryId);
+      const fullDelivery = res.data || delivery;
+      setFormData({
+        orderId: fullDelivery.orderId || fullDelivery.order?.orderId || "",
+        inventoryId: fullDelivery.inventoryId || fullDelivery.inventory?.inventoryId || "",
+        deliveryAddress: fullDelivery.deliveryAddress || "",
+        scheduledDate: fullDelivery.scheduledDate 
+          ? fullDelivery.scheduledDate.split('T')[0] 
+          : fullDelivery.expectedDeliveryDate 
+            ? fullDelivery.expectedDeliveryDate.split('T')[0] 
+            : "",
+        status: fullDelivery.status || "PENDING",
+        notes: fullDelivery.notes || ""
+      });
+      setSelectedDelivery(fullDelivery);
+      setError(null);
+      setShowPopup(true);
+    } catch (err) {
+      console.error("Lỗi khi load chi tiết giao hàng:", err);
+      alert("Không thể tải chi tiết giao hàng!");
+    }
+  };
+
+  // Lưu giao hàng
+  const handleSave = async () => {
+    if (!formData.orderId) {
+      setError("Vui lòng chọn đơn hàng!");
+      return;
+    }
+    if (!formData.deliveryAddress) {
+      setError("Vui lòng nhập địa chỉ giao hàng!");
+      return;
+    }
+    if (!formData.scheduledDate) {
+      setError("Vui lòng chọn ngày giao dự kiến!");
+      return;
+    }
+
+    try {
+      setError(null);
+      const deliveryData = {
+        orderId: formData.orderId,
+        inventoryId: formData.inventoryId || null,
+        deliveryAddress: formData.deliveryAddress,
+        scheduledDate: formData.scheduledDate,
+        status: formData.status,
+        notes: formData.notes || null
+      };
+
+      if (isEdit && selectedDelivery?.deliveryId) {
+        await vehicleDeliveryAPI.updateDelivery(selectedDelivery.deliveryId, deliveryData);
+        alert("Cập nhật giao hàng thành công!");
+      } else {
+        await vehicleDeliveryAPI.createDelivery(deliveryData);
+        alert("Tạo giao hàng thành công!");
+      }
+      
+      setShowPopup(false);
+      await fetchDeliveries();
+    } catch (err) {
+      console.error("Lỗi khi lưu giao hàng:", err);
+      const errorMsg = err.response?.data?.error || err.response?.data?.message || err.message || "Không thể lưu giao hàng!";
+      setError(errorMsg);
+    }
   };
 
   return (
     <div className="customer">
       <div className="title-customer">
-        <span className="title-icon">🚚</span>
-        Quản lý giao xe
+        Giao xe khách hàng
       </div>
 
       <div className="title2-customer">
@@ -128,7 +269,7 @@ export default function Cardelivery() {
           <h2>Danh sách giao xe</h2>
           <p className="subtitle">{deliveries.length} đơn giao xe tổng cộng</p>
         </div>
-        <button className="btn-add" onClick={() => setShowPopup(true)}>
+        <button className="btn-add" onClick={handleOpenAdd}>
           <FaPen className="btn-icon" />
           Tạo đơn giao xe
         </button>
@@ -208,9 +349,17 @@ export default function Cardelivery() {
                       >
                         <FaEye />
                       </button>
+                      <button
+                        className="icon-btn edit"
+                        onClick={() => handleEdit(d)}
+                        disabled={deleting === d.deliveryId}
+                        title="Sửa giao hàng"
+                      >
+                        <FaEdit />
+                      </button>
                       {d.status?.toLowerCase() === 'in_transit' && (
                         <button 
-                          className="icon-btn edit"
+                          className="icon-btn confirm"
                           onClick={() => handleConfirmDelivery(d.deliveryId)}
                           disabled={deleting === d.deliveryId}
                           title="Xác nhận đã giao"
@@ -233,22 +382,108 @@ export default function Cardelivery() {
             </table>
           ) : (
             <div className="empty-state">
-              <div className="empty-icon">📭</div>
-              <h3>{searchTerm ? 'Không tìm thấy đơn giao xe' : 'Chưa có đơn giao xe nào'}</h3>
+              <h3>{searchTerm ? 'Không tìm thấy' : 'Chưa có đơn giao xe'}</h3>
             </div>
           )}
         </div>
       )}
 
-      {/* Popup thêm giao xe */}
+      {/* Popup thêm/sửa giao xe */}
       {showPopup && (
-        <div className="popup-overlay">
-          <div className="popup-box">
-            <h2>Thêm đơn giao xe mới</h2>
-            <p>(Chưa có form, chỉ là popup mẫu)</p>
-            <button className="btn-close" onClick={() => setShowPopup(false)}>
-              Đóng
-            </button>
+        <div className="popup-overlay" onClick={() => setShowPopup(false)}>
+          <div className="popup-box" onClick={(e) => e.stopPropagation()}>
+            <div className="popup-header">
+              <h2>{isEdit ? "Sửa đơn giao xe" : "Thêm đơn giao xe mới"}</h2>
+              <button className="popup-close" onClick={() => setShowPopup(false)}>
+                <FaTimesCircle />
+              </button>
+            </div>
+            <div className="popup-content">
+              {error && (
+                <div className="error-banner" style={{ marginBottom: "16px" }}>
+                  <FaExclamationCircle />
+                  <span>{error}</span>
+                </div>
+              )}
+              <div className="form-group">
+                <label>Đơn hàng <span style={{ color: "red" }}>*</span></label>
+                <select
+                  value={formData.orderId}
+                  onChange={(e) => setFormData({ ...formData, orderId: e.target.value })}
+                  disabled={isEdit}
+                  required
+                >
+                  <option value="">-- Chọn đơn hàng --</option>
+                  {orders.map((o) => (
+                    <option key={o.orderId} value={o.orderId}>
+                      {o.orderNumber || o.orderId} - {getCustomerName(o)} - {formatPrice(o.totalAmount)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Tồn kho (nếu có)</label>
+                <select
+                  value={formData.inventoryId}
+                  onChange={(e) => setFormData({ ...formData, inventoryId: e.target.value })}
+                >
+                  <option value="">-- Chọn tồn kho (tùy chọn) --</option>
+                  {inventories.map((inv) => (
+                    <option key={inv.inventoryId} value={inv.inventoryId}>
+                      {inv.variant?.variantName || inv.inventoryId} - {inv.vin || "N/A"}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Địa chỉ giao hàng <span style={{ color: "red" }}>*</span></label>
+                <textarea
+                  value={formData.deliveryAddress}
+                  onChange={(e) => setFormData({ ...formData, deliveryAddress: e.target.value })}
+                  placeholder="Nhập địa chỉ giao hàng..."
+                  rows="3"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Ngày giao dự kiến <span style={{ color: "red" }}>*</span></label>
+                <input
+                  type="date"
+                  value={formData.scheduledDate}
+                  onChange={(e) => setFormData({ ...formData, scheduledDate: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Trạng thái</label>
+                <select
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                >
+                  <option value="PENDING">PENDING</option>
+                  <option value="IN_TRANSIT">IN_TRANSIT</option>
+                  <option value="DELIVERED">DELIVERED</option>
+                  <option value="CANCELLED">CANCELLED</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Ghi chú</label>
+                <textarea
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  placeholder="Nhập ghi chú (nếu có)..."
+                  rows="2"
+                />
+              </div>
+            </div>
+            <div className="popup-footer">
+              <button className="btn-secondary" onClick={() => setShowPopup(false)}>
+                Hủy
+              </button>
+              <button className="btn-primary" onClick={handleSave}>
+                {isEdit ? "Cập nhật" : "Tạo mới"}
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -60,7 +60,8 @@
 .vf7,
 .vf3,
 .macanxanh,
-.macantim4 {
+.macantim4,
+.car-card {
   background: white;
   border-radius: 16px;
   padding: 0;
@@ -78,7 +79,8 @@
 .vf7::before,
 .vf3::before,
 .macanxanh::before,
-.macantim4::before {
+.macantim4::before,
+.car-card::before {
   content: '';
   position: absolute;
   top: 0;
@@ -100,7 +102,8 @@
 .vf7:hover,
 .vf3:hover,
 .macanxanh:hover,
-.macantim4:hover {
+.macantim4:hover,
+.car-card:hover {
   transform: translateY(-8px);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
 }
@@ -112,7 +115,8 @@
 .vf7:hover::before,
 .vf3:hover::before,
 .macanxanh:hover::before,
-.macantim4:hover::before {
+.macantim4:hover::before,
+.car-card:hover::before {
   opacity: 1;
 }
 
@@ -142,7 +146,8 @@
 /* Car Images */
 .car-body img,
 .car-body2 img,
-.car-body3 img {
+.car-body3 img,
+.car-card img {
   width: 100%;
   height: 280px;
   object-fit: cover;
@@ -157,7 +162,8 @@
 .vf7:hover img,
 .vf3:hover img,
 .macanxanh:hover img,
-.macantim4:hover img {
+.macantim4:hover img,
+.car-card:hover img {
   transform: scale(1.08);
 }
 
@@ -192,6 +198,16 @@
   margin: 20px 0 10px;
   text-align: center;
   line-height: 1.3;
+}
+
+/* Car Color */
+.color-car {
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #7f8c8d;
+  margin: 0 0 8px;
+  text-align: center;
 }
 
 /* Car Price */

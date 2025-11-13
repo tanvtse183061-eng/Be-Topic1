@@ -12,7 +12,7 @@ main {
 }
 
 .customer {
-    padding: 24px 32px;
+    padding: 16px 24px;
     background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
     min-height: 100vh;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -24,12 +24,12 @@ main {
 .title-customer {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 24px 32px;
+    padding: 16px 24px;
     border-radius: 16px;
     font-size: 28px;
     font-weight: 700;
     text-align: center;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
     box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
     display: flex;
     align-items: center;
@@ -50,9 +50,9 @@ main {
     justify-content: space-between;
     background: #ffffff;
     border-radius: 12px;
-    padding: 20px 28px;
+    padding: 14px 20px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-    margin-bottom: 20px;
+    margin-bottom: 12px;
     border: 1px solid rgba(0, 0, 0, 0.04);
 }
 
@@ -107,11 +107,11 @@ main {
     align-items: center;
     background: #ffffff;
     border-radius: 12px;
-    padding: 12px 20px;
+    padding: 10px 16px;
     max-width: 500px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     border: 2px solid #e2e8f0;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
     transition: all 0.3s ease;
     position: relative;
 }
@@ -166,7 +166,7 @@ main {
     color: #991b1b;
     padding: 16px 20px;
     border-radius: 12px;
-    margin-bottom: 20px;
+    margin-bottom: 12px;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -195,7 +195,7 @@ main {
 .loading-container {
     background: #fff;
     border-radius: 12px;
-    padding: 60px 20px;
+    padding: 40px 20px;
     text-align: center;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
@@ -222,7 +222,7 @@ main {
 .empty-state {
     background: #fff;
     border-radius: 12px;
-    padding: 60px 20px;
+    padding: 40px 20px;
     text-align: center;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
@@ -243,7 +243,7 @@ main {
 .empty-state p {
     color: #64748b;
     font-size: 15px;
-    margin: 0 0 24px 0;
+    margin: 0 0 16px 0;
 }
 
 .btn-primary {
@@ -268,7 +268,7 @@ main {
 .customer-table-container {
     background: #fff;
     border-radius: 16px;
-    padding: 24px;
+    padding: 16px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     overflow-x: auto;
     border: 1px solid rgba(0, 0, 0, 0.04);
@@ -514,7 +514,7 @@ main {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 24px 28px;
+    padding: 20px 24px;
     border-bottom: 1px solid #f1f5f9;
 }
 
@@ -542,13 +542,13 @@ main {
 }
 
 .popup-content {
-    padding: 24px 28px;
+    padding: 20px 24px;
     overflow-y: auto;
     flex: 1;
 }
 
 .detail-section {
-    margin-bottom: 28px;
+    margin-bottom: 20px;
 }
 
 .detail-section:last-child {
@@ -598,7 +598,7 @@ main {
 }
 
 .popup-footer {
-    padding: 20px 28px;
+    padding: 16px 24px;
     border-top: 1px solid #f1f5f9;
     display: flex;
     justify-content: flex-end;
@@ -688,6 +688,18 @@ main {
     background-color: #fde2e1;
     /* đỏ nhạt */
     color: #dc2626;
+}
+
+.icon-btn.send {
+    background-color: #dbeafe;
+    /* xanh nhạt */
+    color: #2563eb;
+}
+
+.icon-btn.copy {
+    background-color: #f0f4ff;
+    /* tím nhạt */
+    color: #667eea;
 }
 
 .icon-btn:hover {

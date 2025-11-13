@@ -189,6 +189,7 @@ export const publicVehicleAPI = {
   },
   getColors: () => publicApi.get('/vehicle-colors'),
   getInventory: () => publicApi.get('/vehicle-inventory'),
+  getInventoryById: (id) => publicApi.get(`/vehicle-inventory/${id}`),
   getPromotions: () => publicApi.get('/promotions'),
 };
 // ==================== DEALER API ====================

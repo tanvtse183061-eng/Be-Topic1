@@ -282,9 +282,7 @@ export default function ImageManagement() {
             </div>
           ) : (
             <div className="empty-state">
-              <div className="empty-icon">🖼️</div>
-              <h3>Chưa có hình ảnh nào</h3>
-              <p>Bắt đầu bằng cách upload hình ảnh mới</p>
+              <h3>Chưa có hình ảnh</h3>
             </div>
           )}
         </div>

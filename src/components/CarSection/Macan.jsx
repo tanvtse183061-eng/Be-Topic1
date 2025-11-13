@@ -98,9 +98,6 @@ export default function Macan() {
           <CreateOrderFromCar
             show={showOrderModal}
             onClose={() => setShowOrderModal(false)}
-            carName="Macan thuần điện"
-            carColor={getCurrentColor()}
-            carPrice={3590000000}
           />
         )}
       </div>

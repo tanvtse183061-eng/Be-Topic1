@@ -8,6 +8,7 @@ export default function Order() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showPopup, setShowPopup] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
+  const [isEdit, setIsEdit] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -136,6 +137,80 @@ export default function Order() {
       fetchData();
     }
   }, [showPopup]);
+
+  // Tìm kiếm realtime với debounce (giống Dealer.jsx)
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      const trimmed = searchTerm.trim();
+      if (trimmed === "") {
+        fetchOrder();
+        return;
+      }
+      // Filter local data - trong thực tế có thể gọi API search
+    }, 400);
+    return () => clearTimeout(delay);
+  }, [searchTerm]);
+
+  // Mở form thêm
+  const handleOpenAdd = () => {
+    setIsEdit(false);
+    setSelectedOrder(null);
+    setFormData({
+      createFrom: "quotation",
+      quotationId: "",
+      customerId: "",
+      inventoryId: "",
+      orderDate: new Date().toISOString().split('T')[0],
+      orderType: "RETAIL",
+      paymentStatus: "PENDING",
+      deliveryStatus: "PENDING",
+      status: "pending",
+      totalAmount: "",
+      depositAmount: "",
+      balanceAmount: "",
+      paymentMethod: "cash",
+      deliveryDate: "",
+      notes: "",
+      specialRequests: "",
+    });
+    setError("");
+    setShowPopup(true);
+  };
+
+  // Mở form sửa
+  const handleEdit = async (orderItem) => {
+    try {
+      setIsEdit(true);
+      setSelectedOrder(orderItem);
+      // Load full order details
+      const res = await orderAPI.getOrder(orderItem.orderId || orderItem.id);
+      const fullOrder = res.data || orderItem;
+      
+      setFormData({
+        createFrom: fullOrder.quotationId ? "quotation" : "customer",
+        quotationId: fullOrder.quotationId || "",
+        customerId: fullOrder.customerId || "",
+        inventoryId: fullOrder.inventoryId || "",
+        orderDate: fullOrder.orderDate ? fullOrder.orderDate.split('T')[0] : new Date().toISOString().split('T')[0],
+        orderType: fullOrder.orderType || "RETAIL",
+        paymentStatus: fullOrder.paymentStatus || "PENDING",
+        deliveryStatus: fullOrder.deliveryStatus || "PENDING",
+        status: fullOrder.status || "pending",
+        totalAmount: fullOrder.totalAmount || "",
+        depositAmount: fullOrder.depositAmount || "",
+        balanceAmount: fullOrder.balanceAmount || "",
+        paymentMethod: fullOrder.paymentMethod || "cash",
+        deliveryDate: fullOrder.deliveryDate ? fullOrder.deliveryDate.split('T')[0] : "",
+        notes: fullOrder.notes || "",
+        specialRequests: fullOrder.specialRequests || "",
+      });
+      setError("");
+      setShowPopup(true);
+    } catch (err) {
+      console.error("Lỗi khi load chi tiết đơn hàng:", err);
+      alert("Không thể tải chi tiết đơn hàng!");
+    }
+  };
 
   // Xóa đơn hàng
   const handleDelete = async (orderId) => {
@@ -302,10 +377,19 @@ export default function Order() {
 
       console.log("📤 Payload tạo order:", payload);
 
-      const createRes = await orderAPI.createOrder(payload);
-      console.log("✅ Response từ createOrder:", createRes);
+      if (isEdit && selectedOrder) {
+        // Khi edit, có thể gửi totalAmount
+        if (formData.totalAmount) {
+          payload.totalAmount = parseFloat(formData.totalAmount);
+        }
+        await orderAPI.updateOrder(selectedOrder.orderId || selectedOrder.id, payload);
+        alert("Cập nhật đơn hàng thành công!");
+      } else {
+        const createRes = await orderAPI.createOrder(payload);
+        console.log("✅ Response từ createOrder:", createRes);
+        alert("Tạo đơn hàng thành công!");
+      }
       
-      alert("Tạo đơn hàng thành công!");
       setShowPopup(false);
       
       // Reset form
@@ -342,7 +426,7 @@ export default function Order() {
 
   return (
     <div className="customer">
-      <div className="title-customer">Quản lý đơn hàng</div>
+      <div className="title-customer">Đơn hàng khách hàng</div>
 
       <div className="title2-customer">
         <h2>Danh sách đơn hàng</h2>
@@ -404,6 +488,9 @@ export default function Order() {
                       <button className="icon-btn view" onClick={() => handleView(orderId)}>
                         <FaEye />
                       </button>
+                      <button className="icon-btn edit" onClick={() => handleEdit(o)}>
+                        <FaPen />
+                      </button>
                       <button className="icon-btn delete" onClick={() => handleDelete(orderId)}>
                         <FaTrash />
                       </button>
@@ -426,7 +513,7 @@ export default function Order() {
       {showPopup && (
         <div className="popup-overlay" onClick={() => setShowPopup(false)}>
           <div className="popup-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "700px", maxHeight: "90vh", overflowY: "auto" }}>
-            <h2>Thêm đơn hàng mới</h2>
+            <h2>{isEdit ? "Sửa đơn hàng" : "Thêm đơn hàng mới"}</h2>
             {error && <div style={{ color: "red", marginBottom: "10px" }}>{error}</div>}
             <form onSubmit={handleSubmit}>
               <div style={{ marginBottom: "15px" }}>
@@ -441,7 +528,7 @@ export default function Order() {
                 </select>
               </div>
 
-              {formData.createFrom === "quotation" ? (
+              {(!isEdit && formData.createFrom === "quotation") ? (
                 <div style={{ marginBottom: "15px" }}>
                   <label>Báo giá *</label>
                   <select
@@ -591,21 +678,33 @@ export default function Order() {
                 </select>
               </div>
 
-              <div style={{ marginBottom: "15px" }}>
-                <label>Tổng tiền</label>
-                <input
-                  type="number"
-                  min="0"
-                  value={formData.totalAmount}
-                  onChange={(e) => setFormData({ ...formData, totalAmount: e.target.value })}
-                  placeholder="Tự động tính từ báo giá (không gửi khi tạo mới)"
-                  disabled
-                  style={{ backgroundColor: "#f5f5f5", cursor: "not-allowed" }}
-                />
-                <small style={{ color: "#666", fontSize: "12px", display: "block", marginTop: "5px" }}>
-                  💡 Tổng tiền sẽ được tính tự động từ báo giá khi tạo đơn hàng
-                </small>
-              </div>
+              {isEdit ? (
+                <div style={{ marginBottom: "15px" }}>
+                  <label>Tổng tiền</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={formData.totalAmount}
+                    onChange={(e) => setFormData({ ...formData, totalAmount: e.target.value })}
+                  />
+                </div>
+              ) : (
+                <div style={{ marginBottom: "15px" }}>
+                  <label>Tổng tiền</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={formData.totalAmount}
+                    onChange={(e) => setFormData({ ...formData, totalAmount: e.target.value })}
+                    placeholder="Tự động tính từ báo giá (không gửi khi tạo mới)"
+                    disabled
+                    style={{ backgroundColor: "#f5f5f5", cursor: "not-allowed" }}
+                  />
+                  <small style={{ color: "#666", fontSize: "12px", display: "block", marginTop: "5px" }}>
+                    💡 Tổng tiền sẽ được tính tự động từ báo giá khi tạo đơn hàng
+                  </small>
+                </div>
+              )}
 
               <div style={{ marginBottom: "15px" }}>
                 <label>Tiền đặt cọc</label>
@@ -668,7 +767,7 @@ export default function Order() {
               </div>
 
               <div className="form-actions">
-                <button type="submit">Tạo đơn hàng</button>
+                <button type="submit">{isEdit ? "Cập nhật" : "Tạo đơn hàng"}</button>
                 <button type="button" onClick={() => setShowPopup(false)}>Hủy</button>
               </div>
             </form>

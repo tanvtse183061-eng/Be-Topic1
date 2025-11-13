@@ -1,7 +1,7 @@
 import './Customer.css';
 import { FaSearch, FaEye, FaPen, FaTrash, FaPlus } from "react-icons/fa";
 import { useEffect, useState } from "react";
-import { vehicleAPI } from "../../services/API";
+import { vehicleAPI, imageAPI } from "../../services/API";
 import { getColorSwatchUrl } from "../../utils/imageUtils";
 
 export default function VehicleColor() {
@@ -12,6 +12,9 @@ export default function VehicleColor() {
   const [isEdit, setIsEdit] = useState(false);
   const [selectedColor, setSelectedColor] = useState(null);
   const [error, setError] = useState("");
+  const [selectedImageFile, setSelectedImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const [formData, setFormData] = useState({
     colorName: "",
@@ -71,6 +74,8 @@ export default function VehicleColor() {
       colorSwatchPath: "",
       isActive: true,
     });
+    setSelectedImageFile(null);
+    setImagePreview(null);
     setShowPopup(true);
   };
 
@@ -86,6 +91,8 @@ export default function VehicleColor() {
       colorSwatchPath: color.colorSwatchPath || "",
       isActive: color.isActive !== undefined ? color.isActive : true,
     });
+    setSelectedImageFile(null);
+    setImagePreview(getColorSwatchUrl(color));
     setShowPopup(true);
   };
 
@@ -102,6 +109,23 @@ export default function VehicleColor() {
     }
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        setError("Vui lòng chọn file ảnh!");
+        return;
+      }
+      setSelectedImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+      setError("");
+    }
+  };
+
   // ✅ Submit thêm/sửa
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -112,11 +136,34 @@ export default function VehicleColor() {
       return;
     }
 
+    // Upload ảnh trước nếu có file mới
+    let imageUrl = formData.colorSwatchUrl || "";
+    let imagePath = formData.colorSwatchPath || "";
+    
+    if (selectedImageFile) {
+      try {
+        setUploadingImage(true);
+        const formDataUpload = new FormData();
+        formDataUpload.append('file', selectedImageFile);
+        const uploadRes = await imageAPI.uploadColorSwatch(formDataUpload);
+        // Lấy URL từ response
+        imageUrl = uploadRes.data?.url || uploadRes.data?.imageUrl || uploadRes.data?.filename || uploadRes.data?.path || "";
+        imagePath = uploadRes.data?.path || uploadRes.data?.imagePath || uploadRes.data?.filename || "";
+      } catch (err) {
+        console.error("Lỗi khi upload ảnh:", err);
+        setError("Lỗi khi upload ảnh: " + (err.response?.data?.message || err.message));
+        setUploadingImage(false);
+        return;
+      } finally {
+        setUploadingImage(false);
+      }
+    }
+
     const payload = {
       colorName: formData.colorName.trim(),
       colorCode: formData.colorCode.trim(),
-      colorSwatchUrl: formData.colorSwatchUrl.trim() || "",
-      colorSwatchPath: formData.colorSwatchPath.trim() || "",
+      colorSwatchUrl: imageUrl,
+      colorSwatchPath: imagePath,
       isActive: Boolean(formData.isActive),
     };
 
@@ -271,19 +318,27 @@ export default function VehicleColor() {
                 />
               </div>
 
-              <label>Ảnh Swatch URL</label>
+              <label>Ảnh Swatch</label>
               <input
-                value={formData.colorSwatchUrl}
-                onChange={(e) => setFormData({ ...formData, colorSwatchUrl: e.target.value })}
-                placeholder="/uploads/colors/white-swatch.jpg"
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                style={{ marginBottom: '10px' }}
               />
-
-              <label>Đường dẫn ảnh (Path)</label>
-              <input
-                value={formData.colorSwatchPath}
-                onChange={(e) => setFormData({ ...formData, colorSwatchPath: e.target.value })}
-                placeholder="colors/white-swatch.jpg"
-              />
+              {imagePreview && (
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  style={{
+                    width: '150px',
+                    height: '100px',
+                    objectFit: 'cover',
+                    borderRadius: '8px',
+                    border: '1px solid #ddd',
+                    marginTop: '10px'
+                  }}
+                />
+              )}
 
               <label>
                 <input
@@ -295,8 +350,14 @@ export default function VehicleColor() {
 
               {error && <p style={{ color: "red", marginTop: "10px" }}>{error}</p>}
 
-              <button type="submit" className="btn-save">
-                {isEdit ? "Cập nhật" : "Thêm mới"}
+              {uploadingImage && (
+                <div style={{ color: '#666', marginTop: '10px', marginBottom: '10px' }}>
+                  Đang upload ảnh...
+                </div>
+              )}
+
+              <button type="submit" className="btn-save" disabled={uploadingImage}>
+                {uploadingImage ? "Đang xử lý..." : (isEdit ? "Cập nhật" : "Thêm mới")}
               </button>
             </form>
           </div>
@@ -308,11 +369,14 @@ export default function VehicleColor() {
         <div className="popup-overlay" onClick={() => setShowDetail(false)}>
           <div className="popup-box" style={{ maxWidth: "400px" }} onClick={(e) => e.stopPropagation()}>
             <h2>🎨 Thông tin màu</h2>
-            {selectedColor.colorSwatchUrl && (
+            {getColorSwatchUrl(selectedColor) && (
               <img
-                src={selectedColor.colorSwatchUrl}
+                src={getColorSwatchUrl(selectedColor)}
                 alt="Color"
                 style={{ width: "100%", maxHeight: "200px", borderRadius: "10px", objectFit: "cover", marginBottom: "15px" }}
+                onError={(e) => {
+                  e.target.style.display = "none";
+                }}
               />
             )}
             <div style={{ display: "grid", gap: "10px" }}>

@@ -235,8 +235,7 @@ export default function Feedback() {
             </table>
           ) : (
             <div className="empty-state">
-              <div className="empty-icon">📭</div>
-              <h3>{searchTerm ? 'Không tìm thấy phản hồi' : 'Chưa có phản hồi nào'}</h3>
+              <h3>{searchTerm ? 'Không tìm thấy' : 'Chưa có phản hồi'}</h3>
             </div>
           )}
         </div>

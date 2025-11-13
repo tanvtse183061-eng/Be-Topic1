@@ -1,5 +1,7 @@
-import { FaSearch, FaEye, FaPen, FaTrash, FaSpinner } from "react-icons/fa";
+import { FaSearch, FaEye, FaPen, FaTrash, FaSpinner, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import './Customer.css';
 import { useEffect, useState } from "react";
+// API cần đăng nhập - dùng cho quản lý thanh toán khách hàng (Admin/Staff)
 import { customerPaymentAPI, orderAPI } from "../../services/API";
 
 export default function PaymentCustomer() {
@@ -9,6 +11,7 @@ export default function PaymentCustomer() {
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [updating, setUpdating] = useState(null);
 
   // Lấy danh sách thanh toán
   const fetchPayments = async () => {
@@ -48,9 +51,30 @@ export default function PaymentCustomer() {
     setShowDetail(true);
   };
 
+  // Xác nhận thanh toán
+  const handleConfirmPayment = async (paymentId) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xác nhận thanh toán này không?")) return;
+    try {
+      setUpdating(paymentId);
+      await customerPaymentAPI.updatePaymentStatus(paymentId, "completed");
+      alert("Xác nhận thanh toán thành công!");
+      fetchPayments();
+      // Reload detail if viewing this payment
+      if (selectedPayment && (selectedPayment.paymentId === paymentId || selectedPayment.id === paymentId)) {
+        const res = await customerPaymentAPI.getPayment(paymentId);
+        setSelectedPayment(res.data);
+      }
+    } catch (err) {
+      console.error("Lỗi khi xác nhận thanh toán:", err);
+      alert(err.response?.data?.message || "Không thể xác nhận thanh toán. Vui lòng thử lại.");
+    } finally {
+      setUpdating(null);
+    }
+  };
+
   return (
     <div className="customer">
-      <div className="title-customer">Quản lý thanh toán</div>
+      <div className="title-customer">Thanh toán khách hàng</div>
 
       <div className="title2-customer">
         <h2>Danh sách thanh toán</h2>
@@ -122,9 +146,23 @@ export default function PaymentCustomer() {
                     </td>
                     <td>{p.paymentDate ? new Date(p.paymentDate).toLocaleDateString("vi-VN") : 'N/A'}</td>
                     <td className="action-buttons">
-                      <button className="icon-btn view" onClick={() => handleView(p)}>
+                      <button className="icon-btn view" onClick={() => handleView(p)} title="Xem chi tiết">
                         <FaEye />
                       </button>
+                      {(p.status?.toLowerCase() === "pending" || p.status === "PENDING") && (
+                        <button
+                          className="icon-btn confirm"
+                          onClick={() => handleConfirmPayment(p.paymentId || p.id)}
+                          disabled={updating === (p.paymentId || p.id)}
+                          title="Xác nhận thanh toán"
+                        >
+                          {updating === (p.paymentId || p.id) ? (
+                            <FaSpinner className="spinner-small" />
+                          ) : (
+                            <FaCheckCircle />
+                          )}
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -232,6 +270,25 @@ export default function PaymentCustomer() {
               )}
             </div>
             <div className="popup-footer">
+              {(selectedPayment.status?.toLowerCase() === "pending" || selectedPayment.status === "PENDING") && (
+                <button
+                  className="btn-confirm"
+                  onClick={() => handleConfirmPayment(selectedPayment.paymentId || selectedPayment.id)}
+                  disabled={updating === (selectedPayment.paymentId || selectedPayment.id)}
+                >
+                  {updating === (selectedPayment.paymentId || selectedPayment.id) ? (
+                    <>
+                      <FaSpinner className="spinner-small" />
+                      Đang xử lý...
+                    </>
+                  ) : (
+                    <>
+                      <FaCheckCircle />
+                      Xác nhận thanh toán
+                    </>
+                  )}
+                </button>
+              )}
               <button className="btn-primary" onClick={() => setShowDetail(false)}>Đóng</button>
             </div>
           </div>

@@ -7,7 +7,7 @@ import {
 import { InputGroup, FormControl, Badge } from "react-bootstrap";
 import { Outlet, useNavigate } from "react-router-dom";
 import { useEffect, useState } from 'react';
-import { getMenuItemsByRole, getRoleDisplayName } from '../../config/roleMenus';
+import { getMenuItemsByRole, getRoleDisplayName, groupMenuItemsByCategory } from '../../config/roleMenus';
 
 export default function DealerStaff() {
  const navigate = useNavigate();
@@ -28,25 +28,24 @@ const [selectedAction, setSelectedAction] = useState(null);
   useEffect(() => {
     const savedUser = localStorage.getItem("username");
     const savedRole = localStorage.getItem("role");
+    const savedToken = localStorage.getItem("token");
     
-    console.log("🔍 DealerStaff - savedRole:", savedRole);
-    console.log("🔍 DealerStaff - savedUser:", savedUser);
+    if (!savedUser || !savedRole || !savedToken) {
+      navigate("/login", { replace: true });
+      return;
+    }
     
-    if (savedUser && savedRole) {
-      // Kiểm tra role có đúng với route không
-      // Cho phép cả "STAFF" và "DEALER_STAFF"
+    // Kiểm tra role có đúng với route không - cho phép cả "STAFF" và "DEALER_STAFF"
       if (savedRole !== "STAFF" && savedRole !== "DEALER_STAFF") {
         // Redirect về đúng route theo role
         if (savedRole === "ADMIN") {
-          navigate("/admin");
+        navigate("/admin", { replace: true });
         } else if (savedRole === "EVM_STAFF") {
-          navigate("/evmstaff");
+        navigate("/evmstaff", { replace: true });
         } else if (savedRole === "MANAGER" || savedRole === "DEALER_MANAGER") {
-          // Xử lý cả MANAGER và DEALER_MANAGER
-          navigate("/dealermanager");
+        navigate("/dealermanager", { replace: true });
         } else {
-          console.warn("⚠️ Role không hợp lệ, redirect về login:", savedRole);
-          navigate("/login");
+        navigate("/login", { replace: true });
         }
         return;
       }
@@ -54,12 +53,7 @@ const [selectedAction, setSelectedAction] = useState(null);
       setUsername(savedUser);
       setUserRole(savedRole);
       const menuItemsForRole = getMenuItemsByRole(savedRole);
-      console.log("✅ Menu items cho role:", savedRole, menuItemsForRole);
       setMenuItems(menuItemsForRole);
-    } else {
-      console.warn("⚠️ Không có user hoặc role, redirect về login");
-      navigate("/login");
-    }
   }, [navigate]);
 
   const handleLogout = () => {
@@ -133,14 +127,11 @@ const [selectedAction, setSelectedAction] = useState(null);
           )}
         </div>
 
-        <div className="p-3">
-          {!isCollapsed && (
-            <p className="text-muted small fw-semibold mb-3 text-uppercase">Chức năng</p>
-          )}
-          <ul className="list-unstyled">
-            {menuItems
-              .filter(item => !item.disabled) // Ẩn các menu item bị disabled
-              .map((item) => {
+        <div className="p-3" style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 200px)' }}>
+          {(() => {
+            const groupedMenu = groupMenuItemsByCategory(menuItems);
+            const categories = Object.keys(groupedMenu);
+            
               // Icon mapping
               const iconMap = {
                 faGrip: faGrip,
@@ -158,6 +149,25 @@ const [selectedAction, setSelectedAction] = useState(null);
                 faChartBar: faChartBar
               };
               
+            return categories.map((category, categoryIndex) => (
+              <div key={category} style={{ marginBottom: categoryIndex < categories.length - 1 ? '20px' : '0' }}>
+                {!isCollapsed && (
+                  <div 
+                    className="text-muted small fw-semibold mb-2 px-2"
+                    style={{ 
+                      fontSize: '11px', 
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      color: '#6c757d',
+                      paddingTop: categoryIndex > 0 ? '12px' : '0',
+                      borderTop: categoryIndex > 0 ? '1px solid rgba(0,0,0,0.1)' : 'none'
+                    }}
+                  >
+                    {category}
+                  </div>
+                )}
+                <ul className="list-unstyled">
+                  {groupedMenu[category].map((item) => {
               const icon = iconMap[item.icon] || faFileAlt;
               
               // Nếu có children (submenu)
@@ -166,10 +176,7 @@ const [selectedAction, setSelectedAction] = useState(null);
                   <li key={item.id}>
                     <div
                       className="d-flex align-items-center gap-2 py-2 px-3 rounded mb-1 cursor-pointer"
-                      onClick={() => {
-                        console.log("🖱️ Click vào menu item có children:", item.label, item.id);
-                        setSelectedAction(selectedAction === item.id ? null : item.id);
-                      }}
+                            onClick={() => setSelectedAction(selectedAction === item.id ? null : item.id)}
                       style={{ cursor: 'pointer' }}
                     >
                       <FontAwesomeIcon icon={icon} className={item.color || "text-primary"} />
@@ -181,10 +188,7 @@ const [selectedAction, setSelectedAction] = useState(null);
                           <li 
                             key={child.id}
                             className="py-2 cursor-pointer"
-                            onClick={() => {
-                              console.log("🖱️ Click vào submenu:", child.label, child.path);
-                              navigate(child.path);
-                            }}
+                                  onClick={() => navigate(child.path)}
                             style={{ cursor: 'pointer' }}
                           >
                             {child.label}
@@ -200,14 +204,7 @@ const [selectedAction, setSelectedAction] = useState(null);
                 <li 
                   key={item.id}
                   className="d-flex align-items-center gap-2 py-2 px-3 rounded mb-1 cursor-pointer"
-                  onClick={() => {
-                    if (item.path) {
-                      console.log("🖱️ Click vào menu item:", item.label, item.path);
-                      navigate(item.path);
-                    } else {
-                      console.warn("⚠️ Menu item không có path:", item.label, item.id);
-                    }
-                  }}
+                        onClick={() => item.path && navigate(item.path)}
                   style={{ cursor: item.path ? 'pointer' : 'default' }}
                 >
                   <FontAwesomeIcon icon={icon} className={item.color || "text-secondary"} />
@@ -216,6 +213,9 @@ const [selectedAction, setSelectedAction] = useState(null);
               );
             })}
           </ul>
+              </div>
+            ));
+          })()}
         </div>
       </div>
 

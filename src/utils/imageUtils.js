@@ -68,12 +68,39 @@ export const getModelImageUrl = (model) => {
 export const getVariantImageUrl = (variant) => {
   if (!variant) return null;
   
+  // Ưu tiên variantImageUrl (backend trả về dạng /uploads/variants/...)
   if (variant.variantImageUrl) {
-    return getImageUrl(variant.variantImageUrl);
+    // Nếu đã là full URL, trả về nguyên
+    if (variant.variantImageUrl.startsWith('http://') || variant.variantImageUrl.startsWith('https://')) {
+      return variant.variantImageUrl;
+    }
+    // Nếu bắt đầu bằng /, thêm base URL (http://localhost:8080)
+    if (variant.variantImageUrl.startsWith('/')) {
+      const baseUrl = BASE_URL.replace('/api', '');
+      return `${baseUrl}${variant.variantImageUrl}`;
+    }
+    // Nếu là relative path, thêm base URL và /
+    const baseUrl = BASE_URL.replace('/api', '');
+    return `${baseUrl}/${variant.variantImageUrl}`;
   }
   
+  // Thử variantImagePath
   if (variant.variantImagePath) {
-    return getImageUrl(variant.variantImagePath);
+    // Nếu đã là full URL, trả về nguyên
+    if (variant.variantImagePath.startsWith('http://') || variant.variantImagePath.startsWith('https://')) {
+      return variant.variantImagePath;
+    }
+    // Nếu bắt đầu bằng /, thêm base URL
+    if (variant.variantImagePath.startsWith('/')) {
+      const baseUrl = BASE_URL.replace('/api', '');
+      return `${baseUrl}${variant.variantImagePath}`;
+    }
+    // Nếu là relative path, thử lấy từ image management API
+    const filename = variant.variantImagePath.split('/').pop();
+    if (filename && filename.includes('.')) {
+      const baseUrl = BASE_URL.replace('/api', '');
+      return `${baseUrl}/images/vehicle-variant/${filename}`;
+    }
   }
   
   return null;

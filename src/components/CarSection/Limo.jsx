@@ -124,9 +124,6 @@ export default function Limo() {
           <CreateOrderFromCar
             show={showOrderModal}
             onClose={() => setShowOrderModal(false)}
-            carName="Limo Green"
-            carColor={getCurrentColor()}
-            carPrice={749000000}
           />
         )}
       </div>

@@ -18,13 +18,15 @@ const adminMenuItems = [
     label: "Tổng quan",
     icon: "faGrip",
     path: "dashboard",
-    color: "text-secondary"
+    color: "text-secondary",
+    category: "Tổng quan"
   },
   {
     id: "vehicle",
     label: "Truy vấn thông tin xe",
     icon: "faCar",
     color: "text-primary",
+    category: "Quản lý sản phẩm",
     children: [
       { id: "vehicle-brand", label: "Thương hiệu", path: "vehiclebrand" },
       { id: "vehicle-model", label: "Dòng xe", path: "vehiclemodel" },
@@ -33,151 +35,212 @@ const adminMenuItems = [
     ]
   },
   {
-    id: "dealer",
-    label: "Tạo Dealer",
-    icon: "faUserPlus",
-    path: "createdealer",
-    color: "text-info"
-  },
-  {
-    id: "usermanagement",
-    label: "Quản lý tài khoản",
-    icon: "faUserCog",
-    path: "usermanagement",
-    color: "text-primary"
-  },
-  {
     id: "warehouse",
     label: "Kho",
     icon: "faWarehouse",
     path: "warehouse",
-    color: "text-info"
+    color: "text-info",
+    category: "Quản lý sản phẩm"
   },
   {
     id: "vehicleinventory",
     label: "Tồn kho xe",
     icon: "faBoxes",
     path: "vehicleinventory",
-    color: "text-info"
+    color: "text-info",
+    category: "Quản lý sản phẩm"
   },
   {
     id: "quotation",
     label: "Báo giá khách hàng",
     icon: "faFileAlt",
     path: "quotation",
-    color: "text-warning"
+    color: "text-warning",
+    category: "Quản lý đơn hàng"
+  },
+  {
+    id: "customer-order",
+    label: "Khách hàng",
+    icon: "faUsers",
+    path: "customer",
+    color: "text-info",
+    category: "Quản lý đơn hàng"
+  },
+  {
+    id: "order",
+    label: "Đơn hàng",
+    icon: "faShoppingCart",
+    path: "order",
+    color: "text-primary",
+    category: "Quản lý đơn hàng"
+  },
+  {
+    id: "paymentcustomer",
+    label: "Thanh toán",
+    icon: "faMoneyCheckDollar",
+    path: "paymentcustomer",
+    color: "text-success",
+    category: "Quản lý đơn hàng"
+  },
+  {
+    id: "invoice",
+    label: "Hóa đơn",
+    icon: "faFileInvoice",
+    path: "invoice",
+    color: "text-warning",
+    category: "Quản lý đơn hàng"
+  },
+  {
+    id: "cardelivery",
+    label: "Giao hàng",
+    icon: "faTruck",
+    path: "cardelivery",
+    color: "text-info",
+    category: "Quản lý đơn hàng"
   },
   {
     id: "dealerorder",
     label: "Đơn hàng đại lý",
     icon: "faShoppingCart",
     path: "dealerorder",
-    color: "text-primary"
+    color: "text-primary",
+    category: "Quản lý đại lý"
   },
   {
     id: "dealerquotation",
     label: "Báo giá đại lý",
     icon: "faFileAlt",
     path: "dealerquotation",
-    color: "text-warning"
+    color: "text-warning",
+    category: "Quản lý đại lý"
   },
   {
     id: "dealerinvoice",
     label: "Hóa đơn đại lý",
     icon: "faFileInvoice",
     path: "dealerinvoice",
-    color: "text-info"
+    color: "text-info",
+    category: "Quản lý đại lý"
   },
   {
     id: "dealerpayment",
     label: "Thanh toán đại lý",
     icon: "faMoneyCheckDollar",
     path: "dealerpayment",
-    color: "text-success"
+    color: "text-success",
+    category: "Quản lý đại lý"
   },
   {
     id: "vehicledelivery",
     label: "Giao hàng đại lý",
     icon: "faTruck",
     path: "vehicledelivery",
-    color: "text-info"
+    color: "text-info",
+    category: "Quản lý đại lý"
   },
   {
-    id: "appointment",
-    label: "Lịch hẹn",
-    icon: "faCalendarCheck",
-    path: "appointment",
-    color: "text-primary"
+    id: "dealer",
+    label: "Tạo Dealer",
+    icon: "faUserPlus",
+    path: "createdealer",
+    color: "text-info",
+    category: "Quản lý hệ thống"
   },
   {
-    id: "feedback",
-    label: "Phản hồi",
-    icon: "faComments",
-    path: "feedback",
-    color: "text-info"
-  },
-  {
-    id: "salescontract",
-    label: "Hợp đồng bán hàng",
-    icon: "faFileContract",
-    path: "salescontract",
-    color: "text-warning"
-  },
-  {
-    id: "promotion",
-    label: "Khuyến mãi",
-    icon: "faTags",
-    path: "promotion",
-    color: "text-success"
-  },
-  {
-    id: "dealertarget",
-    label: "Mục tiêu đại lý",
-    icon: "faBullseye",
-    path: "dealertarget",
-    color: "text-primary"
-  },
-  {
-    id: "dealercontract",
-    label: "Hợp đồng đại lý",
-    icon: "faFileSignature",
-    path: "dealercontract",
-    color: "text-warning"
-  },
-  {
-    id: "pricingpolicy",
-    label: "Chính sách giá",
-    icon: "faDollarSign",
-    path: "pricingpolicy",
-    color: "text-success"
-  },
-  {
-    id: "report",
-    label: "Báo cáo",
-    icon: "faChartBar",
-    path: "report",
-    color: "text-secondary"
+    id: "usermanagement",
+    label: "Quản lý tài khoản",
+    icon: "faUserCog",
+    path: "usermanagement",
+    color: "text-primary",
+    category: "Quản lý hệ thống"
   },
   {
     id: "imagemanagement",
     label: "Quản lý hình ảnh",
     icon: "faImages",
     path: "imagemanagement",
-    color: "text-info"
+    color: "text-info",
+    category: "Quản lý hệ thống"
+  },
+  {
+    id: "appointment",
+    label: "Lịch hẹn",
+    icon: "faCalendarCheck",
+    path: "appointment",
+    color: "text-primary",
+    category: "Dịch vụ"
+  },
+  {
+    id: "feedback",
+    label: "Phản hồi",
+    icon: "faComments",
+    path: "feedback",
+    color: "text-info",
+    category: "Dịch vụ"
+  },
+  {
+    id: "salescontract",
+    label: "Hợp đồng bán hàng",
+    icon: "faFileContract",
+    path: "salescontract",
+    color: "text-warning",
+    category: "Dịch vụ"
+  },
+  {
+    id: "promotion",
+    label: "Khuyến mãi",
+    icon: "faTags",
+    path: "promotion",
+    color: "text-success",
+    category: "Khuyến mãi & Chính sách"
+  },
+  {
+    id: "dealertarget",
+    label: "Mục tiêu đại lý",
+    icon: "faBullseye",
+    path: "dealertarget",
+    color: "text-primary",
+    category: "Khuyến mãi & Chính sách"
+  },
+  {
+    id: "dealercontract",
+    label: "Hợp đồng đại lý",
+    icon: "faFileSignature",
+    path: "dealercontract",
+    color: "text-warning",
+    category: "Khuyến mãi & Chính sách"
+  },
+  {
+    id: "pricingpolicy",
+    label: "Chính sách giá",
+    icon: "faDollarSign",
+    path: "pricingpolicy",
+    color: "text-success",
+    category: "Khuyến mãi & Chính sách"
+  },
+  {
+    id: "report",
+    label: "Báo cáo",
+    icon: "faChartBar",
+    path: "report",
+    color: "text-secondary",
+    category: "Báo cáo & Tài chính"
   },
   {
     id: "installmentplan",
     label: "Kế hoạch trả góp",
     icon: "faCalendarAlt",
     path: "installmentplan",
-    color: "text-primary"
+    color: "text-primary",
+    category: "Báo cáo & Tài chính"
   },
   {
     id: "installmentschedule",
     label: "Lịch trả góp",
     icon: "faListAlt",
     path: "installmentschedule",
-    color: "text-info"
+    color: "text-info",
+    category: "Báo cáo & Tài chính"
   }
 ];
 
@@ -188,13 +251,15 @@ const evmStaffMenuItems = [
     label: "Tổng quan",
     icon: "faGrip",
     path: "dashboard",
-    color: "text-secondary"
+    color: "text-secondary",
+    category: "Tổng quan"
   },
   {
     id: "vehicle",
     label: "Truy vấn thông tin xe",
     icon: "faCar",
     color: "text-primary",
+    category: "Quản lý sản phẩm",
     children: [
       { id: "vehicle-brand", label: "Thương hiệu", path: "vehiclebrand" },
       { id: "vehicle-model", label: "Dòng xe", path: "vehiclemodel" },
@@ -207,84 +272,136 @@ const evmStaffMenuItems = [
     label: "Kho",
     icon: "faWarehouse",
     path: "warehouse",
-    color: "text-info"
+    color: "text-info",
+    category: "Quản lý sản phẩm"
   },
   {
     id: "vehicleinventory",
     label: "Tồn kho xe",
     icon: "faBoxes",
     path: "vehicleinventory",
-    color: "text-info"
+    color: "text-info",
+    category: "Quản lý sản phẩm"
   },
   {
     id: "quotation",
     label: "Báo giá khách hàng",
     icon: "faFileAlt",
     path: "quotation",
-    color: "text-warning"
+    color: "text-warning",
+    category: "Quản lý đơn hàng"
+  },
+  {
+    id: "customer-order",
+    label: "Khách hàng",
+    icon: "faUsers",
+    path: "customer",
+    color: "text-info",
+    category: "Quản lý đơn hàng"
+  },
+  {
+    id: "order",
+    label: "Đơn hàng",
+    icon: "faShoppingCart",
+    path: "order",
+    color: "text-primary",
+    category: "Quản lý đơn hàng"
+  },
+  {
+    id: "paymentcustomer",
+    label: "Thanh toán",
+    icon: "faMoneyCheckDollar",
+    path: "paymentcustomer",
+    color: "text-success",
+    category: "Quản lý đơn hàng"
+  },
+  {
+    id: "invoice",
+    label: "Hóa đơn",
+    icon: "faFileInvoice",
+    path: "invoice",
+    color: "text-warning",
+    category: "Quản lý đơn hàng"
+  },
+  {
+    id: "cardelivery",
+    label: "Giao hàng",
+    icon: "faTruck",
+    path: "cardelivery",
+    color: "text-info",
+    category: "Quản lý đơn hàng"
   },
   {
     id: "dealerorder",
     label: "Đơn hàng đại lý",
     icon: "faShoppingCart",
     path: "dealerorder",
-    color: "text-primary"
+    color: "text-primary",
+    category: "Quản lý đại lý"
   },
   {
     id: "dealerquotation",
     label: "Báo giá đại lý",
     icon: "faFileAlt",
     path: "dealerquotation",
-    color: "text-warning"
+    color: "text-warning",
+    category: "Quản lý đại lý"
   },
   {
     id: "dealerinvoice",
     label: "Hóa đơn đại lý",
     icon: "faFileInvoice",
     path: "dealerinvoice",
-    color: "text-info"
+    color: "text-info",
+    category: "Quản lý đại lý"
   },
   {
     id: "dealerpayment",
     label: "Thanh toán đại lý",
     icon: "faMoneyCheckDollar",
     path: "dealerpayment",
-    color: "text-success"
+    color: "text-success",
+    category: "Quản lý đại lý"
   },
   {
     id: "vehicledelivery",
     label: "Giao hàng đại lý",
     icon: "faTruck",
     path: "vehicledelivery",
-    color: "text-info"
+    color: "text-info",
+    category: "Quản lý đại lý"
   },
   {
     id: "appointment",
     label: "Lịch hẹn",
     icon: "faCalendarCheck",
     path: "appointment",
-    color: "text-primary"
+    color: "text-primary",
+    category: "Dịch vụ"
   },
   {
     id: "feedback",
     label: "Phản hồi",
     icon: "faComments",
     path: "feedback",
-    color: "text-info"
+    color: "text-info",
+    category: "Dịch vụ"
   },
   {
     id: "salescontract",
     label: "Hợp đồng bán hàng",
     icon: "faFileContract",
     path: "salescontract",
-    color: "text-warning"
+    color: "text-warning",
+    category: "Dịch vụ"
   },
   {
     id: "promotion",
     label: "Khuyến mãi",
     icon: "faTags",
     path: "promotion",
-    color: "text-success"
+    color: "text-success",
+    category: "Khuyến mãi & Chính sách"
   }
 ];
 
@@ -295,13 +412,15 @@ const dealerMenuItems = [
     label: "Tổng quan",
     icon: "faGrip",
     path: "dashboard",
-    color: "text-secondary"
+    color: "text-secondary",
+    category: "Tổng quan"
   },
   {
     id: "vehicle",
     label: "Truy vấn thông tin xe",
     icon: "faCar",
     color: "text-primary",
+    category: "Quản lý sản phẩm",
     children: [
       { id: "vehicle-brand", label: "Thương hiệu", path: "vehiclebrand", viewOnly: true },
       { id: "vehicle-model", label: "Dòng xe", path: "vehiclemodel", viewOnly: true },
@@ -314,56 +433,80 @@ const dealerMenuItems = [
     label: "Đơn hàng đại lý",
     icon: "faShoppingCart",
     path: "dealerorder",
-    color: "text-primary"
+    color: "text-primary",
+    category: "Quản lý đại lý"
   },
   {
     id: "dealerquotation",
     label: "Báo giá đại lý",
     icon: "faFileAlt",
     path: "dealerquotation",
-    color: "text-warning"
+    color: "text-warning",
+    category: "Quản lý đại lý"
   },
   {
     id: "dealerinvoice",
     label: "Hóa đơn đại lý",
     icon: "faFileInvoice",
     path: "dealerinvoice",
-    color: "text-info"
+    color: "text-info",
+    category: "Quản lý đại lý"
   },
   {
     id: "dealerpayment",
     label: "Thanh toán đại lý",
     icon: "faMoneyCheckDollar",
     path: "dealerpayment",
-    color: "text-success"
+    color: "text-success",
+    category: "Quản lý đại lý"
   },
   {
     id: "vehicledelivery",
     label: "Giao hàng đại lý",
     icon: "faTruck",
     path: "vehicledelivery",
-    color: "text-info"
-  },
-  {
-    id: "quotation",
-    label: "Báo giá",
-    icon: "faFileAlt",
-    path: "quotation",
-    color: "text-warning"
+    color: "text-info",
+    category: "Quản lý đại lý"
   },
   {
     id: "customer",
     label: "Khách hàng",
     icon: "faUsers",
     path: "customer",
-    color: "text-success"
+    color: "text-success",
+    category: "Quản lý khách hàng"
   },
   {
     id: "order",
-    label: "Đơn hàng",
+    label: "Đơn hàng khách hàng",
     icon: "faShoppingCart",
     path: "order",
-    color: "text-purple"
+    color: "text-purple",
+    category: "Quản lý khách hàng"
+  },
+  {
+    id: "quotation",
+    label: "Báo giá khách hàng",
+    icon: "faFileAlt",
+    path: "quotation",
+    color: "text-warning",
+    category: "Quản lý khách hàng"
+  },
+  {
+    id: "paymentcustomer",
+    label: "Thanh toán khách hàng",
+    icon: "faMoneyCheckDollar",
+    path: "paymentcustomer",
+    color: "text-success",
+    category: "Quản lý khách hàng"
+  },
+  {
+    id: "cardelivery",
+    label: "Giao xe khách hàng",
+    icon: "faTruck",
+    path: "cardelivery",
+    color: "text-info",
+    category: "Quản lý khách hàng"
   },
   {
     id: "contract",
@@ -371,21 +514,8 @@ const dealerMenuItems = [
     icon: "faFileAlt",
     path: "contract",
     color: "text-danger",
-    disabled: true // Chưa có component
-  },
-  {
-    id: "cardelivery",
-    label: "Giao xe",
-    icon: "faTruck",
-    path: "cardelivery",
-    color: "text-info"
-  },
-  {
-    id: "paymentcustomer",
-    label: "Thanh Toán",
-    icon: "faMoneyCheckDollar",
-    path: "paymentcustomer",
-    color: "text-success"
+    disabled: true, // Chưa có component
+    category: "Quản lý khách hàng"
   }
 ];
 
@@ -427,5 +557,22 @@ export const hasAccessToRoute = (role, routePath) => {
   });
   
   return hasAccess;
+};
+
+// Function để nhóm menu items theo category
+export const groupMenuItemsByCategory = (menuItems) => {
+  const grouped = {};
+  
+  menuItems.forEach(item => {
+    if (item.disabled) return; // Bỏ qua các item bị disabled
+    
+    const category = item.category || "Khác";
+    if (!grouped[category]) {
+      grouped[category] = [];
+    }
+    grouped[category].push(item);
+  });
+  
+  return grouped;
 };
 

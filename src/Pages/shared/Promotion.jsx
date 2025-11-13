@@ -340,8 +340,7 @@ export default function Promotion() {
             </table>
           ) : (
             <div className="empty-state">
-              <div className="empty-icon">📭</div>
-              <h3>{searchTerm ? 'Không tìm thấy khuyến mãi' : 'Chưa có khuyến mãi nào'}</h3>
+              <h3>{searchTerm ? 'Không tìm thấy' : 'Chưa có khuyến mãi'}</h3>
             </div>
           )}
         </div>

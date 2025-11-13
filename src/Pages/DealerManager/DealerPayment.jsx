@@ -256,7 +256,7 @@ export default function DealerPayment() {
 
   return (
     <div className="customer">
-      <div className="title-customer">Quản lý thanh toán đại lý</div>
+      <div className="title-customer">Thanh toán đại lý</div>
 
       <div className="title2-customer">
         <h2>Danh sách thanh toán đại lý</h2>
@@ -334,11 +334,11 @@ export default function DealerPayment() {
         </table>
       </div>
 
-      {/* Popup thanh toán - Bước 6 */}
+      {/* Popup thanh toán */}
       {showPopup && (
         <div className="popup-overlay" onClick={() => setShowPopup(false)}>
           <div className="popup-box" onClick={(e) => e.stopPropagation()}>
-            <h2>Thanh toán hóa đơn (Bước 6)</h2>
+            <h2>Thanh toán hóa đơn</h2>
             {error && <div className="error-message">{error}</div>}
             <form onSubmit={handleProcessPayment}>
               <div style={{ marginBottom: "15px" }}>
@@ -360,7 +360,7 @@ export default function DealerPayment() {
                   })}
                 </select>
                 {invoices.length === 0 && (
-                  <small style={{ color: "red" }}>Không có hóa đơn nào chưa thanh toán đủ</small>
+                  <small style={{ color: "red" }}>Chưa có hóa đơn chưa thanh toán</small>
                 )}
               </div>
 
@@ -373,7 +373,7 @@ export default function DealerPayment() {
                   value={formData.amount}
                   onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                   required
-                  placeholder="Nhập số tiền..."
+                  placeholder="Số tiền"
                 />
               </div>
 
@@ -418,7 +418,7 @@ export default function DealerPayment() {
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   rows="3"
-                  placeholder="Ghi chú thanh toán..."
+                  placeholder="Ghi chú"
                 />
               </div>
 

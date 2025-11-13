@@ -1,7 +1,7 @@
 import '../Admin/Customer.css';
 import { FaSearch, FaEye, FaPen, FaTrash, FaPlus } from "react-icons/fa";
 import { useEffect, useState } from "react";
-import { vehicleAPI } from "../../services/API";
+import { vehicleAPI, imageAPI } from "../../services/API";
 import { getBrandLogoUrl } from "../../utils/imageUtils"; 
 
 export default function VehicleBrand() {
@@ -12,6 +12,9 @@ export default function VehicleBrand() {
   const [isEdit, setIsEdit] = useState(false);
   const [selectedBrand, setSelectedBrand] = useState(null);
   const [error, setError] = useState("");
+  const [selectedImageFile, setSelectedImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   // Phân quyền: Admin và EVMStaff có thể sửa/xóa, Dealer chỉ xem
   const currentRole = localStorage.getItem("role") || "";
@@ -77,6 +80,8 @@ export default function VehicleBrand() {
       brandLogoPath: "",
       isActive: true,
     });
+    setSelectedImageFile(null);
+    setImagePreview(null);
     setShowPopup(true);
   };
 
@@ -92,6 +97,8 @@ export default function VehicleBrand() {
       brandLogoPath: brand.brandLogoPath || "",
       isActive: brand.isActive ?? true,
     });
+    setSelectedImageFile(null);
+    setImagePreview(getBrandLogoUrl(brand));
     setShowPopup(true);
   };
 
@@ -108,6 +115,23 @@ export default function VehicleBrand() {
     }
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        setError("Vui lòng chọn file ảnh!");
+        return;
+      }
+      setSelectedImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+      setError("");
+    }
+  };
+
   // ✅ Thêm / Sửa thương hiệu
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -116,12 +140,35 @@ export default function VehicleBrand() {
       return;
     }
 
+    // Upload ảnh trước nếu có file mới
+    let imageUrl = formData.brandLogoUrl || "";
+    let imagePath = formData.brandLogoPath || "";
+    
+    if (selectedImageFile) {
+      try {
+        setUploadingImage(true);
+        const formDataUpload = new FormData();
+        formDataUpload.append('file', selectedImageFile);
+        const uploadRes = await imageAPI.uploadVehicleBrand(formDataUpload);
+        // Lấy URL từ response
+        imageUrl = uploadRes.data?.url || uploadRes.data?.imageUrl || uploadRes.data?.filename || uploadRes.data?.path || "";
+        imagePath = uploadRes.data?.path || uploadRes.data?.imagePath || uploadRes.data?.filename || "";
+      } catch (err) {
+        console.error("Lỗi khi upload ảnh:", err);
+        setError("Lỗi khi upload ảnh: " + (err.response?.data?.message || err.message));
+        setUploadingImage(false);
+        return;
+      } finally {
+        setUploadingImage(false);
+      }
+    }
+
     const payload = {
       brandName: formData.brandName,
       country: formData.country,
       foundedYear: formData.foundedYear ? Number(formData.foundedYear) : null,
-      brandLogoUrl: formData.brandLogoUrl || "",
-      brandLogoPath: formData.brandLogoPath || "",
+      brandLogoUrl: imageUrl,
+      brandLogoPath: imagePath,
       isActive: formData.isActive ?? true,
     };
 
@@ -273,18 +320,31 @@ export default function VehicleBrand() {
                   value={formData.foundedYear}
                   onChange={(e) => setFormData({ ...formData, foundedYear: e.target.value })}
                 />
-                <input
-                  name="brandLogoUrl"
-                  placeholder="URL Logo"
-                  value={formData.brandLogoUrl}
-                  onChange={(e) => setFormData({ ...formData, brandLogoUrl: e.target.value })}
-                />
-                <input
-                  name="brandLogoPath"
-                  placeholder="Đường dẫn file logo"
-                  value={formData.brandLogoPath}
-                  onChange={(e) => setFormData({ ...formData, brandLogoPath: e.target.value })}
-                />
+                <div style={{ gridColumn: 'span 2' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
+                    Logo thương hiệu
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    style={{ marginBottom: '10px' }}
+                  />
+                  {imagePreview && (
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      style={{
+                        width: '150px',
+                        height: '100px',
+                        objectFit: 'contain',
+                        borderRadius: '8px',
+                        border: '1px solid #ddd',
+                        marginTop: '10px'
+                      }}
+                    />
+                  )}
+                </div>
                 <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <input
                     type="checkbox"
@@ -295,9 +355,16 @@ export default function VehicleBrand() {
                 </label>
               </div>
               {error && <span className="error">{error}</span>}
+              {uploadingImage && (
+                <div style={{ color: '#666', marginTop: '10px', marginBottom: '10px' }}>
+                  Đang upload ảnh...
+                </div>
+              )}
               <div className="form-actions">
-                <button type="submit">{isEdit ? "Cập nhật" : "Tạo"}</button>
-                <button type="button" onClick={() => setShowPopup(false)}>
+                <button type="submit" disabled={uploadingImage}>
+                  {uploadingImage ? "Đang xử lý..." : (isEdit ? "Cập nhật" : "Tạo")}
+                </button>
+                <button type="button" onClick={() => setShowPopup(false)} disabled={uploadingImage}>
                   Hủy
                 </button>
               </div>
