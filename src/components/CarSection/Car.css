@@ -1,0 +1,220 @@
+.car-page {
+    width: 100%;
+    background-color: white;
+    text-align: center;
+    padding-bottom: 40px; 
+    margin-top: 1000px;
+    
+}
+
+.car-carousel {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.main-car-image {
+    width: 70%;
+    max-width: 850px;
+    height: auto;
+    object-fit: contain;
+    margin-top: 20px;
+    transition: transform 0.3s ease-in-out;
+}
+
+.main-car-image:hover {
+    transform: scale(1.02);
+}
+
+.thumbnail-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.thumbnail-img {
+    width: 80px;
+    height: 55px;
+    cursor: pointer;
+    opacity: 0.6;
+    border-radius: 8px;
+    transition: all 0.3s;
+    object-fit: cover;
+}
+
+.thumbnail-img:hover,
+.thumbnail-img.active {
+    opacity: 1;
+    transform: scale(1.05);
+    border: 2px solid #007bff;
+}
+
+.promo {
+    list-style: none;
+    padding: 0;
+    margin-top: 30px;
+    font-weight: 600;
+    color: red;
+}
+.car {
+    text-align: center;
+    background-color: #fff;
+    padding-top: 30px;
+    position: relative;
+    top:200px;
+}
+.car-page {
+    text-align: center;
+    background-color: #fff;
+    padding-bottom: 40px;
+    font-family: "Segoe UI", sans-serif;
+}
+
+/* --- Ảnh và tên xe chính --- */
+.car-top {
+    top:10px;
+    position: relative;
+   
+}
+
+.main-car-image {
+    width: 70%;
+    max-width: 800px;
+    border-radius: 10px;
+}
+
+.car-top h2 {
+    margin-top: 10px;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.car-top p {
+    font-size: 18px;
+    color: #444;
+    margin-bottom: 25px;
+}
+
+/* --- Thanh menu đen --- */
+.car-menu {
+    background-color: #000;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    padding: 12px 0;
+}
+
+.car-menu ul {
+    display: flex;
+    gap: 30px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.car-menu li {
+    cursor: pointer;
+    font-weight: 600;
+    border-bottom: 2px solid transparent;
+    transition: 0.3s;
+}
+
+.car-menu li:hover {
+    border-bottom: 2px solid white;
+}
+
+.btn-price {
+    margin-left: 40px;
+    background-color: transparent;
+    color: white;
+    border: 1px solid white;
+    padding: 5px 15px;
+    border-radius: 3px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-price:hover {
+    background-color: white;
+    color: black;
+}
+
+/* --- Ưu đãi --- */
+.promo {
+    background-color: #f9f9f9;
+    padding: 15px 0;
+}
+
+.promo ul {
+    list-style: none;
+    color: red;
+    font-weight: 600;
+    line-height: 1.8;
+    padding: 0;
+    margin: 0;
+}
+
+/* --- Carousel --- */
+.car-carousel-container {
+    width: 70%;
+    max-width: 800px;
+    margin: 40px auto 0 auto;
+}
+
+.car-carousel-image {
+    width: 100%;
+    border-radius: 10px;
+}
+
+/* --- Thumbnail chọn màu --- */
+.thumbnail-row {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.thumbnail-img {
+    width: 60px;
+    height: 40px;
+    border-radius: 5px;
+    cursor: pointer;
+    opacity: 0.7;
+    border: 2px solid transparent;
+    transition: 0.3s;
+}
+
+.thumbnail-img:hover,
+.thumbnail-img.active {
+    opacity: 1;
+    border-color: #000;
+}
+.car-im img {
+    width: 80%;
+    max-width: 1000px;
+    height: auto;
+    border-radius: 10px;
+}
+
+.car-in {
+    margin-top: 20px;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.car-in h2 {
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.car-in p {
+    font-size: 18px;
+    color: #555;
+}
