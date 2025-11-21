@@ -748,15 +748,91 @@ export default function Quotation() {
 
   // Xóa báo giá
   const handleDeleteQuotation = async (quotationId) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa báo giá này không?")) return;
+    // Tìm quotation để kiểm tra order liên kết
+    const quotationToDelete = quotations.find(q => (q.quotationId || q.id) === quotationId);
+    const quotationNumber = quotationToDelete?.quotationNumber || quotationId;
+    
+    // Kiểm tra xem quotation có đang được liên kết với order không
+    let linkedOrder = null;
+    if (quotationToDelete?.orderId) {
+      try {
+        const orderRes = await orderAPI.getOrder(quotationToDelete.orderId);
+        linkedOrder = orderRes.data?.data || orderRes.data || orderRes;
+      } catch (orderErr) {
+        console.warn("⚠️ Không thể kiểm tra order liên kết:", orderErr);
+      }
+    } else if (quotationToDelete?.order) {
+      linkedOrder = quotationToDelete.order;
+    }
+    
+    // Nếu có order liên kết, kiểm tra trạng thái
+    let cancelOrderIfNeeded = false;
+    if (linkedOrder) {
+      const orderStatus = (linkedOrder.status || "").toUpperCase().trim();
+      const orderId = linkedOrder.orderId || linkedOrder.id;
+      const orderNumber = linkedOrder.orderNumber || orderId;
+      
+      // Các trạng thái quan trọng cần hủy order trước khi xóa báo giá
+      const criticalStatuses = ["PAID", "DELIVERED", "COMPLETED"];
+      const isCritical = criticalStatuses.includes(orderStatus);
+      
+      if (isCritical) {
+        // Nếu đơn hàng ở trạng thái quan trọng, hỏi user có muốn hủy order không
+        const shouldCancel = window.confirm(
+          `Báo giá này đang được liên kết với đơn hàng "${orderNumber}" có trạng thái "${linkedOrder.status}".\n\n` +
+          `Để xóa báo giá, bạn cần hủy đơn hàng trước.\n\n` +
+          `Bạn có muốn tự động hủy đơn hàng và xóa báo giá không?`
+        );
+        
+        if (shouldCancel) {
+          cancelOrderIfNeeded = true; // Backend sẽ tự động hủy order
+        } else {
+          // Người dùng không muốn hủy order
+          alert("❌ Không thể xóa báo giá vì đơn hàng đang ở trạng thái quan trọng.\n\nVui lòng hủy đơn hàng trước khi xóa báo giá.");
+          return;
+        }
+      } else {
+        // Nếu order không ở trạng thái quan trọng, có thể xóa báo giá trực tiếp
+        const confirmDelete = window.confirm(
+          `Báo giá này đang được liên kết với đơn hàng "${orderNumber}" (trạng thái: ${linkedOrder.status}).\n\n` +
+          `Bạn có chắc chắn muốn xóa báo giá này không?`
+        );
+        
+        if (!confirmDelete) {
+          return;
+        }
+      }
+    } else {
+      // Không có order liên kết, xác nhận xóa bình thường
+      if (!window.confirm(`Bạn có chắc chắn muốn xóa báo giá "${quotationNumber}" không?`)) {
+        return;
+      }
+    }
+    
     try {
-      await quotationAPI.deleteQuotation(quotationId);
-      alert("Xóa báo giá thành công!");
+      // Gọi API với tham số cancelOrderIfNeeded
+      const response = await quotationAPI.deleteQuotation(quotationId, cancelOrderIfNeeded);
+      
+      // Kiểm tra xem có thông tin về việc tự động hủy order không
+      const responseData = response.data || {};
+      let successMessage = "✅ Xóa báo giá thành công!";
+      
+      if (responseData.orderCancelled) {
+        successMessage += `\n\n✅ Đã tự động hủy đơn hàng "${responseData.cancelledOrderNumber || 'liên kết'}"`;
+      }
+      
+      alert(successMessage);
       fetchQuotations();
     } catch (err) {
-      console.error("Lỗi khi xóa báo giá:", err);
-      const errorMsg = err.response?.data?.error || err.response?.data?.message || err.message || "Không thể xóa báo giá!";
-      alert(`Xóa báo giá thất bại!\n${errorMsg}`);
+      console.error("❌ Lỗi khi xóa báo giá:", err);
+      let errorMsg = err.response?.data?.error || err.response?.data?.message || err.message || "Không thể xóa báo giá!";
+      
+      // Nếu lỗi là về order đang active, thông báo rõ ràng hơn
+      if (errorMsg.includes("linked to an active order") || errorMsg.includes("active order") || errorMsg.includes("Cannot delete")) {
+        errorMsg = "Không thể xóa báo giá vì đang được liên kết với đơn hàng đang hoạt động.\n\nVui lòng hủy hoặc từ chối đơn hàng trước khi xóa báo giá.";
+      }
+      
+      alert(`❌ Xóa báo giá thất bại!\n\n${errorMsg}`);
     }
   };
 
@@ -942,14 +1018,102 @@ export default function Quotation() {
         }
       }
       
-      // Nếu có orderId nhưng không có order data, fetch order để lấy thông tin
-      if (quotationData.orderId && !quotationData.order) {
+      // Nếu có orderId, fetch order để lấy thông tin đầy đủ
+      if (quotationData.orderId) {
         try {
           console.log("🔄 Fetching order data separately...");
           const orderRes = await orderAPI.getOrder(quotationData.orderId);
-          const orderData = orderRes.data?.data || orderRes.data || orderRes;
+          let orderData = orderRes.data?.data || orderRes.data || orderRes;
           console.log("✅ Order data fetched:", orderData);
+          
+          // Fetch customer nếu chỉ có customerId
+          if (!orderData.customer && orderData.customerId) {
+            try {
+              const customerRes = await customerAPI.getCustomer(orderData.customerId);
+              const customerData = customerRes.data?.data || customerRes.data || customerRes;
+              orderData = { ...orderData, customer: customerData };
+            } catch (customerErr) {
+              console.error("❌ Lỗi khi fetch customer từ order:", customerErr);
+            }
+          }
+          
+          // Fetch inventory và variant nếu có inventoryId
+          if (orderData.inventoryId && (!orderData.inventory || !orderData.inventory.variant)) {
+            try {
+              const inventoryRes = await inventoryAPI.getInventoryById(orderData.inventoryId);
+              let inventoryData = inventoryRes.data?.data || inventoryRes.data || inventoryRes;
+              
+              // Fetch variant nếu chỉ có variantId
+              if (inventoryData.variantId || inventoryData.variant?.variantId) {
+                const variantId = inventoryData.variantId || inventoryData.variant?.variantId || inventoryData.variant?.id;
+                if (variantId && (!inventoryData.variant || !inventoryData.variant.model)) {
+                  try {
+                    const variantRes = await vehicleAPI.getVariant(variantId);
+                    const variantData = variantRes.data?.data || variantRes.data || variantRes;
+                    
+                    // Fetch model nếu chỉ có modelId
+                    if (variantData.modelId && !variantData.model) {
+                      try {
+                        const modelRes = await vehicleAPI.getModel(variantData.modelId);
+                        const modelData = modelRes.data?.data || modelRes.data || modelRes;
+                        
+                        // Fetch brand nếu chỉ có brandId
+                        if (modelData.brandId && !modelData.brand) {
+                          try {
+                            const brandRes = await vehicleAPI.getBrand(modelData.brandId);
+                            const brandData = brandRes.data?.data || brandRes.data || brandRes;
+                            modelData.brand = brandData;
+                          } catch (brandErr) {
+                            console.error("❌ Lỗi khi fetch brand:", brandErr);
+                          }
+                        }
+                        
+                        variantData.model = modelData;
+                      } catch (modelErr) {
+                        console.error("❌ Lỗi khi fetch model:", modelErr);
+                      }
+                    }
+                    
+                    inventoryData.variant = variantData;
+                  } catch (variantErr) {
+                    console.error("❌ Lỗi khi fetch variant:", variantErr);
+                  }
+                }
+              }
+              
+              // Fetch color nếu chỉ có colorId
+              if (inventoryData.colorId && !inventoryData.color) {
+                try {
+                  const colorRes = await vehicleAPI.getColor(inventoryData.colorId);
+                  const colorData = colorRes.data?.data || colorRes.data || colorRes;
+                  inventoryData.color = colorData;
+                } catch (colorErr) {
+                  console.error("❌ Lỗi khi fetch color:", colorErr);
+                }
+              }
+              
+              orderData.inventory = inventoryData;
+            } catch (inventoryErr) {
+              console.error("❌ Lỗi khi fetch inventory:", inventoryErr);
+            }
+          }
+          
           quotationData = { ...quotationData, order: orderData };
+          
+          // Nếu quotation không có customer nhưng order có, dùng customer từ order
+          if (!quotationData.customer && orderData.customer) {
+            quotationData.customer = orderData.customer;
+          }
+          
+          // Nếu quotation không có variant nhưng order có, dùng variant từ order
+          if (!quotationData.variant && orderData.inventory?.variant) {
+            quotationData.variant = orderData.inventory.variant;
+          }
+          
+          // Nếu quotation không có color nhưng order có, dùng color từ order
+          if (!quotationData.color && orderData.inventory?.color) {
+            quotationData.color = orderData.inventory.color;
+          }
         } catch (orderErr) {
           console.error("❌ Lỗi khi fetch order:", orderErr);
         }

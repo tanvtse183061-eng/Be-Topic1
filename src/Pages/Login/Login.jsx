@@ -69,26 +69,12 @@ export default function Login() {
       console.log("✅ Login response:", data);
 
       if (data?.accessToken) {
-        // Kiểm tra trạng thái tài khoản
+        // Kiểm tra trạng thái tài khoản - chỉ từ response, không gọi API thêm
         let isActive = true;
-        
-        // Kiểm tra trong response trước
         if (data.isActive !== undefined) {
           isActive = data.isActive;
         } else if (data.user?.isActive !== undefined) {
           isActive = data.user.isActive;
-        } else {
-          // Nếu không có trong response, gọi API để lấy thông tin user
-          try {
-            const userRes = await userAPI.getUsers();
-            const user = userRes.data?.find(u => u.username === data.username);
-            if (user) {
-              isActive = user.isActive !== false; // Mặc định true nếu không có
-            }
-          } catch (userErr) {
-            console.warn("Không thể kiểm tra trạng thái user:", userErr);
-            // Tiếp tục với mặc định isActive = true
-          }
         }
 
         // Nếu tài khoản bị ngừng hoạt động
@@ -100,31 +86,50 @@ export default function Login() {
         }
 
         // Lưu thông tin đăng nhập - ưu tiên userType từ backend
-        const roleToSave = data.userType || data.role;
+        const roleToSave = data.userType || data.role || data.user?.userType || data.user?.role;
+        const usernameToSave = data.username || data.user?.username || "";
+        
+        // Lưu vào localStorage ngay lập tức
         localStorage.setItem("token", data.accessToken);
-        localStorage.setItem("username", data.username);
+        localStorage.setItem("username", usernameToSave);
         localStorage.setItem("role", roleToSave);
 
-        console.log("✅ Role từ login response:", roleToSave);
-        console.log("✅ Username:", data.username);
+        // Kiểm tra lại ngay để đảm bảo đã lưu
+        const savedToken = localStorage.getItem("token");
+        const savedRole = localStorage.getItem("role");
+        const savedUser = localStorage.getItem("username");
         
-        // Redirect theo role (không cần alert, redirect luôn)
-        const role = roleToSave;
-        console.log("🔄 Redirect theo role:", role);
+        console.log("✅ Login thành công!");
+        console.log("✅ Role:", savedRole);
+        console.log("✅ Username:", savedUser);
+        console.log("✅ Token:", savedToken ? "Đã lưu" : "Chưa lưu");
         
-        // Sử dụng replace: true để không thể quay lại trang login bằng back button
-        if (role === "ADMIN") {
-          navigate("/admin", { replace: true });
-        } else if (role === "EVM_STAFF") {
-          navigate("/evmstaff", { replace: true });
-        } else if (role === "MANAGER" || role === "DEALER_MANAGER") {
-          navigate("/dealermanager", { replace: true });
-        } else if (role === "STAFF" || role === "DEALER_STAFF") {
-          navigate("/dealerstaff", { replace: true });
-        } else {
-          console.warn("⚠️ Role không khớp, dùng fallback:", role);
-          navigate("/dealerstaff", { replace: true });
+        // Nếu không lưu được, báo lỗi
+        if (!savedToken || !savedRole) {
+          console.error("❌ Lỗi: Không thể lưu token hoặc role!");
+          alert("Lỗi: Không thể lưu thông tin đăng nhập. Vui lòng thử lại!");
+          setIsSubmitting(false);
+          setLoading(false);
+          return;
         }
+        
+        // Xác định route redirect
+        let redirectPath = "/dealerstaff"; // fallback
+        if (roleToSave === "ADMIN") {
+          redirectPath = "/admin";
+        } else if (roleToSave === "EVM_STAFF") {
+          redirectPath = "/evmstaff";
+        } else if (roleToSave === "MANAGER" || roleToSave === "DEALER_MANAGER") {
+          redirectPath = "/dealermanager";
+        } else if (roleToSave === "STAFF" || roleToSave === "DEALER_STAFF") {
+          redirectPath = "/dealerstaff";
+        }
+        
+        console.log("🔄 Redirect đến:", redirectPath);
+        
+        // Sử dụng navigate với replace để không có history entry
+        // Không dùng window.location.href để tránh reload không cần thiết
+        navigate(redirectPath, { replace: true });
       } else {
         alert("Sai tài khoản hoặc mật khẩu!");
       }

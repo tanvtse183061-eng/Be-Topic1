@@ -176,7 +176,6 @@ export default function VehicleColor() {
               <th>SWATCH</th>
               <th>TÊN MÀU</th>
               <th>MÃ MÀU</th>
-              <th>ĐƯỜNG DẪN ẢNH</th>
               <th>TRẠNG THÁI</th>
               <th>THAO TÁC</th>
             </tr>
@@ -213,7 +212,6 @@ export default function VehicleColor() {
                       <span style={{ fontFamily: "monospace", fontSize: "13px" }}>{c.colorCode}</span>
                     </div>
                   </td>
-                  <td>{c.colorSwatchPath || "—"}</td>
                   <td>
                     <span style={{
                       background: c.isActive ? "#dcfce7" : "#fee2e2",
@@ -231,7 +229,7 @@ export default function VehicleColor() {
                 </tr>
               ))
             ) : (
-              <tr><td colSpan="6" style={{ textAlign: "center", color: "#666", padding: "30px" }}>Không có dữ liệu màu xe</td></tr>
+              <tr><td colSpan="5" style={{ textAlign: "center", color: "#666", padding: "30px" }}>Không có dữ liệu màu xe</td></tr>
             )}
           </tbody>
         </table>
@@ -314,7 +312,6 @@ export default function VehicleColor() {
             <div style={{ display: "grid", gap: "10px" }}>
               <p><b>Tên màu:</b> {selectedColor.colorName}</p>
               <p><b>Mã màu:</b> {selectedColor.colorCode}</p>
-              <p><b>Đường dẫn ảnh:</b> {selectedColor.colorSwatchPath || "—"}</p>
               <p><b>Trạng thái:</b> {selectedColor.isActive ? "✅ Hoạt động" : "❌ Ngưng"}</p>
             </div>
             <button

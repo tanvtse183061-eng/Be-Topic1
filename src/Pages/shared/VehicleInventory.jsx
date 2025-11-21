@@ -15,6 +15,8 @@ export default function VehicleInventory() {
   const [isEdit, setIsEdit] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [error, setError] = useState("");
+  // Track các ID đã xóa để không hiển thị lại
+  const [deletedVehicleIds, setDeletedVehicleIds] = useState(new Set());
 
   const [formData, setFormData] = useState({
     vin: "",
@@ -188,12 +190,41 @@ export default function VehicleInventory() {
 
       vehiclesData = Array.from(allVehiclesMap.values());
 
+      // 🔹 Filter ra các xe đã bị xóa (soft delete) - không hiển thị trong danh sách
+      vehiclesData = vehiclesData.filter(v => {
+        const vid = v.id || v.inventoryId || v.vehicleId;
+        const status = (v.status || v.vehicleStatus || "").toLowerCase().trim();
+        const deletedStatuses = ["deleted", "removed", "archived", "inactive", "đã xóa"];
+        
+        // Kiểm tra nếu ID đã được đánh dấu là đã xóa
+        if (deletedVehicleIds.has(String(vid))) {
+          console.log("🚫 Filtered out vehicle (tracked as deleted):", vid);
+          return false;
+        }
+        
+        // Kiểm tra nếu status là deleted
+        if (deletedStatuses.includes(status)) {
+          console.log("🚫 Filtered out deleted vehicle:", {
+            id: vid,
+            status: status,
+            originalStatus: v.status || v.vehicleStatus
+          });
+          // Đánh dấu ID này là đã xóa để không hiển thị lại
+          setDeletedVehicleIds(prev => new Set([...prev, String(vid)]));
+          return false;
+        }
+        
+        return true;
+      });
+      
+      console.log("📊 Vehicles after filter:", vehiclesData.length, "vehicles (deleted ones filtered out)");
+
       // 🔹 Normalize data: Đảm bảo các field names chuẩn
       vehiclesData = vehiclesData.map(v => {
         const normalized = { ...v };
         
-        // Normalize licensePlate
-        if (!normalized.licensePlate) {
+        // Normalize licensePlate - ưu tiên licensePlate từ DTO, fallback các field khác
+        if (!normalized.licensePlate || normalized.licensePlate === "") {
           normalized.licensePlate = v.plateNumber || v.license || v.licensePlateNumber || null;
         }
         
@@ -324,7 +355,13 @@ export default function VehicleInventory() {
       }
       try {
         const allVehicles = await inventoryAPI.getInventory();
-        const filtered = (allVehicles.data || []).filter(v => 
+        // Filter ra các xe đã bị xóa (soft delete) trước khi search
+        const notDeleted = (allVehicles.data || []).filter(v => {
+          const status = (v.status || v.vehicleStatus || "").toLowerCase();
+          const deletedStatuses = ["deleted", "removed", "archived", "inactive"];
+          return !deletedStatuses.includes(status);
+        });
+        const filtered = notDeleted.filter(v => 
           v.licensePlate?.toLowerCase().includes(q.toLowerCase()) ||
           v.vin?.toLowerCase().includes(q.toLowerCase()) ||
           v.chassisNumber?.toLowerCase().includes(q.toLowerCase())
@@ -488,19 +525,153 @@ export default function VehicleInventory() {
   };
 
   // 🔹 Xóa xe
-  const handleDelete = async (id) => {
-    if (!window.confirm("Bạn có chắc muốn xóa xe này không?")) return;
+  const handleDelete = async (vehicle) => {
+    // Nếu truyền vào là ID (string/number), tìm vehicle object
+    let vehicleToDelete = vehicle;
+    if (typeof vehicle === 'string' || typeof vehicle === 'number') {
+      vehicleToDelete = vehicles.find(v => {
+        const vid = v.id || v.inventoryId || v.vehicleId;
+        return String(vid) === String(vehicle) || vid === vehicle;
+      });
+    }
+    
+    if (!vehicleToDelete) {
+      alert("❌ Không tìm thấy thông tin xe để xóa!");
+      return;
+    }
+    
+    // Lấy ID từ nhiều nguồn
+    const inventoryId = vehicleToDelete.id || vehicleToDelete.inventoryId || vehicleToDelete.vehicleId;
+    
+    if (!inventoryId) {
+      alert("❌ Không tìm thấy ID của xe để xóa!");
+      console.error("❌ Vehicle object không có ID:", vehicleToDelete);
+      return;
+    }
+    
+    const vin = vehicleToDelete.vin || vehicleToDelete.vinNumber || "N/A";
+    const licensePlate = vehicleToDelete.licensePlate || vehicleToDelete.plateNumber || "N/A";
+    
+    if (!window.confirm(`Bạn có chắc muốn xóa xe này không?\n\nVIN: ${vin}\nBiển số: ${licensePlate}\n\n⚠️ Hành động này không thể hoàn tác!`)) {
+      return;
+    }
+    
+    // Đảm bảo id là string (UUID phải là string) - khai báo ngoài try để dùng trong catch
+    const inventoryIdStr = String(inventoryId).trim();
+    
     try {
-      // Đảm bảo id là string (UUID phải là string)
-      const inventoryIdStr = String(id).trim();
-      console.log("🗑️ Deleting inventory with ID:", inventoryIdStr);
+      console.log("🗑️ Deleting inventory:", {
+        inventoryId: inventoryIdStr,
+        vehicle: vehicleToDelete,
+        fullObject: vehicleToDelete,
+        allPossibleIds: {
+          id: vehicleToDelete.id,
+          inventoryId: vehicleToDelete.inventoryId,
+          vehicleId: vehicleToDelete.vehicleId
+        }
+      });
+      
+      // Thử xác minh ID có tồn tại không trước khi xóa
+      try {
+        const verifyRes = await inventoryAPI.getInventoryById(inventoryIdStr);
+        console.log("✅ ID verified, vehicle exists:", verifyRes.data);
+      } catch (verifyError) {
+        console.warn("⚠️ Could not verify ID, but proceeding with delete:", verifyError);
+      }
+      
+      // Thử xóa bằng DELETE endpoint
+      try {
       await inventoryAPI.deleteInventory(inventoryIdStr);
-      alert("✅ Xóa thành công!");
-      fetchAll();
+        console.log("✅ Hard delete successful for:", inventoryIdStr);
+        
+        // Đánh dấu ID này là đã xóa
+        setDeletedVehicleIds(prev => new Set([...prev, inventoryIdStr]));
+        
+        // Đánh dấu ID này là đã xóa
+        setDeletedVehicleIds(prev => new Set([...prev, inventoryIdStr]));
+        
+        // Xóa khỏi state ngay lập tức thay vì fetchAll để tránh hiển thị lại các xe đã soft delete
+        setVehicles(prev => {
+          const filtered = prev.filter(v => {
+            const vid = v.id || v.inventoryId || v.vehicleId;
+            const shouldKeep = String(vid) !== String(inventoryIdStr);
+            if (!shouldKeep) {
+              console.log("🗑️ Removing vehicle from state (hard delete):", vid);
+            }
+            return shouldKeep;
+          });
+          console.log("📊 Vehicles after hard delete removal:", filtered.length, "remaining");
+          return filtered;
+        });
+        
+        alert("✅ Xóa xe thành công!");
+        return;
+      } catch (deleteError) {
+        // Nếu DELETE không được, thử soft delete bằng cách update status
+        if (deleteError.response?.status === 404 || deleteError.response?.status === 405) {
+          console.warn("⚠️ DELETE endpoint không khả dụng, thử soft delete...");
+          // Thử các status khác nhau mà backend có thể hỗ trợ
+          const softDeleteStatuses = ["deleted", "removed", "archived", "inactive"];
+          let softDeleteSuccess = false;
+          
+          for (const status of softDeleteStatuses) {
+            try {
+              console.log(`🔄 Thử update status thành "${status}"...`);
+              const updateResult = await inventoryAPI.updateStatus(inventoryIdStr, status);
+              console.log("✅ Update status result:", updateResult.data);
+              
+              // Đánh dấu ID này là đã xóa
+              setDeletedVehicleIds(prev => new Set([...prev, inventoryIdStr]));
+              
+              // Xóa khỏi state ngay lập tức thay vì fetchAll để tránh hiển thị lại
+              setVehicles(prev => {
+                const filtered = prev.filter(v => {
+                  const vid = v.id || v.inventoryId || v.vehicleId;
+                  const shouldKeep = String(vid) !== String(inventoryIdStr);
+                  if (!shouldKeep) {
+                    console.log("🗑️ Removing vehicle from state (soft delete):", vid);
+                  }
+                  return shouldKeep;
+                });
+                console.log("📊 Vehicles after soft delete removal:", filtered.length, "remaining");
+                return filtered;
+              });
+              
+              alert(`✅ Đã xóa xe thành công!`);
+              softDeleteSuccess = true;
+              return;
+            } catch (statusError) {
+              console.warn(`⚠️ Không thể update status thành "${status}":`, statusError.response?.status);
+              // Tiếp tục thử status tiếp theo
+            }
+          }
+          
+          // Nếu tất cả soft delete đều thất bại, throw lỗi gốc
+          if (!softDeleteSuccess) {
+            console.error("❌ Tất cả phương án soft delete đều thất bại");
+            throw deleteError;
+          }
+        }
+        throw deleteError;
+      }
     } catch (error) {
       console.error("❌ Lỗi xóa xe:", error);
-      const msg = error.response?.data?.message || error.message || "Không thể xóa xe";
-      alert("Không thể xóa xe: " + msg);
+      console.error("❌ Error response:", error.response);
+      console.error("❌ Error data:", error.response?.data);
+      console.error("❌ Full error:", error);
+      
+      let errorMsg = "Không thể xóa xe";
+      if (error.response?.status === 404) {
+        errorMsg = `Không tìm thấy xe trong hệ thống (404).\n\nID đang thử: ${inventoryIdStr}\n\nVui lòng kiểm tra:\n- ID có đúng format UUID không?\n- Xe có còn tồn tại trong database không?\n- Backend có hỗ trợ endpoint DELETE không?`;
+      } else if (error.response?.status === 405) {
+        errorMsg = "Backend không hỗ trợ phương thức DELETE cho endpoint này.";
+      } else if (error.response?.data?.message) {
+        errorMsg = error.response.data.message;
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+      
+      alert(`❌ ${errorMsg}`);
     }
   };
 
@@ -560,7 +731,7 @@ export default function VehicleInventory() {
                 // Xử lý các field name khác nhau từ API
                 const vehicleId = v.id || v.inventoryId || v.vehicleId;
                 const vin = v.vin || v.vinNumber || "";
-                const licensePlate = v.licensePlate || v.plateNumber || "";
+                const licensePlate = v.licensePlate || v.plateNumber || v.license || v.licensePlateNumber || "";
                 const variantId = v.variantId || v.variant?.variantId || v.variant?.id;
                 const colorId = v.colorId || v.color?.colorId || v.color?.id;
                 const warehouseId = v.warehouseId || v.warehouse?.warehouseId || v.warehouse?.id;
@@ -598,7 +769,22 @@ export default function VehicleInventory() {
                     <td className="action-buttons">
                       <button onClick={() => handleView(v)} className="icon-btn view"><FaEye /></button>
                       <button onClick={() => handleEdit(v)} className="icon-btn edit"><FaPen /></button>
-                      <button onClick={() => handleDelete(vehicleId)} className="icon-btn delete"><FaTrash /></button>
+                      {(() => {
+                        const statusLower = (status || '').toLowerCase();
+                        // Chỉ hiển thị nút xóa khi xe đã bán (status = "sold")
+                        if (statusLower === 'sold' || statusLower === 'đã bán') {
+                          return (
+                            <button 
+                              onClick={() => handleDelete(v)} 
+                              className="icon-btn delete"
+                              title="Xóa xe đã bán"
+                            >
+                              <FaTrash />
+                            </button>
+                          );
+                        }
+                        return null;
+                      })()}
                     </td>
                   </tr>
                 );
@@ -647,8 +833,34 @@ export default function VehicleInventory() {
                   name="variantId"
                   value={formData.variantId || ""}
                   onChange={(e) => {
-                    console.log("🔹 Selected variantId:", e.target.value);
-                    setFormData({ ...formData, variantId: e.target.value });
+                    const selectedVariantId = e.target.value;
+                    console.log("🔹 Selected variantId:", selectedVariantId);
+                    
+                    // Tự động điền giá từ variant.basePrice hoặc variant.priceBase
+                    let autoPrice = "";
+                    if (selectedVariantId) {
+                      const variant = variants.find(v => 
+                        (v.variantId || v.id) == selectedVariantId ||
+                        String(v.variantId || v.id) === String(selectedVariantId)
+                      );
+                      if (variant) {
+                        autoPrice = variant.basePrice || variant.priceBase || "";
+                        if (autoPrice) {
+                          console.log("✅ Tự động điền giá từ variant:", {
+                            variantName: variant.variantName,
+                            basePrice: variant.basePrice,
+                            priceBase: variant.priceBase,
+                            autoPrice: autoPrice
+                          });
+                        }
+                      }
+                    }
+                    
+                    setFormData({ 
+                      ...formData, 
+                      variantId: selectedVariantId,
+                      price: autoPrice || formData.price // Giữ giá cũ nếu variant không có giá
+                    });
                   }}
                   required
                 >
@@ -704,6 +916,7 @@ export default function VehicleInventory() {
                   })}
                 </select>
 
+                <div>
                 <input
                   name="price"
                   type="number"
@@ -711,6 +924,22 @@ export default function VehicleInventory() {
                   value={formData.price}
                   onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                 />
+                  {formData.variantId && formData.price && (() => {
+                    const selectedVariant = variants.find(v => 
+                      (v.variantId || v.id) == formData.variantId ||
+                      String(v.variantId || v.id) === String(formData.variantId)
+                    );
+                    const variantPrice = selectedVariant?.basePrice || selectedVariant?.priceBase;
+                    if (variantPrice && parseFloat(formData.price) === parseFloat(variantPrice)) {
+                      return (
+                        <small style={{ color: "#16a34a", fontSize: "12px", display: "block", marginTop: "5px" }}>
+                          ✅ Giá đã tự động lấy từ variant ({selectedVariant?.variantName || "variant"})
+                        </small>
+                      );
+                    }
+                    return null;
+                  })()}
+                </div>
 
                 <select
                   name="status"

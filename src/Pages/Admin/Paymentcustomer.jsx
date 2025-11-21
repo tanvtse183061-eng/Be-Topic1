@@ -1,6 +1,6 @@
 import { FaSearch, FaEye, FaPen, FaTrash, FaSpinner, FaCheck } from "react-icons/fa";
 import { useEffect, useState } from "react";
-import { customerPaymentAPI, orderAPI } from "../../services/API";
+import { customerPaymentAPI, orderAPI, customerAPI } from "../../services/API";
 
 export default function PaymentCustomer() {
   const [payments, setPayments] = useState([]);
@@ -16,7 +16,56 @@ export default function PaymentCustomer() {
       setLoading(true);
       setError(null);
       const res = await customerPaymentAPI.getPayments();
-      setPayments(res.data || []);
+      let paymentsData = res.data || [];
+      
+      // Enrich payments với customer và order data nếu cần
+      const enrichedPayments = await Promise.all(
+        paymentsData.map(async (payment) => {
+          let enriched = { ...payment };
+          
+          // Nếu không có customer data nhưng có customerId, fetch customer
+          if ((!payment.customer || !payment.customer.firstName) && payment.customerId) {
+            try {
+              const customerRes = await customerAPI.getCustomer(payment.customerId);
+              const customerData = customerRes.data?.data || customerRes.data || customerRes;
+              enriched.customer = customerData;
+            } catch (err) {
+              console.error(`❌ Lỗi fetch customer cho payment ${payment.paymentId}:`, err);
+            }
+          }
+          
+          // Nếu không có order data nhưng có orderId, fetch order (có thể có customer trong order)
+          if ((!payment.order || !payment.order.orderNumber) && payment.orderId) {
+            try {
+              const orderRes = await orderAPI.getOrder(payment.orderId);
+              const orderData = orderRes.data?.data || orderRes.data || orderRes;
+              enriched.order = orderData;
+              
+              // Nếu order có customer nhưng payment chưa có, dùng customer từ order
+              if (orderData.customer && !enriched.customer) {
+                enriched.customer = orderData.customer;
+              }
+              
+              // Nếu order có customerId nhưng chưa có customer object, fetch customer
+              if (orderData.customerId && !enriched.customer) {
+                try {
+                  const customerRes = await customerAPI.getCustomer(orderData.customerId);
+                  const customerData = customerRes.data?.data || customerRes.data || customerRes;
+                  enriched.customer = customerData;
+                } catch (err) {
+                  console.error(`❌ Lỗi fetch customer từ order:`, err);
+                }
+              }
+            } catch (err) {
+              console.error(`❌ Lỗi fetch order cho payment ${payment.paymentId}:`, err);
+            }
+          }
+          
+          return enriched;
+        })
+      );
+      
+      setPayments(enrichedPayments);
     } catch (err) {
       console.error("Lỗi khi lấy danh sách thanh toán:", err);
       setError("Không thể tải danh sách thanh toán. Vui lòng thử lại sau.");
@@ -68,13 +117,52 @@ export default function PaymentCustomer() {
     }
   };
 
+  // Xoá thanh toán
+  const handleDelete = async (payment) => {
+    const paymentId = payment.paymentId || payment.id;
+    const paymentNumber = payment.paymentNumber || paymentId;
+    const paymentStatus = (payment.status || "").toLowerCase().trim();
+    
+    // Chỉ cho phép xóa khi status = "completed"
+    if (paymentStatus !== "completed" && 
+        paymentStatus !== "hoàn tất" && 
+        paymentStatus !== "đã hoàn tất" &&
+        paymentStatus !== "done" &&
+        paymentStatus !== "finished") {
+      alert("❌ Chỉ có thể xóa thanh toán với trạng thái 'completed'!");
+      return;
+    }
+    
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa thanh toán "${paymentNumber}" không?\n\n⚠️ Lưu ý: Hành động này không thể hoàn tác!`)) {
+      return;
+    }
+    
+    try {
+      await customerPaymentAPI.deletePayment(paymentId);
+      alert("✅ Xóa thanh toán thành công!");
+      // Xóa khỏi state ngay lập tức
+      setPayments(prev => prev.filter(p => {
+        const pid = p.paymentId || p.id;
+        return String(pid) !== String(paymentId);
+      }));
+      // Đóng popup chi tiết nếu đang mở
+      if (showDetail && selectedPayment && (selectedPayment.paymentId || selectedPayment.id) === paymentId) {
+        setShowDetail(false);
+        setSelectedPayment(null);
+      }
+    } catch (err) {
+      console.error("❌ Lỗi khi xóa:", err);
+      const errorMsg = err.response?.data?.error || err.response?.data?.message || err.message || "Xóa thất bại!";
+      alert(`❌ Xóa thất bại!\n\n${errorMsg}`);
+    }
+  };
+
   return (
     <div className="customer">
       <div className="title-customer">Quản lý thanh toán</div>
 
       <div className="title2-customer">
         <h2>Danh sách thanh toán</h2>
-        <h3>+ Thêm thanh toán</h3>
       </div>
 
       <div className="title3-customer">
@@ -122,9 +210,15 @@ export default function PaymentCustomer() {
                   <tr key={p.paymentId}>
                     <td>{p.paymentNumber || p.paymentId}</td>
                     <td>
-                      {p.customer?.firstName || ''} {p.customer?.lastName || ''}
-                      <br />
-                      <small style={{ color: "#6b7280" }}>{p.customer?.email || 'N/A'}</small>
+                      {p.customer?.firstName && p.customer?.lastName
+                        ? `${p.customer.firstName} ${p.customer.lastName}`.trim()
+                        : p.customer?.firstName || p.customer?.lastName || 'N/A'}
+                      {p.customer?.email && (
+                        <>
+                          <br />
+                          <small style={{ color: "#6b7280" }}>{p.customer.email}</small>
+                        </>
+                      )}
                     </td>
                     <td>{p.order?.orderNumber || p.orderId || 'N/A'}</td>
                     <td>{p.amount ? p.amount.toLocaleString('vi-VN') : '0'} ₫</td>
@@ -154,6 +248,26 @@ export default function PaymentCustomer() {
                           <FaCheck />
                         </button>
                       )}
+                      {(() => {
+                        const status = (p.status || "").toLowerCase().trim();
+                        // Chỉ hiển thị nút xóa khi thanh toán có status = "completed"
+                        if (status === "completed" || 
+                            status === "hoàn tất" || 
+                            status === "đã hoàn tất" ||
+                            status === "done" ||
+                            status === "finished") {
+                          return (
+                            <button 
+                              className="icon-btn delete" 
+                              onClick={() => handleDelete(p)}
+                              title="Xóa thanh toán (chỉ khi completed)"
+                            >
+                              <FaTrash />
+                            </button>
+                          );
+                        }
+                        return null;
+                      })()}
                     </td>
                   </tr>
                 ))

@@ -1,7 +1,7 @@
 import './Order.css'
 import { FaSearch, FaEye, FaPen, FaTrash, FaSpinner, FaExclamationCircle, FaCheckCircle, FaClock, FaTimesCircle } from "react-icons/fa";
 import { useEffect, useState } from "react";
-import { orderAPI } from "../../services/API";
+import { orderAPI, customerPaymentAPI } from "../../services/API";
 
 export default function Order(){
   const [order, setOrder] = useState([]);
@@ -12,6 +12,8 @@ export default function Order(){
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [deleting, setDeleting] = useState(null);
+  // Track các ID đã xóa để không hiển thị lại
+  const [deletedOrderIds, setDeletedOrderIds] = useState(new Set());
 
   // Lấy danh sách đơn hàng (bao gồm cả đơn hàng từ DealerStaff)
   const fetchOrder = async () => {
@@ -20,10 +22,58 @@ export default function Order(){
       setError(null);
       const res = await orderAPI.getOrders();
       console.log("📦 Raw response từ getOrders (Admin):", res);
-      const ordersData = res.data?.data || res.data || [];
+      let ordersData = res.data?.data || res.data || [];
       console.log("📦 Orders data (Admin):", ordersData);
       console.log("📦 Total orders:", Array.isArray(ordersData) ? ordersData.length : 0);
-      setOrder(Array.isArray(ordersData) ? ordersData : []);
+      
+      if (Array.isArray(ordersData) && ordersData.length > 0) {
+        // 🔹 Kiểm tra payment từ thanh toán đi lên - nếu có payment completed thì có thể xóa
+        ordersData = await Promise.all(
+          ordersData.map(async (order) => {
+            const orderIdForPayment = order.orderId || order.id;
+            if (orderIdForPayment) {
+              try {
+                const paymentsRes = await customerPaymentAPI.getPaymentsByOrder(orderIdForPayment);
+                const payments = paymentsRes.data?.data || paymentsRes.data || [];
+                const completedPayments = payments.filter(p => {
+                  const paymentStatus = (p.status || "").toLowerCase().trim();
+                  // Hỗ trợ nhiều cách viết: completed, COMPLETED, Completed, hoàn tất, đã hoàn tất
+                  return paymentStatus === "completed" || 
+                         paymentStatus === "hoàn tất" || 
+                         paymentStatus === "đã hoàn tất" ||
+                         paymentStatus === "done" ||
+                         paymentStatus === "finished";
+                });
+                // Đánh dấu order có payment completed
+                order.hasCompletedPayment = completedPayments.length > 0;
+                order.completedPayments = completedPayments;
+                if (order.hasCompletedPayment) {
+                  console.log(`✅ Order ${orderIdForPayment} có ${completedPayments.length} payment(s) completed`);
+                }
+              } catch (paymentErr) {
+                console.warn(`⚠️ Không thể kiểm tra payment cho order ${orderIdForPayment}:`, paymentErr);
+                order.hasCompletedPayment = false;
+              }
+            } else {
+              order.hasCompletedPayment = false;
+            }
+            return order;
+          })
+        );
+      }
+      
+      // 🔹 Filter ra các đơn hàng đã bị xóa - không hiển thị trong danh sách
+      ordersData = (Array.isArray(ordersData) ? ordersData : []).filter(o => {
+        const orderId = o.orderId || o.id;
+        // Kiểm tra nếu ID đã được đánh dấu là đã xóa
+        if (orderId && deletedOrderIds.has(String(orderId))) {
+          console.log("🚫 Filtered out order (tracked as deleted):", orderId);
+          return false;
+        }
+        return true;
+      });
+      
+      setOrder(ordersData);
     } catch (err) {
       console.error("❌ Lỗi khi lấy đơn hàng:", err);
       setError("Không thể tải danh sách đơn hàng. Vui lòng thử lại sau.");
@@ -54,11 +104,73 @@ export default function Order(){
 
   // Xóa đơn hàng
   const handleDelete = async (orderId) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa đơn hàng này không?")) return;
+    // Tìm order để hiển thị thông tin
+    const orderToDelete = order.find(o => (o.orderId || o.id) === orderId);
+    const orderNumber = orderToDelete?.orderNumber || orderId;
+    
+    // Lấy danh sách tất cả payments liên quan để xóa trước
+    let paymentsToDelete = [];
+    try {
+      const paymentsRes = await customerPaymentAPI.getPaymentsByOrder(orderId);
+      const allPayments = paymentsRes.data || [];
+      // Lấy tất cả payments (không chỉ completed) để xóa
+      paymentsToDelete = allPayments;
+      console.log(`📋 Tìm thấy ${paymentsToDelete.length} payment(s) cho order ${orderId}`);
+    } catch (paymentFetchErr) {
+      console.warn("⚠️ Không thể fetch payments:", paymentFetchErr);
+      // Tiếp tục xóa order dù không fetch được payments
+    }
+    
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa đơn hàng "${orderNumber}" không?\n\n⚠️ Lưu ý: Hành động này sẽ xóa cả các thanh toán liên quan và không thể hoàn tác!`)) {
+      return;
+    }
+    
     try {
       setDeleting(orderId);
+      
+      // Xóa các payment liên quan trước để tránh foreign key constraint violation
+      if (paymentsToDelete.length > 0) {
+        console.log(`🗑️ Đang xóa ${paymentsToDelete.length} payment(s) liên quan...`);
+        for (const payment of paymentsToDelete) {
+          try {
+            const paymentId = payment.paymentId || payment.id;
+            if (paymentId) {
+              await customerPaymentAPI.deletePayment(paymentId);
+              console.log(`✅ Đã xóa payment ${paymentId}`);
+            }
+          } catch (paymentDeleteErr) {
+            console.error(`❌ Lỗi khi xóa payment ${payment.paymentId || payment.id}:`, paymentDeleteErr);
+            // Tiếp tục xóa các payment khác
+          }
+        }
+      }
+      
       await orderAPI.deleteOrder(orderId);
-      await fetchOrder();
+      
+      // Đánh dấu ID này là đã xóa
+      setDeletedOrderIds(prev => new Set([...prev, String(orderId)]));
+      
+      // Đóng popup chi tiết nếu đang mở
+      if (showDetail && selectedOrder && (selectedOrder.orderId || selectedOrder.id) === orderId) {
+        setShowDetail(false);
+        setSelectedOrder(null);
+      }
+      
+      // Xóa khỏi state ngay lập tức thay vì fetchAll để tránh hiển thị lại
+      setOrder(prev => {
+        const filtered = prev.filter(o => {
+          const oid = o.orderId || o.id;
+          const shouldKeep = String(oid) !== String(orderId);
+          if (!shouldKeep) {
+            console.log("🗑️ Removing order from state:", oid);
+          }
+          return shouldKeep;
+        });
+        console.log("📊 Orders after deletion:", filtered.length, "remaining");
+        return filtered;
+      });
+      
+      alert(`✅ Xóa đơn hàng "${orderNumber}" thành công!`);
     } catch (err) {
       console.error("Lỗi khi xóa đơn hàng:", err);
       alert("Xóa thất bại! " + (err.response?.data?.error || err.message));
@@ -259,14 +371,24 @@ export default function Order(){
                           <FaCheckCircle />
                         </button>
                       )}
-                      <button 
-                        className="icon-btn delete" 
-                        onClick={() => handleDelete(c.orderId)}
-                        disabled={deleting === c.orderId}
-                        title="Xóa đơn hàng"
-                      >
-                        {deleting === c.orderId ? <FaSpinner className="spinner-small" /> : <FaTrash />}
-                      </button>
+                      {/* Chỉ hiển thị nút xóa khi đơn hàng có trạng thái "cancelled" */}
+                      {(() => {
+                        const orderStatus = (c.status || "").toLowerCase().trim();
+                        const isCancelled = orderStatus === "cancelled" || 
+                                          orderStatus === "đã hủy" || 
+                                          orderStatus === "hủy" ||
+                                          orderStatus === "canceled";
+                        return isCancelled && (
+                          <button 
+                            className="icon-btn delete" 
+                            onClick={() => handleDelete(c.orderId)}
+                            disabled={deleting === c.orderId}
+                            title="Xóa đơn hàng đã hủy"
+                          >
+                            {deleting === c.orderId ? <FaSpinner className="spinner-small" /> : <FaTrash />}
+                          </button>
+                        );
+                      })()}
                     </td>
                   </tr>
                 ))}

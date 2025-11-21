@@ -59,20 +59,6 @@ export default function VehicleBrand() {
     setShowDetail(true);
   };
 
-  // ✅ Mở form thêm
-  const handleOpenAdd = () => {
-    setIsEdit(false);
-    setFormData({
-      brandName: "",
-      country: "",
-      foundedYear: "",
-      brandLogoUrl: "",
-      brandLogoPath: "",
-      isActive: true,
-    });
-    setShowPopup(true);
-  };
-
   // ✅ Mở form sửa
   const handleEdit = (brand) => {
     setIsEdit(true);
@@ -122,9 +108,6 @@ export default function VehicleBrand() {
       if (isEdit && selectedBrand) {
         await vehicleAPI.updateBrand(selectedBrand.brandId, payload);
         alert("✅ Cập nhật thương hiệu thành công!");
-      } else {
-        await vehicleAPI.createBrand(payload);
-        alert("✅ Thêm thương hiệu thành công!");
       }
       setShowPopup(false);
       setError("");
@@ -153,9 +136,6 @@ export default function VehicleBrand() {
 
       <div className="title2-customer">
         <h2>Danh sách thương hiệu</h2>
-        <h3 onClick={handleOpenAdd}>
-          <FaPlus /> Thêm thương hiệu
-        </h3>
       </div>
 
       <div className="title3-customer">
@@ -221,12 +201,6 @@ export default function VehicleBrand() {
                     <button className="icon-btn view" onClick={() => handleView(b)}>
                       <FaEye />
                     </button>
-                    <button className="icon-btn edit" onClick={() => handleEdit(b)}>
-                      <FaPen />
-                    </button>
-                    <button className="icon-btn delete" onClick={() => handleDelete(b.brandId)}>
-                      <FaTrash />
-                    </button>
                   </td>
                 </tr>
               ))
@@ -241,11 +215,11 @@ export default function VehicleBrand() {
         </table>
       </div>
 
-      {/* Popup thêm/sửa */}
-      {showPopup && (
+      {/* Popup sửa (chỉ cho phép sửa, không cho tạo mới) */}
+      {showPopup && isEdit && (
         <div className="popup-overlay">
           <div className="popup-box">
-            <h2>{isEdit ? "Sửa thương hiệu" : "Thêm thương hiệu mới"}</h2>
+            <h2>Sửa thương hiệu</h2>
             <form onSubmit={handleSubmit}>
               <div className="form-grid">
                 <input

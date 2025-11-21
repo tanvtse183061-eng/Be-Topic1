@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { publicQuotationAPI } from "../../services/API";
+import { publicQuotationAPI, publicOrderAPI, publicVehicleAPI, publicCustomerAPI } from "../../services/API";
 import { FaCheck, FaTimes, FaSpinner, FaCreditCard } from "react-icons/fa";
 import "./PublicQuotation.css";
 
@@ -23,7 +23,141 @@ export default function PublicQuotation() {
       setLoading(true);
       setError("");
       const res = await publicQuotationAPI.getQuotation(quotationId);
-      const quotationData = res.data?.data || res.data || res;
+      let quotationData = res.data?.data || res.data || res;
+      console.log("📋 Quotation data from API:", quotationData);
+      
+      // Nếu có orderId, fetch order để lấy thông tin đầy đủ (ưu tiên lấy từ order)
+      if (quotationData.orderId) {
+        try {
+          console.log("🔄 Fetching order data from publicOrderAPI...");
+          const orderRes = await publicOrderAPI.getOrder(quotationData.orderId);
+          let orderData = orderRes.data?.data || orderRes.data || orderRes;
+          console.log("✅ Order data fetched:", orderData);
+          
+          // Fetch customer nếu order chỉ có customerId
+          if (orderData.customerId && !orderData.customer) {
+            try {
+              console.log("🔄 Fetching customer from order...");
+              const customerRes = await publicCustomerAPI.getCustomer(orderData.customerId);
+              orderData.customer = customerRes.data?.data || customerRes.data || customerRes;
+              console.log("✅ Customer data fetched:", orderData.customer);
+            } catch (customerErr) {
+              console.error("❌ Lỗi khi fetch customer từ order:", customerErr);
+            }
+          }
+          
+          // Fetch inventory và variant nếu có inventoryId
+          if (orderData.inventoryId) {
+            try {
+              console.log("🔄 Fetching inventory from order...");
+              const inventoryRes = await publicVehicleAPI.getInventoryById(orderData.inventoryId);
+              let inventoryData = inventoryRes.data?.data || inventoryRes.data || inventoryRes;
+              console.log("✅ Inventory data fetched:", inventoryData);
+              
+              // Fetch variant từ danh sách variants nếu chỉ có variantId
+              if (inventoryData.variantId || inventoryData.variant?.variantId) {
+                const variantId = inventoryData.variantId || inventoryData.variant?.variantId || inventoryData.variant?.id;
+                if (variantId && (!inventoryData.variant || !inventoryData.variant.model)) {
+                  try {
+                    console.log("🔄 Fetching variant details...");
+                    // Tìm variant trong danh sách variants từ publicVehicleAPI
+                    const variantsRes = await publicVehicleAPI.getVariants();
+                    const allVariants = Array.isArray(variantsRes.data?.data) ? variantsRes.data.data :
+                                      Array.isArray(variantsRes.data) ? variantsRes.data :
+                                      Array.isArray(variantsRes) ? variantsRes : [];
+                    const variantData = allVariants.find(v => (v.variantId || v.id) == variantId);
+                    
+                    if (variantData) {
+                      console.log("✅ Variant data found:", variantData);
+                      // Fetch model và brand từ danh sách models và brands
+                      if (variantData.modelId && !variantData.model) {
+                        try {
+                          console.log("🔄 Fetching model details...");
+                          const modelsRes = await publicVehicleAPI.getModels();
+                          const allModels = Array.isArray(modelsRes.data?.data) ? modelsRes.data.data :
+                                         Array.isArray(modelsRes.data) ? modelsRes.data :
+                                         Array.isArray(modelsRes) ? modelsRes : [];
+                          const modelData = allModels.find(m => (m.modelId || m.id) == variantData.modelId);
+                          
+                          if (modelData) {
+                            console.log("✅ Model data found:", modelData);
+                            // Fetch brand từ danh sách brands
+                            if (modelData.brandId && !modelData.brand) {
+                              try {
+                                console.log("🔄 Fetching brand details...");
+                                const brandsRes = await publicVehicleAPI.getBrands();
+                                const allBrands = Array.isArray(brandsRes.data?.data) ? brandsRes.data.data :
+                                               Array.isArray(brandsRes.data) ? brandsRes.data :
+                                               Array.isArray(brandsRes) ? brandsRes : [];
+                                const brandData = allBrands.find(b => (b.brandId || b.id) == modelData.brandId);
+                                if (brandData) {
+                                  console.log("✅ Brand data found:", brandData);
+                                  modelData.brand = brandData;
+                                }
+                              } catch (brandErr) {
+                                console.error("❌ Lỗi khi fetch brand:", brandErr);
+                              }
+                            }
+                            variantData.model = modelData;
+                          }
+                        } catch (modelErr) {
+                          console.error("❌ Lỗi khi fetch model:", modelErr);
+                        }
+                      }
+                      
+                      inventoryData.variant = variantData;
+                    }
+                  } catch (variantErr) {
+                    console.error("❌ Lỗi khi fetch variant:", variantErr);
+                  }
+                }
+              }
+              
+              // Fetch color từ danh sách colors nếu chỉ có colorId
+              if (inventoryData.colorId && !inventoryData.color) {
+                try {
+                  console.log("🔄 Fetching color details...");
+                  const colorsRes = await publicVehicleAPI.getColors();
+                  const allColors = Array.isArray(colorsRes.data?.data) ? colorsRes.data.data :
+                                 Array.isArray(colorsRes.data) ? colorsRes.data :
+                                 Array.isArray(colorsRes) ? colorsRes : [];
+                  const colorData = allColors.find(c => (c.colorId || c.id) == inventoryData.colorId);
+                  if (colorData) {
+                    console.log("✅ Color data found:", colorData);
+                    inventoryData.color = colorData;
+                  }
+                } catch (colorErr) {
+                  console.error("❌ Lỗi khi fetch color:", colorErr);
+                }
+              }
+              
+              orderData.inventory = inventoryData;
+            } catch (inventoryErr) {
+              console.error("❌ Lỗi khi fetch inventory:", inventoryErr);
+            }
+          }
+          
+          // Ưu tiên dữ liệu từ order (ghi đè quotation nếu có)
+          if (orderData.customer) {
+            quotationData.customer = orderData.customer;
+            console.log("✅ Customer data từ order đã được áp dụng:", quotationData.customer);
+          }
+          
+          if (orderData.inventory?.variant) {
+            quotationData.variant = orderData.inventory.variant;
+            console.log("✅ Variant data từ order đã được áp dụng:", quotationData.variant);
+          }
+          
+          if (orderData.inventory?.color) {
+            quotationData.color = orderData.inventory.color;
+            console.log("✅ Color data từ order đã được áp dụng:", quotationData.color);
+          }
+        } catch (orderErr) {
+          console.error("❌ Lỗi khi fetch order:", orderErr);
+        }
+      }
+      
+      console.log("📋 Final quotation data with order info:", quotationData);
       setQuotation(quotationData);
     } catch (err) {
       console.error("❌ Lỗi khi lấy báo giá:", err);
@@ -120,12 +254,25 @@ export default function PublicQuotation() {
   const isExpired = quotation.expiryDate && new Date(quotation.expiryDate) < new Date();
   const isAccepted = status === "accepted" || status === "converted";
 
-  const customer = quotation.customer || {};
-  const variant = quotation.variant || {};
-  const color = quotation.color || {};
+  // Lấy thông tin từ quotation, ưu tiên từ order nếu đã fetch
+  const customer = quotation.customer || quotation.order?.customer || {};
+  const variant = quotation.variant || quotation.order?.inventory?.variant || {};
+  const color = quotation.color || quotation.order?.inventory?.color || {};
   const brand = variant?.model?.brand || variant?.brand || {};
+  
+  // Tên khách hàng
+  const customerName = `${customer.firstName || customer.first_name || ""} ${customer.lastName || customer.last_name || ""}`.trim() || "—";
+  const customerEmail = customer.email || "—";
+  
+  // Thương hiệu
   const brandName = brand?.brandName || brand?.brand_name || brand?.name || "—";
+  
+  // Dòng xe (variant name hoặc model name)
   const variantName = variant?.variantName || variant?.variant_name || variant?.name || "—";
+  const modelName = variant?.model?.modelName || variant?.model?.model_name || variant?.model?.name || "—";
+  const displayVariantName = variantName !== "—" ? variantName : (modelName !== "—" ? modelName : "—");
+  
+  // Màu sắc
   const colorName = color?.colorName || color?.color_name || color?.name || "—";
 
   return (
@@ -189,26 +336,26 @@ export default function PublicQuotation() {
         <div className="quotation-content">
           <div className="info-row">
             <div className="info-item">
-              <label>Khách hàng:</label>
-              <span>{`${customer.firstName || customer.first_name || ""} ${customer.lastName || customer.last_name || ""}`.trim() || "—"}</span>
+              <label>KHÁCH HÀNG:</label>
+              <span>{customerName}</span>
             </div>
             <div className="info-item">
-              <label>Email:</label>
-              <span>{customer.email || "—"}</span>
+              <label>EMAIL:</label>
+              <span>{customerEmail}</span>
             </div>
           </div>
 
           <div className="info-row">
             <div className="info-item">
-              <label>Thương hiệu:</label>
+              <label>THƯƠNG HIỆU:</label>
               <span>{brandName}</span>
             </div>
             <div className="info-item">
-              <label>Dòng xe:</label>
-              <span>{variantName}</span>
+              <label>DÒNG XE:</label>
+              <span>{displayVariantName}</span>
             </div>
             <div className="info-item">
-              <label>Màu sắc:</label>
+              <label>MÀU SẮC:</label>
               <span>{colorName}</span>
             </div>
           </div>

@@ -12,20 +12,15 @@ export default function Customer() {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [errors, setErrors] = useState({});
 
-  // ✅ Form khách hàng (đồng bộ Dashboard)
+  // ✅ Form khách hàng (chỉ các field có trong CustomerDTO)
   const [customerForm, setCustomerForm] = useState({
     firstName: "",
     lastName: "",
     email: "",
     phone: "",
     dateOfBirth: "",
-    address: "",
     city: "",
     province: "",
-    postalCode: "",
-    preferredContactMethod: "",
-    creditScore: 750,
-    notes: "",
   });
 
   // 📦 Lấy danh sách khách hàng
@@ -78,13 +73,8 @@ export default function Customer() {
       email: "",
       phone: "",
       dateOfBirth: "",
-      address: "",
       city: "",
       province: "",
-      postalCode: "",
-      preferredContactMethod: "",
-      creditScore: 750,
-      notes: "",
     });
     setErrors({});
     setShowPopup(true);
@@ -100,13 +90,8 @@ export default function Customer() {
       email: customer.email || "",
       phone: customer.phone || "",
       dateOfBirth: customer.dateOfBirth ? customer.dateOfBirth.slice(0, 10) : "",
-      address: customer.address || "",
       city: customer.city || "",
       province: customer.province || "",
-      postalCode: customer.postalCode || "",
-      preferredContactMethod: customer.preferredContactMethod || "",
-      creditScore: customer.creditScore || 750,
-      notes: customer.notes || "",
     });
     setErrors({});
     setShowPopup(true);
@@ -117,11 +102,21 @@ export default function Customer() {
     if (!window.confirm("Bạn có chắc muốn xóa khách hàng này?")) return;
     try {
       await customerAPI.deleteCustomer(id);
-      alert("Xóa khách hàng thành công!");
+      alert("✅ Xóa khách hàng thành công!");
       fetchCustomers();
     } catch (err) {
       console.error("❌ Lỗi khi xóa khách hàng:", err);
-      alert("Không thể xóa khách hàng!");
+      const errorMsg = err.response?.data?.error || 
+                      err.response?.data?.message || 
+                      err.message || 
+                      "Không thể xóa khách hàng!";
+      
+      // Kiểm tra nếu là lỗi 403 (Access Denied)
+      if (err.response?.status === 403) {
+        alert(`❌ Không có quyền xóa khách hàng!\n\n${errorMsg}\n\nVui lòng liên hệ Admin để được cấp quyền.`);
+      } else {
+        alert(`❌ Không thể xóa khách hàng!\n\n${errorMsg}`);
+      }
     }
   };
 
@@ -154,9 +149,15 @@ export default function Customer() {
       return;
     }
 
+    // Chỉ gửi các field có trong CustomerDTO
     const payload = {
-      ...customerForm,
-      creditScore: Number(customerForm.creditScore),
+      firstName: customerForm.firstName.trim(),
+      lastName: customerForm.lastName.trim(),
+      email: customerForm.email.trim(),
+      phone: customerForm.phone.trim(),
+      city: customerForm.city?.trim() || null,
+      province: customerForm.province?.trim() || null,
+      dateOfBirth: customerForm.dateOfBirth || null,
     };
 
     try {
@@ -177,8 +178,17 @@ export default function Customer() {
 
   const formatDate = (dateString) => {
     if (!dateString) return "—";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("vi-VN");
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "—";
+      return date.toLocaleDateString("vi-VN", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      });
+    } catch {
+      return "—";
+    }
   };
 
   return (
@@ -210,7 +220,6 @@ export default function Customer() {
               <th>ĐIỆN THOẠI</th>
               <th>THÀNH PHỐ</th>
               <th>TỈNH</th>
-              <th>ĐIỂM TÍN DỤNG</th>
               <th>NGÀY SINH</th>
               <th>NGÀY TẠO</th>
               <th>THAO TÁC</th>
@@ -223,9 +232,8 @@ export default function Customer() {
                   <td>{c.firstName} {c.lastName}</td>
                   <td>{c.email}</td>
                   <td>{c.phone}</td>
-                  <td>{c.city}</td>
-                  <td>{c.province}</td>
-                  <td>{c.creditScore}</td>
+                  <td>{c.city || '—'}</td>
+                  <td>{c.province || '—'}</td>
                   <td>{formatDate(c.dateOfBirth)}</td>
                   <td>{formatDate(c.createdAt)}</td>
                   <td className="action-buttons">
@@ -236,7 +244,7 @@ export default function Customer() {
                 </tr>
               ))
             ) : (
-              <tr><td colSpan="9">Không có dữ liệu</td></tr>
+              <tr><td colSpan="8">Không có dữ liệu</td></tr>
             )}
           </tbody>
         </table>
@@ -254,18 +262,8 @@ export default function Customer() {
                 <input type="email" name="email" placeholder="Email" value={customerForm.email} onChange={handleChange} />
                 <input name="phone" placeholder="Số điện thoại" value={customerForm.phone} onChange={handleChange} />
                 <input type="date" name="dateOfBirth" value={customerForm.dateOfBirth} onChange={handleChange} />
-                <input name="address" placeholder="Địa chỉ" value={customerForm.address} onChange={handleChange} />
                 <input name="city" placeholder="Thành phố" value={customerForm.city} onChange={handleChange} />
                 <input name="province" placeholder="Tỉnh" value={customerForm.province} onChange={handleChange} />
-                <input name="postalCode" placeholder="Mã bưu điện" value={customerForm.postalCode} onChange={handleChange} />
-                <select name="preferredContactMethod" value={customerForm.preferredContactMethod} onChange={handleChange}>
-                  <option value="">-- Liên hệ qua --</option>
-                  <option value="email">Email</option>
-                  <option value="sms">SMS</option>
-                  <option value="phone">Điện thoại</option>
-                </select>
-                <input type="number" name="creditScore" placeholder="Điểm tín dụng" value={customerForm.creditScore} onChange={handleChange} />
-                <textarea name="notes" placeholder="Ghi chú" value={customerForm.notes} onChange={handleChange}></textarea>
               </div>
 
               <div className="form-actions">
@@ -283,15 +281,14 @@ export default function Customer() {
           <div className="popup-box">
             <h2>Chi tiết khách hàng</h2>
             <p><b>Họ tên:</b> {selectedCustomer.firstName} {selectedCustomer.lastName}</p>
-            <p><b>Email:</b> {selectedCustomer.email}</p>
-            <p><b>Điện thoại:</b> {selectedCustomer.phone}</p>
+            <p><b>Email:</b> {selectedCustomer.email || '—'}</p>
+            <p><b>Điện thoại:</b> {selectedCustomer.phone || '—'}</p>
             <p><b>Ngày sinh:</b> {formatDate(selectedCustomer.dateOfBirth)}</p>
-            <p><b>Địa chỉ:</b> {selectedCustomer.address}</p>
-            <p><b>Thành phố:</b> {selectedCustomer.city}</p>
-            <p><b>Tỉnh:</b> {selectedCustomer.province}</p>
-            <p><b>Điểm tín dụng:</b> {selectedCustomer.creditScore}</p>
-            <p><b>Liên hệ qua:</b> {selectedCustomer.preferredContactMethod}</p>
-            <p><b>Ghi chú:</b> {selectedCustomer.notes}</p>
+            <p><b>Thành phố:</b> {selectedCustomer.city || '—'}</p>
+            <p><b>Tỉnh:</b> {selectedCustomer.province || '—'}</p>
+            {selectedCustomer.createdAt && (
+              <p><b>Ngày tạo:</b> {formatDate(selectedCustomer.createdAt)}</p>
+            )}
             <button onClick={() => setShowDetail(false)}>Đóng</button>
           </div>
         </div>

@@ -76,29 +76,6 @@ export default function VehicleVariant() {
     setShowDetail(true);
   };
 
-  const handleOpenAdd = () => {
-    setIsEdit(false);
-    setFormData({
-      variantName: "",
-      topSpeed: "",
-      batteryCapacity: "",
-      chargingTimeFast: "",
-      chargingTimeSlow: "",
-      isActive: true,
-      variantImageUrl: "",
-      variantImagePath: "",
-      basePrice: "",
-      powerKw: "",
-      acceleration0100: "",
-      rangeKm: "",
-      modelId: "",
-      valid: true,
-      priceBase: "",
-    });
-    setError("");
-    setShowPopup(true);
-  };
-
   const handleEdit = (variant) => {
     setIsEdit(true);
     setSelectedVariant(variant);
@@ -172,9 +149,6 @@ export default function VehicleVariant() {
       if (isEdit && selectedVariant) {
         await vehicleAPI.updateVariant(selectedVariant.variantId, payload);
         alert("Cập nhật biến thể thành công!");
-      } else {
-        await vehicleAPI.createVariant(payload);
-        alert("Tạo biến thể thành công!");
       }
       setShowPopup(false);
       fetchVariants();
@@ -198,9 +172,6 @@ export default function VehicleVariant() {
 
       <div className="title2-customer">
         <h2>Danh sách biến thể</h2>
-        <h3 onClick={handleOpenAdd}>
-          <FaPlus /> Thêm biến thể
-        </h3>
       </div>
 
       <div className="title3-customer">
@@ -249,7 +220,7 @@ export default function VehicleVariant() {
                     )}
                   </td>
                   <td>{v.variantName}</td>
-                  <td>{v.model?.modelName ?? "—"}</td>
+                  <td>{v.model?.modelName || (v.model?.modelId || v.modelId ? models.find(m => m.modelId === (v.model?.modelId || v.modelId))?.modelName : null) || "—"}</td>
                   <td>{v.topSpeed ?? "—"} km/h</td>
                   <td>{v.batteryCapacity ?? "—"} kWh</td>
                   <td>{v.priceBase}</td>
@@ -269,12 +240,6 @@ export default function VehicleVariant() {
                     <button className="icon-btn view" onClick={() => handleView(v)}>
                       <FaEye />
                     </button>
-                    <button className="icon-btn edit" onClick={() => handleEdit(v)}>
-                      <FaPen />
-                    </button>
-                    <button className="icon-btn delete" onClick={() => handleDelete(v.variantId)}>
-                      <FaTrash />
-                    </button>
                   </td>
                 </tr>
               ))
@@ -289,11 +254,11 @@ export default function VehicleVariant() {
         </table>
       </div>
 
-      {/* Popup thêm / sửa */}
-      {showPopup && (
+      {/* Popup sửa (chỉ cho phép sửa, không cho tạo mới) */}
+      {showPopup && isEdit && (
         <div className="popup-overlay">
           <div className="popup-box">
-            <h2>{isEdit ? "Sửa biến thể" : "Thêm biến thể mới"}</h2>
+            <h2>Sửa biến thể</h2>
             <form onSubmit={handleSubmit}>
               <div className="form-grid">
                 <select

@@ -16,20 +16,15 @@ export default function Customer() {
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(null);
 
-  // ✅ Form khách hàng (đồng bộ Dashboard)
+  // ✅ Form khách hàng (chỉ các field có trong CustomerDTO)
   const [customerForm, setCustomerForm] = useState({
     firstName: "",
     lastName: "",
     email: "",
     phone: "",
     dateOfBirth: "",
-    address: "",
     city: "",
     province: "",
-    postalCode: "",
-    preferredContactMethod: "",
-    creditScore: 750,
-    notes: "",
   });
 
   // 📦 Lấy danh sách khách hàng
@@ -38,10 +33,52 @@ export default function Customer() {
       setLoading(true);
       setError(null);
       const res = await customerAPI.getCustomers();
-      setCustomers(res.data || []);
+      console.log("🔍 API Response:", res);
+      console.log("🔍 res.data:", res.data);
+      
+      // Xử lý nhiều format response
+      let customersData = [];
+      
+      // Cách 1: res.data là array
+      if (Array.isArray(res.data)) {
+        customersData = res.data;
+      }
+      // Cách 2: res.data.data là array
+      else if (Array.isArray(res.data?.data)) {
+        customersData = res.data.data;
+      }
+      // Cách 3: res.data.content là array
+      else if (Array.isArray(res.data?.content)) {
+        customersData = res.data.content;
+      }
+      // Cách 4: res là array trực tiếp
+      else if (Array.isArray(res)) {
+        customersData = res;
+      }
+      // Cách 5: Tìm array trong object
+      else if (res.data && typeof res.data === 'object') {
+        const possibleArrays = Object.values(res.data).filter(Array.isArray);
+        if (possibleArrays.length > 0) {
+          customersData = possibleArrays[0];
+        }
+      }
+      
+      console.log("✅ Customers data sau khi extract:", customersData);
+      console.log("✅ Số lượng customers:", customersData.length);
+      if (customersData.length > 0) {
+        console.log("✅ Sample customer:", customersData[0]);
+      }
+      
+      setCustomers(customersData);
+      
+      if (customersData.length === 0) {
+        console.warn("⚠️ Không có customers nào được tìm thấy!");
+      }
     } catch (err) {
       console.error("❌ Lỗi khi lấy danh sách khách hàng:", err);
+      console.error("❌ Error details:", err.response?.data || err.message);
       setError("Không thể tải danh sách khách hàng. Vui lòng thử lại sau.");
+      setCustomers([]); // Đảm bảo set về [] nếu có lỗi
     } finally {
       setLoading(false);
     }
@@ -62,9 +99,31 @@ export default function Customer() {
       }
       try {
         const res = await customerAPI.searchCustomers(trimmed);
-        setCustomers(res.data);
+        console.log("🔍 Search Response:", res);
+        
+        // Xử lý nhiều format response tương tự fetchCustomers
+        let customersData = [];
+        
+        if (Array.isArray(res.data)) {
+          customersData = res.data;
+        } else if (Array.isArray(res.data?.data)) {
+          customersData = res.data.data;
+        } else if (Array.isArray(res.data?.content)) {
+          customersData = res.data.content;
+        } else if (Array.isArray(res)) {
+          customersData = res;
+        } else if (res.data && typeof res.data === 'object') {
+          const possibleArrays = Object.values(res.data).filter(Array.isArray);
+          if (possibleArrays.length > 0) {
+            customersData = possibleArrays[0];
+          }
+        }
+        
+        console.log("✅ Search results:", customersData.length);
+        setCustomers(customersData);
       } catch (err) {
         console.error("❌ Lỗi khi tìm kiếm:", err);
+        setCustomers([]);
       }
     }, 400);
     return () => clearTimeout(delay);
@@ -86,13 +145,8 @@ export default function Customer() {
       email: "",
       phone: "",
       dateOfBirth: "",
-      address: "",
       city: "",
       province: "",
-      postalCode: "",
-      preferredContactMethod: "",
-      creditScore: 750,
-      notes: "",
     });
     setErrors({});
     setShowPopup(true);
@@ -108,13 +162,8 @@ export default function Customer() {
       email: customer.email || "",
       phone: customer.phone || "",
       dateOfBirth: customer.dateOfBirth ? customer.dateOfBirth.slice(0, 10) : "",
-      address: customer.address || "",
       city: customer.city || "",
       province: customer.province || "",
-      postalCode: customer.postalCode || "",
-      preferredContactMethod: customer.preferredContactMethod || "",
-      creditScore: customer.creditScore || 750,
-      notes: customer.notes || "",
     });
     setErrors({});
     setShowPopup(true);
@@ -164,9 +213,15 @@ export default function Customer() {
       return;
     }
 
+    // Chỉ gửi các field có trong CustomerDTO
     const payload = {
-      ...customerForm,
-      creditScore: Number(customerForm.creditScore),
+      firstName: customerForm.firstName.trim(),
+      lastName: customerForm.lastName.trim(),
+      email: customerForm.email.trim(),
+      phone: customerForm.phone.trim(),
+      city: customerForm.city?.trim() || null,
+      province: customerForm.province?.trim() || null,
+      dateOfBirth: customerForm.dateOfBirth || null,
     };
 
     try {
@@ -188,8 +243,17 @@ export default function Customer() {
 
   const formatDate = (dateString) => {
     if (!dateString) return "—";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("vi-VN");
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "—";
+      return date.toLocaleDateString("vi-VN", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      });
+    } catch {
+      return "—";
+    }
   };
 
   return (
@@ -256,7 +320,6 @@ export default function Customer() {
                   <th>ĐIỆN THOẠI</th>
                   <th>THÀNH PHỐ</th>
                   <th>TỈNH</th>
-                  <th>ĐIỂM TÍN DỤNG</th>
                   <th>NGÀY SINH</th>
                   <th>NGÀY TẠO</th>
                   <th>THAO TÁC</th>
@@ -272,9 +335,6 @@ export default function Customer() {
                     <td>{c.phone || '—'}</td>
                     <td>{c.city || '—'}</td>
                     <td>{c.province || '—'}</td>
-                    <td>
-                      <span className="credit-score">{c.creditScore || 0}</span>
-                    </td>
                     <td>{formatDate(c.dateOfBirth)}</td>
                     <td>{formatDate(c.createdAt)}</td>
                     <td className="action-buttons">
@@ -335,116 +395,81 @@ export default function Customer() {
               </button>
             </div>
             <form onSubmit={handleSubmit}>
-              <div className="form-grid">
-                <div className="form-group">
-                  <input 
-                    name="firstName" 
-                    placeholder="Họ *" 
-                    value={customerForm.firstName} 
-                    onChange={handleChange}
-                    className={errors.firstName ? 'error' : ''}
-                  />
-                  {errors.firstName && <span className="error-text">{errors.firstName}</span>}
-                </div>
-                <div className="form-group">
-                  <input 
-                    name="lastName" 
-                    placeholder="Tên *" 
-                    value={customerForm.lastName} 
-                    onChange={handleChange}
-                    className={errors.lastName ? 'error' : ''}
-                  />
-                  {errors.lastName && <span className="error-text">{errors.lastName}</span>}
-                </div>
-                <div className="form-group">
-                  <input 
-                    type="email" 
-                    name="email" 
-                    placeholder="Email *" 
-                    value={customerForm.email} 
-                    onChange={handleChange}
-                    className={errors.email ? 'error' : ''}
-                  />
-                  {errors.email && <span className="error-text">{errors.email}</span>}
-                </div>
-                <div className="form-group">
-                  <input 
-                    name="phone" 
-                    placeholder="Số điện thoại *" 
-                    value={customerForm.phone} 
-                    onChange={handleChange}
-                    className={errors.phone ? 'error' : ''}
-                  />
-                  {errors.phone && <span className="error-text">{errors.phone}</span>}
-                </div>
-                <div className="form-group">
-                  <input 
-                    type="date" 
-                    name="dateOfBirth" 
-                    placeholder="Ngày sinh" 
-                    value={customerForm.dateOfBirth} 
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="form-group">
-                  <input 
-                    name="address" 
-                    placeholder="Địa chỉ" 
-                    value={customerForm.address} 
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="form-group">
-                  <input 
-                    name="city" 
-                    placeholder="Thành phố" 
-                    value={customerForm.city} 
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="form-group">
-                  <input 
-                    name="province" 
-                    placeholder="Tỉnh" 
-                    value={customerForm.province} 
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="form-group">
-                  <input 
-                    name="postalCode" 
-                    placeholder="Mã bưu điện" 
-                    value={customerForm.postalCode} 
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="form-group">
-                  <select name="preferredContactMethod" value={customerForm.preferredContactMethod} onChange={handleChange}>
-                    <option value="">-- Liên hệ qua --</option>
-                    <option value="email">Email</option>
-                    <option value="sms">SMS</option>
-                    <option value="phone">Điện thoại</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <input 
-                    type="number" 
-                    name="creditScore" 
-                    placeholder="Điểm tín dụng" 
-                    value={customerForm.creditScore} 
-                    onChange={handleChange}
-                    min="0"
-                    max="850"
-                  />
-                </div>
-                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                  <textarea 
-                    name="notes" 
-                    placeholder="Ghi chú" 
-                    value={customerForm.notes} 
-                    onChange={handleChange}
-                    rows="3"
-                  ></textarea>
+              <div className="form-section">
+                <div className="form-section-title">Thông tin khách hàng</div>
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label>Họ *</label>
+                    <input 
+                      name="firstName" 
+                      placeholder="Nhập họ" 
+                      value={customerForm.firstName} 
+                      onChange={handleChange}
+                      className={errors.firstName ? 'error' : ''}
+                    />
+                    {errors.firstName && <span className="error-text">{errors.firstName}</span>}
+                  </div>
+                  <div className="form-group">
+                    <label>Tên *</label>
+                    <input 
+                      name="lastName" 
+                      placeholder="Nhập tên" 
+                      value={customerForm.lastName} 
+                      onChange={handleChange}
+                      className={errors.lastName ? 'error' : ''}
+                    />
+                    {errors.lastName && <span className="error-text">{errors.lastName}</span>}
+                  </div>
+                  <div className="form-group">
+                    <label>Email *</label>
+                    <input 
+                      type="email" 
+                      name="email" 
+                      placeholder="Nhập email" 
+                      value={customerForm.email} 
+                      onChange={handleChange}
+                      className={errors.email ? 'error' : ''}
+                    />
+                    {errors.email && <span className="error-text">{errors.email}</span>}
+                  </div>
+                  <div className="form-group">
+                    <label>Số điện thoại *</label>
+                    <input 
+                      name="phone" 
+                      placeholder="Nhập số điện thoại" 
+                      value={customerForm.phone} 
+                      onChange={handleChange}
+                      className={errors.phone ? 'error' : ''}
+                    />
+                    {errors.phone && <span className="error-text">{errors.phone}</span>}
+                  </div>
+                  <div className="form-group">
+                    <label>Ngày sinh</label>
+                    <input 
+                      type="date" 
+                      name="dateOfBirth" 
+                      value={customerForm.dateOfBirth} 
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Thành phố</label>
+                    <input 
+                      name="city" 
+                      placeholder="Nhập thành phố" 
+                      value={customerForm.city} 
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Tỉnh</label>
+                    <input 
+                      name="province" 
+                      placeholder="Nhập tỉnh" 
+                      value={customerForm.province} 
+                      onChange={handleChange}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -500,16 +525,16 @@ export default function Customer() {
                     <span className="detail-label">Ngày sinh</span>
                     <span className="detail-value">{formatDate(selectedCustomer.dateOfBirth)}</span>
                   </div>
+                  <div className="detail-item">
+                    <span className="detail-label">Ngày tạo</span>
+                    <span className="detail-value">{formatDate(selectedCustomer.createdAt)}</span>
+                  </div>
                 </div>
               </div>
 
               <div className="detail-section">
                 <h3>Địa chỉ</h3>
                 <div className="detail-grid">
-                  <div className="detail-item full-width">
-                    <span className="detail-label">Địa chỉ</span>
-                    <span className="detail-value">{selectedCustomer.address || '—'}</span>
-                  </div>
                   <div className="detail-item">
                     <span className="detail-label">Thành phố</span>
                     <span className="detail-value">{selectedCustomer.city || '—'}</span>
@@ -518,32 +543,6 @@ export default function Customer() {
                     <span className="detail-label">Tỉnh</span>
                     <span className="detail-value">{selectedCustomer.province || '—'}</span>
                   </div>
-                  <div className="detail-item">
-                    <span className="detail-label">Mã bưu điện</span>
-                    <span className="detail-value">{selectedCustomer.postalCode || '—'}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="detail-section">
-                <h3>Thông tin khác</h3>
-                <div className="detail-grid">
-                  <div className="detail-item">
-                    <span className="detail-label">Điểm tín dụng</span>
-                    <span className="detail-value credit-score">
-                      {selectedCustomer.creditScore || 0}
-                    </span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="detail-label">Liên hệ qua</span>
-                    <span className="detail-value">{selectedCustomer.preferredContactMethod || '—'}</span>
-                  </div>
-                  {selectedCustomer.notes && (
-                    <div className="detail-item full-width">
-                      <span className="detail-label">Ghi chú</span>
-                      <span className="detail-value">{selectedCustomer.notes}</span>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>

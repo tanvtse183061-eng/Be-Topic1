@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import {
   customerAPI,
   orderAPI,
-  warehouseAPI,
+  inventoryAPI,
 } from "../../services/API.js";
 
 export default function Dashboard() {
@@ -12,6 +12,7 @@ export default function Dashboard() {
   const [customerCount, setCustomerCount] = useState(0);
   const [vehicleCount, setVehicleCount] = useState(0);
   const [pendingCount, setPendingCount] = useState(0);
+  const [monthlyRevenue, setMonthlyRevenue] = useState(0);
   const [recentOrders, setRecentOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -23,15 +24,21 @@ export default function Dashboard() {
         setLoading(true);
         setError(null);
         
-        const [orders, customers, warehouses] = await Promise.all([
+        const [orders, customers, inventory] = await Promise.all([
           orderAPI.getOrders(),
           customerAPI.getCustomers(),
-          warehouseAPI.getWarehouses(),
+          inventoryAPI.getInventory().catch(() => ({ data: [] })),
         ]);
 
         const newOrderCount = orders.data?.length || 0;
         const newCustomerCount = customers.data?.length || 0;
-        const newVehicleCount = warehouses.data?.length || 0;
+        
+        // Lọc chỉ lấy xe có status "available"
+        const availableVehicles = (inventory.data || []).filter(v => {
+          const status = (v.status || '').toLowerCase();
+          return status === 'available' || status === 'có sẵn';
+        });
+        const newVehicleCount = availableVehicles.length;
 
         // Save previous stats for comparison
         setPreviousStats({
@@ -49,6 +56,103 @@ export default function Dashboard() {
           o.status?.toLowerCase().includes('chờ')
         ) || [];
         setPendingCount(pending.length);
+
+        // Tính doanh số tháng hiện tại
+        const currentDate = new Date();
+        const currentMonth = currentDate.getMonth();
+        const currentYear = currentDate.getFullYear();
+        
+        // Lấy danh sách inventory IDs còn tồn tại (chưa bị xóa)
+        const existingInventoryIds = new Set(
+          (inventory.data || [])
+            .filter(v => {
+              const status = (v.status || '').toLowerCase();
+              // Loại bỏ các xe đã bị xóa
+              return status !== 'deleted' && 
+                     status !== 'removed' && 
+                     status !== 'archived' && 
+                     status !== 'inactive';
+            })
+            .map(v => String(v.inventoryId || v.id || ''))
+        );
+        
+        const monthlyOrders = (orders.data || []).filter(o => {
+          // Lọc đơn hàng đã hoàn thành trong tháng hiện tại
+          const status = (o.status || '').toLowerCase();
+          const isCompleted = status.includes('completed') || 
+                             status.includes('hoàn tất') || 
+                             status.includes('delivered') || 
+                             status.includes('đã giao') ||
+                             status.includes('paid') ||
+                             status.includes('đã thanh toán');
+          
+          if (!isCompleted) return false;
+          
+          // Kiểm tra ngày trong tháng hiện tại
+          let isInCurrentMonth = false;
+          if (o.orderDate) {
+            const orderDate = new Date(o.orderDate);
+            isInCurrentMonth = orderDate.getMonth() === currentMonth && 
+                              orderDate.getFullYear() === currentYear;
+          } else if (o.createdAt) {
+            const createdDate = new Date(o.createdAt);
+            isInCurrentMonth = createdDate.getMonth() === currentMonth && 
+                              createdDate.getFullYear() === currentYear;
+          }
+          
+          if (!isInCurrentMonth) return false;
+          
+          // Kiểm tra xem inventory có còn tồn tại không (chưa bị xóa)
+          const orderInventoryId = o.inventoryId || o.inventory?.inventoryId || o.inventory?.id;
+          if (orderInventoryId) {
+            const inventoryIdStr = String(orderInventoryId);
+            // Nếu inventory không còn trong danh sách tồn tại, bỏ qua order này
+            if (!existingInventoryIds.has(inventoryIdStr)) {
+              console.log(`🚫 Bỏ qua order ${o.orderId || o.id} - inventory ${inventoryIdStr} đã bị xóa`);
+              return false;
+            }
+            
+            // Kiểm tra thêm status của inventory trong order object
+            const inventoryStatus = (o.inventory?.status || '').toLowerCase();
+            if (inventoryStatus === 'deleted' || 
+                inventoryStatus === 'removed' || 
+                inventoryStatus === 'archived' || 
+                inventoryStatus === 'inactive') {
+              console.log(`🚫 Bỏ qua order ${o.orderId || o.id} - inventory có status ${inventoryStatus}`);
+              return false;
+            }
+          }
+          
+          return true;
+        });
+        
+        // Tính tổng doanh số
+        const revenue = monthlyOrders.reduce((sum, o) => {
+          // Ưu tiên 1: totalAmount từ order
+          let total = o.totalAmount || o.total_amount;
+          
+          // Ưu tiên 2: finalPrice từ quotation
+          if (!total || total === 0) {
+            total = o.quotation?.finalPrice || o.quotation?.final_price;
+          }
+          
+          // Ưu tiên 3: Giá từ inventory
+          if (!total || total === 0) {
+            const inventory = o.inventory;
+            if (inventory) {
+              total = inventory.sellingPrice || 
+                     inventory.costPrice || 
+                     inventory.price ||
+                     inventory.selling_price ||
+                     inventory.cost_price;
+            }
+          }
+          
+          const totalNum = typeof total === 'string' ? parseFloat(total) : (total || 0);
+          return sum + totalNum;
+        }, 0);
+        
+        setMonthlyRevenue(revenue);
 
         // Sort by orderDate instead of id
         const recent = orders.data
@@ -102,9 +206,9 @@ export default function Dashboard() {
       gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
       bg: '#ede9fe',
       title: 'Xe trong kho', 
-      value: vehicleCount,
+      value: vehicleCount > 0 ? vehicleCount : 'Không có',
       trend: getTrend(vehicleCount, previousStats.vehicles),
-      suffix: ' xe'
+      suffix: vehicleCount > 0 ? ' xe' : ''
     },
     { 
       id: 4, 
@@ -112,7 +216,7 @@ export default function Dashboard() {
       gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
       bg: '#fef3c7',
       title: 'Doanh thu tháng', 
-      value: '0',
+      value: monthlyRevenue,
       trend: 'stable',
       suffix: ' VNĐ',
       isMoney: true
@@ -204,7 +308,9 @@ export default function Dashboard() {
                     <div className="stat-value">
                       {stat.isMoney 
                         ? `${parseInt(stat.value).toLocaleString('vi-VN')}${stat.suffix}`
-                        : `${stat.value.toLocaleString('vi-VN')}${stat.suffix}`
+                        : typeof stat.value === 'number'
+                        ? `${stat.value.toLocaleString('vi-VN')}${stat.suffix}`
+                        : `${stat.value}${stat.suffix}`
                       }
                     </div>
                     <div className="stat-title">{stat.title}</div>

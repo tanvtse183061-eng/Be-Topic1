@@ -9,6 +9,7 @@ import { InputGroup, FormControl, Badge } from "react-bootstrap";
 import { Outlet, useNavigate } from "react-router-dom";
 import { useEffect, useState } from 'react';
 import { getMenuItemsByRole, getRoleDisplayName } from '../../config/roleMenus';
+import { feedbackAPI } from '../../services/API';
 
 export default function EVMStaff() {
  const navigate = useNavigate();
@@ -25,23 +26,26 @@ const [selectedAction, setSelectedAction] = useState(null);
   const [username, setUsername] = useState("");
   const [userRole, setUserRole] = useState("");
   const [menuItems, setMenuItems] = useState([]);
+  const [unreadFeedbackCount, setUnreadFeedbackCount] = useState(0);
 
   useEffect(() => {
+    const savedToken = localStorage.getItem("token");
     const savedUser = localStorage.getItem("username");
     const savedRole = localStorage.getItem("role");
     
-    if (savedUser && savedRole) {
+    // Kiểm tra cả token, username và role
+    if (savedToken && savedUser && savedRole) {
       // Kiểm tra role có đúng với route không
       if (savedRole !== "EVM_STAFF") {
         // Redirect về đúng route theo role
         if (savedRole === "ADMIN") {
-          navigate("/admin");
+          navigate("/admin", { replace: true });
         } else if (savedRole === "MANAGER" || savedRole === "DEALER_MANAGER") {
-          navigate("/dealermanager");
+          navigate("/dealermanager", { replace: true });
         } else if (savedRole === "STAFF" || savedRole === "DEALER_STAFF") {
-          navigate("/dealerstaff");
+          navigate("/dealerstaff", { replace: true });
         } else {
-          navigate("/login");
+          navigate("/login", { replace: true });
         }
         return;
       }
@@ -49,10 +53,33 @@ const [selectedAction, setSelectedAction] = useState(null);
       setUsername(savedUser);
       setUserRole(savedRole);
       setMenuItems(getMenuItemsByRole(savedRole));
+      
+      // Lấy số lượng phản hồi chưa xem
+      fetchUnreadFeedbackCount();
     } else {
-      navigate("/login");
+      // Nếu không có đủ thông tin, redirect về login
+      console.warn("⚠️ EVMStaff: Không có đủ thông tin đăng nhập, redirect về login");
+      navigate("/login", { replace: true });
     }
   }, [navigate]);
+
+  // Lấy số lượng phản hồi chưa xem
+  const fetchUnreadFeedbackCount = async () => {
+    try {
+      const res = await feedbackAPI.getFeedbacks();
+      const feedbacks = res.data || [];
+      // Đếm phản hồi có status pending hoặc chưa được phản hồi
+      const unread = feedbacks.filter(f => {
+        const status = (f.status || '').toLowerCase();
+        return status.includes('pending') || 
+               status.includes('chờ') || 
+               !f.response;
+      }).length;
+      setUnreadFeedbackCount(unread);
+    } catch (err) {
+      console.error("Lỗi khi lấy số lượng phản hồi:", err);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -129,10 +156,33 @@ const [selectedAction, setSelectedAction] = useState(null);
           {!isCollapsed && (
             <p className="text-muted small fw-semibold mb-3 text-uppercase">Chức năng</p>
           )}
-          <ul className="list-unstyled">
-            {menuItems
-              .filter(item => !item.disabled) // Ẩn các menu item bị disabled
-              .map((item) => {
+          {(() => {
+            // Nhóm menu items theo category
+            const groupedItems = {};
+            menuItems
+              .filter(item => !item.disabled)
+              .forEach((item) => {
+                const category = item.category || "Khác";
+                if (!groupedItems[category]) {
+                  groupedItems[category] = [];
+                }
+                groupedItems[category].push(item);
+              });
+
+            const categories = Object.keys(groupedItems);
+            
+            return categories.map((category, categoryIndex) => (
+              <div key={category}>
+                {categoryIndex > 0 && (
+                  <hr className="my-3" style={{ borderColor: '#e0e0e0', borderWidth: '1px' }} />
+                )}
+                {!isCollapsed && (
+                  <p className="text-muted small fw-semibold mb-2 mt-3 text-uppercase" style={{ fontSize: '10px', letterSpacing: '0.5px' }}>
+                    {category}
+                  </p>
+                )}
+                <ul className="list-unstyled">
+                  {groupedItems[category].map((item) => {
               // Icon mapping
               const iconMap = {
                 faGrip: faGrip,
@@ -197,8 +247,11 @@ const [selectedAction, setSelectedAction] = useState(null);
                   {!isCollapsed && <span>{item.label}</span>}
                 </li>
               );
-            })}
-          </ul>
+                  })}
+                </ul>
+              </div>
+            ));
+          })()}
         </div>
       </div>
 
@@ -271,11 +324,17 @@ const [selectedAction, setSelectedAction] = useState(null);
             </div>
 
             <div className="position-relative">
-              <button className="btn btn-link text-dark text-decoration-none position-relative">
-                <FontAwesomeIcon icon={faEnvelope} />
+              <button 
+                className="btn btn-link text-dark text-decoration-none position-relative"
+                onClick={() => navigate('feedback')}
+                title="Phản hồi"
+              >
+                <FontAwesomeIcon icon={faComments} />
+                {unreadFeedbackCount > 0 && (
                 <Badge bg="danger" className="position-absolute top-0 start-100 translate-middle rounded-pill" style={{ fontSize: '0.7rem' }}>
-                  3
+                    {unreadFeedbackCount > 99 ? '99+' : unreadFeedbackCount}
                 </Badge>
+                )}
               </button>
             </div>
 

@@ -77,6 +77,10 @@ import VehicleDeliveryEVMStaff from './Pages/EVMStaff/VehicleDelivery';
 import PublicQuotation from './Pages/Public/PublicQuotation';
 import PublicPayment from './Pages/Public/PublicPayment';
 import PublicAppointment from './Pages/Public/PublicAppointment';
+import CreateCustomer from './Pages/Public/CreateCustomer';
+import CreateOrder from './Pages/Public/CreateOrder';
+import Invoice from './Pages/Admin/Invoice';
+import CarDetail from './components/CarSection/CarDetail';
 import HerioGreen from './components/CarSection/HerioGreen';
 import Limo from './components/CarSection/Limo';
 import Minio from './components/CarSection/Minio';
@@ -92,6 +96,7 @@ function App() {
       <BrowserRouter>
      
         <Routes>
+          <Route path="/car/:inventoryId" element={<CarDetail />} />
           <Route path="/heriogreen" element={<HerioGreen />} />
           <Route path="/limo" element={<Limo />} />
           <Route path="/minio" element={<Minio />} />
@@ -104,6 +109,8 @@ function App() {
           <Route path="/public/quotations/:quotationId" element={<PublicQuotation />} />
           <Route path="/public/orders/:orderId/payment" element={<PublicPayment />} />
           <Route path="/public/orders/:orderId/appointment" element={<PublicAppointment />} />
+          <Route path="/public/customer/create" element={<CreateCustomer />} />
+          <Route path="/public/order/create" element={<CreateOrder />} />
           
           <Route path="/" element={
             <MainLayout>
@@ -124,6 +131,7 @@ function App() {
             <Route path='order' element={<Order />} />
             <Route path='cardelivery' element={<Cardelivery />} />
             <Route path='paymentcustomer' element={<Paymentcustomer />} />
+            <Route path='invoice' element={<Invoice />} />
             <Route path='vehiclebrand' element={<VehicleBrand />} />
             <Route path='vehiclemodel' element={<VehicleModel />} />
             <Route path='vehiclevariant' element={<VehicleVariant />} />
@@ -164,6 +172,7 @@ function App() {
             <Route path='vehiclemodel' element={<VehicleModelDealerStaff />} />
             <Route path='vehiclevariant' element={<VehicleVariantDealerStaff />} />
             <Route path='vehiclcolor' element={<VehicleColorDealerStaff />} />
+            <Route path='feedback' element={<Feedback />} />
           </Route>
           
           {/* DealerManager routes */}

@@ -190,6 +190,7 @@ export const publicVehicleAPI = {
   },
   getColors: () => publicApi.get('/vehicle-colors'),
   getInventory: () => publicApi.get('/vehicle-inventory'),
+  getInventoryById: (id) => publicApi.get(`/vehicle-inventory/${id}`),
   getPromotions: () => publicApi.get('/promotions'),
 };
 // ==================== DEALER API ====================
@@ -211,7 +212,7 @@ export const inventoryAPI = {
   createFromRequest: (data) => api.post('/inventory-management/create-from-request', data),
   updateInventory: (id, data) => api.put(`/inventory-management/${id}`, data),
   updateFromRequest: (id, data) => api.put(`/inventory-management/${id}/update-from-request`, data),
-  updateStatus: (id, status) => api.put(`/inventory-management/${id}/status`, { status }),
+  updateStatus: (id, status) => api.put(`/inventory-management/${id}/status?status=${status}`),
   markSold: (id) => api.put(`/inventory-management/${id}/mark-sold`),
   markReserved: (id) => api.put(`/inventory-management/${id}/mark-reserved`),
   deleteInventory: (id) => api.delete(`/inventory-management/${id}`),
@@ -439,7 +440,10 @@ export const quotationAPI = {
   createQuotation: (data) => api.post('/quotations', data),
   createQuotationFromOrder: (orderId, data) => api.post(`/quotations/from-order/${orderId}`, data),
   updateQuotation: (id, data) => api.put(`/quotations/${id}`, data),
-  deleteQuotation: (id) => api.delete(`/quotations/${id}`),
+  deleteQuotation: (id, cancelOrderIfNeeded = false) => {
+    const params = cancelOrderIfNeeded ? { cancelOrderIfNeeded: 'true' } : {};
+    return api.delete(`/quotations/${id}`, { params });
+  },
   sendQuotation: (id) => api.post(`/quotations/${id}/send`),
 };
 
@@ -543,8 +547,10 @@ export const dealerPaymentAPI = {
 export const customerPaymentAPI = {
   getPayments: () => api.get('/customer-payments'),
   getPayment: (id) => api.get(`/customer-payments/${id}`),
+  getPaymentsByOrder: (orderId) => api.get(`/customer-payments/order/${orderId}`),
   createPayment: (data) => api.post('/customer-payments', data),
   updatePaymentStatus: (id, status) => api.put(`/customer-payments/${id}/status`, { status }),
+  deletePayment: (id) => api.delete(`/customer-payments/${id}`),
 };
 
 // ==================== PUBLIC PAYMENT API ====================

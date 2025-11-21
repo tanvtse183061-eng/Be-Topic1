@@ -227,10 +227,10 @@ export default function VehicleModel() {
           <tbody>
             {models.length > 0 ? (
               models.map((m) => (
-                <tr key={m.modelId}>
-                  <td>{m.modelName}</td>
-                  <td>{m.brand?.brandName || "—"}</td>
-                  <td>{m.description || "—"}</td>
+                  <tr key={m.modelId}>
+                    <td>{m.modelName}</td>
+                    <td>{m.brand?.brandName || (m.brandId ? brands.find(b => b.brandId === m.brandId)?.brandName : null) || "—"}</td>
+                    <td>{m.description || "—"}</td>
                   <td>{m.modelYear || m.year || "—"}</td>
                   <td>
                     <span style={{

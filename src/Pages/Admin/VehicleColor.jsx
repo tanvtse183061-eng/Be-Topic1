@@ -177,7 +177,6 @@ export default function VehicleColor() {
               <th>SWATCH</th>
               <th>TÊN MÀU</th>
               <th>MÃ MÀU</th>
-              <th>ĐƯỜNG DẪN ẢNH</th>
               <th>TRẠNG THÁI</th>
               <th>THAO TÁC</th>
             </tr>
@@ -217,7 +216,6 @@ export default function VehicleColor() {
                       <span style={{ fontFamily: "monospace", fontSize: "13px" }}>{c.colorCode}</span>
                     </div>
                   </td>
-                  <td>{c.colorSwatchPath || "—"}</td>
                   <td>
                     <span style={{
                       background: c.isActive ? "#dcfce7" : "#fee2e2",
@@ -235,7 +233,7 @@ export default function VehicleColor() {
                 </tr>
               ))
             ) : (
-              <tr><td colSpan="6" style={{ textAlign: "center", color: "#666", padding: "30px" }}>Không có dữ liệu màu xe</td></tr>
+              <tr><td colSpan="5" style={{ textAlign: "center", color: "#666", padding: "30px" }}>Không có dữ liệu màu xe</td></tr>
             )}
           </tbody>
         </table>
@@ -244,60 +242,84 @@ export default function VehicleColor() {
       {/* Popup thêm/sửa */}
       {showPopup && (
         <div className="popup-overlay" onClick={() => setShowPopup(false)}>
-          <div className="popup-box" style={{ maxWidth: "500px" }} onClick={(e) => e.stopPropagation()}>
-            <h2>{isEdit ? "✏️ Sửa màu xe" : "➕ Thêm màu mới"}</h2>
+          <div className="popup-box" style={{ maxWidth: "600px" }} onClick={(e) => e.stopPropagation()}>
+            <div className="popup-header">
+              <h2>{isEdit ? "Sửa màu xe" : "Thêm màu mới"}</h2>
+              <button className="popup-close" onClick={() => setShowPopup(false)}>✕</button>
+            </div>
             <form onSubmit={handleSubmit}>
-              <label>Tên màu</label>
-              <input
-                value={formData.colorName}
-                onChange={(e) => setFormData({ ...formData, colorName: e.target.value })}
-                placeholder="Tên màu xe"
-              />
+              <div className="form-section">
+                <div className="form-section-title">Thông tin màu xe</div>
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label>Tên màu *</label>
+                    <input
+                      value={formData.colorName}
+                      onChange={(e) => setFormData({ ...formData, colorName: e.target.value })}
+                      placeholder="Nhập tên màu xe"
+                      required
+                    />
+                  </div>
 
-              <label>Mã màu</label>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <input
-                  type="color"
-                  value={formData.colorCode}
-                  onChange={(e) => setFormData({ ...formData, colorCode: e.target.value })}
-                  style={{ width: "60px", height: "40px", border: "none", background: "none", cursor: "pointer" }}
-                />
-                <input
-                  type="text"
-                  placeholder="#FFFFFF"
-                  value={formData.colorCode}
-                  onChange={(e) => setFormData({ ...formData, colorCode: e.target.value })}
-                  style={{ flex: 1 }}
-                />
+                  <div className="form-group">
+                    <label>Mã màu</label>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <input
+                        type="color"
+                        value={formData.colorCode}
+                        onChange={(e) => setFormData({ ...formData, colorCode: e.target.value })}
+                        style={{ width: "60px", height: "42px", border: "2px solid #e2e8f0", borderRadius: "10px", cursor: "pointer" }}
+                      />
+                      <input
+                        type="text"
+                        placeholder="#FFFFFF"
+                        value={formData.colorCode}
+                        onChange={(e) => setFormData({ ...formData, colorCode: e.target.value })}
+                        style={{ flex: 1, padding: "12px 16px", border: "2px solid #e2e8f0", borderRadius: "10px" }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Ảnh Swatch URL</label>
+                    <input
+                      value={formData.colorSwatchUrl}
+                      onChange={(e) => setFormData({ ...formData, colorSwatchUrl: e.target.value })}
+                      placeholder="/uploads/colors/white-swatch.jpg"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Đường dẫn ảnh (Path)</label>
+                    <input
+                      value={formData.colorSwatchPath}
+                      onChange={(e) => setFormData({ ...formData, colorSwatchPath: e.target.value })}
+                      placeholder="colors/white-swatch.jpg"
+                    />
+                  </div>
+
+                  <div className="form-group" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <input
+                      type="checkbox"
+                      checked={formData.isActive}
+                      onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                      style={{ width: "20px", height: "20px", cursor: "pointer" }}
+                    />
+                    <label style={{ margin: 0, cursor: "pointer" }}>Hoạt động</label>
+                  </div>
+                </div>
               </div>
 
-              <label>Ảnh Swatch URL</label>
-              <input
-                value={formData.colorSwatchUrl}
-                onChange={(e) => setFormData({ ...formData, colorSwatchUrl: e.target.value })}
-                placeholder="/uploads/colors/white-swatch.jpg"
-              />
+              {error && <div className="error-message">{error}</div>}
 
-              <label>Đường dẫn ảnh (Path)</label>
-              <input
-                value={formData.colorSwatchPath}
-                onChange={(e) => setFormData({ ...formData, colorSwatchPath: e.target.value })}
-                placeholder="colors/white-swatch.jpg"
-              />
-
-              <label>
-                <input
-                  type="checkbox"
-                  checked={formData.isActive}
-                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                /> Hoạt động
-              </label>
-
-              {error && <p style={{ color: "red", marginTop: "10px" }}>{error}</p>}
-
-              <button type="submit" className="btn-save">
-                {isEdit ? "Cập nhật" : "Thêm mới"}
-              </button>
+              <div className="form-actions">
+                <button type="submit" className="btn-submit">
+                  {isEdit ? "Cập nhật" : "Thêm mới"}
+                </button>
+                <button type="button" onClick={() => setShowPopup(false)} className="btn-cancel">
+                  Hủy
+                </button>
+              </div>
             </form>
           </div>
         </div>
@@ -318,7 +340,6 @@ export default function VehicleColor() {
             <div style={{ display: "grid", gap: "10px" }}>
               <p><b>Tên màu:</b> {selectedColor.colorName}</p>
               <p><b>Mã màu:</b> {selectedColor.colorCode}</p>
-              <p><b>Đường dẫn ảnh:</b> {selectedColor.colorSwatchPath || "—"}</p>
               <p><b>Trạng thái:</b> {selectedColor.isActive ? "✅ Hoạt động" : "❌ Ngưng"}</p>
             </div>
             <button

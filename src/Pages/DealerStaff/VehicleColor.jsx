@@ -59,20 +59,6 @@ export default function VehicleColor() {
     setShowDetail(true);
   };
 
-  // ✅ Mở form thêm
-  const handleOpenAdd = () => {
-    setIsEdit(false);
-    setError("");
-    setFormData({
-      colorName: "",
-      colorCode: "#FFFFFF",
-      colorSwatchUrl: "",
-      colorSwatchPath: "",
-      isActive: true,
-    });
-    setShowPopup(true);
-  };
-
   // ✅ Sửa màu
   const handleEdit = (color) => {
     setIsEdit(true);
@@ -155,7 +141,6 @@ export default function VehicleColor() {
 
       <div className="title2-customer">
         <h2>Danh sách màu ({colors.length})</h2>
-        <h3 onClick={handleOpenAdd}><FaPlus /> Thêm màu</h3>
       </div>
 
       <div className="title3-customer">
@@ -176,7 +161,6 @@ export default function VehicleColor() {
               <th>SWATCH</th>
               <th>TÊN MÀU</th>
               <th>MÃ MÀU</th>
-              <th>ĐƯỜNG DẪN ẢNH</th>
               <th>TRẠNG THÁI</th>
               <th>THAO TÁC</th>
             </tr>
@@ -213,7 +197,6 @@ export default function VehicleColor() {
                       <span style={{ fontFamily: "monospace", fontSize: "13px" }}>{c.colorCode}</span>
                     </div>
                   </td>
-                  <td>{c.colorSwatchPath || "—"}</td>
                   <td>
                     <span style={{
                       background: c.isActive ? "#dcfce7" : "#fee2e2",
@@ -225,23 +208,21 @@ export default function VehicleColor() {
                   </td>
                   <td className="action-buttons">
                     <button className="icon-btn view" onClick={() => handleView(c)}><FaEye /></button>
-                    <button className="icon-btn edit" onClick={() => handleEdit(c)}><FaPen /></button>
-                    <button className="icon-btn delete" onClick={() => handleDelete(c.colorId)}><FaTrash /></button>
                   </td>
                 </tr>
               ))
             ) : (
-              <tr><td colSpan="6" style={{ textAlign: "center", color: "#666", padding: "30px" }}>Không có dữ liệu màu xe</td></tr>
+              <tr><td colSpan="5" style={{ textAlign: "center", color: "#666", padding: "30px" }}>Không có dữ liệu màu xe</td></tr>
             )}
           </tbody>
         </table>
       </div>
 
-      {/* Popup thêm/sửa */}
-      {showPopup && (
+      {/* Popup sửa (chỉ cho phép sửa, không cho tạo mới) */}
+      {showPopup && isEdit && (
         <div className="popup-overlay" onClick={() => setShowPopup(false)}>
           <div className="popup-box" style={{ maxWidth: "500px" }} onClick={(e) => e.stopPropagation()}>
-            <h2>{isEdit ? "✏️ Sửa màu xe" : "➕ Thêm màu mới"}</h2>
+            <h2>✏️ Sửa màu xe</h2>
             <form onSubmit={handleSubmit}>
               <label>Tên màu</label>
               <input
@@ -314,7 +295,6 @@ export default function VehicleColor() {
             <div style={{ display: "grid", gap: "10px" }}>
               <p><b>Tên màu:</b> {selectedColor.colorName}</p>
               <p><b>Mã màu:</b> {selectedColor.colorCode}</p>
-              <p><b>Đường dẫn ảnh:</b> {selectedColor.colorSwatchPath || "—"}</p>
               <p><b>Trạng thái:</b> {selectedColor.isActive ? "✅ Hoạt động" : "❌ Ngưng"}</p>
             </div>
             <button

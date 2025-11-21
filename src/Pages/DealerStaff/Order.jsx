@@ -1,7 +1,7 @@
 import './Order.css';
 import { FaSearch, FaEye, FaPen, FaTrash, FaFileInvoice } from "react-icons/fa";
 import { useEffect, useState } from "react";
-import { orderAPI, customerAPI, quotationAPI, dealerQuotationAPI, inventoryAPI, publicVehicleAPI, vehicleAPI } from "../../services/API";
+import { orderAPI, customerAPI, quotationAPI, dealerQuotationAPI, inventoryAPI, publicVehicleAPI, vehicleAPI, customerPaymentAPI } from "../../services/API";
 
 export default function Order() {
   const [order, setOrder] = useState([]);
@@ -13,6 +13,8 @@ export default function Order() {
   const [selectedOrderForQuotation, setSelectedOrderForQuotation] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  // Track các ID đã xóa để không hiển thị lại
+  const [deletedOrderIds, setDeletedOrderIds] = useState(new Set());
   
   // Data for form
   const [customers, setCustomers] = useState([]);
@@ -99,6 +101,35 @@ export default function Order() {
               }
             }
             
+            // 🔹 Kiểm tra payment từ thanh toán đi lên - nếu có payment completed thì có thể xóa
+            const orderIdForPayment = enrichedOrder.orderId || enrichedOrder.id;
+            if (orderIdForPayment) {
+              try {
+                const paymentsRes = await customerPaymentAPI.getPaymentsByOrder(orderIdForPayment);
+                const payments = paymentsRes.data?.data || paymentsRes.data || [];
+                const completedPayments = payments.filter(p => {
+                  const paymentStatus = (p.status || "").toLowerCase().trim();
+                  // Hỗ trợ nhiều cách viết: completed, COMPLETED, Completed, hoàn tất, đã hoàn tất
+                  return paymentStatus === "completed" || 
+                         paymentStatus === "hoàn tất" || 
+                         paymentStatus === "đã hoàn tất" ||
+                         paymentStatus === "done" ||
+                         paymentStatus === "finished";
+                });
+                // Đánh dấu order có payment completed
+                enrichedOrder.hasCompletedPayment = completedPayments.length > 0;
+                enrichedOrder.completedPayments = completedPayments;
+                if (enrichedOrder.hasCompletedPayment) {
+                  console.log(`✅ Order ${orderIdForPayment} có ${completedPayments.length} payment(s) completed`);
+                }
+              } catch (paymentErr) {
+                console.warn(`⚠️ Không thể kiểm tra payment cho order ${orderIdForPayment}:`, paymentErr);
+                enrichedOrder.hasCompletedPayment = false;
+              }
+            } else {
+              enrichedOrder.hasCompletedPayment = false;
+            }
+            
             return enrichedOrder;
           })
         );
@@ -107,7 +138,21 @@ export default function Order() {
         console.log("📦 Orders data (enriched):", ordersData);
       }
       
-      setOrder(Array.isArray(ordersData) ? ordersData : []);
+      // 🔹 Filter ra các đơn hàng đã bị xóa - không hiển thị trong danh sách
+      ordersData = (Array.isArray(ordersData) ? ordersData : []).filter(o => {
+        const orderId = o.orderId || o.id;
+        const status = (o.status || "").toLowerCase().trim();
+        
+        // Kiểm tra nếu ID đã được đánh dấu là đã xóa
+        if (orderId && deletedOrderIds.has(String(orderId))) {
+          console.log("🚫 Filtered out order (tracked as deleted):", orderId);
+          return false;
+        }
+        
+        return true;
+      });
+      
+      setOrder(ordersData);
     } catch (err) {
       console.error("❌ Lỗi khi lấy đơn hàng:", err);
       console.error("❌ Error response:", err.response?.data);
@@ -124,6 +169,7 @@ export default function Order() {
     totalPrice: "",
     finalPrice: "",
     discountAmount: "",
+    discountPercentage: "",
     validityDays: 7,
     notes: "",
   });
@@ -223,16 +269,49 @@ export default function Order() {
     const orderToDelete = order.find(o => (o.orderId || o.id) === orderId);
     const orderNumber = orderToDelete?.orderNumber || orderId;
     
+    // Lấy danh sách tất cả payments liên quan để xóa trước
+    let paymentsToDelete = [];
+    try {
+      const paymentsRes = await customerPaymentAPI.getPaymentsByOrder(orderId);
+      const allPayments = paymentsRes.data || [];
+      // Lấy tất cả payments (không chỉ completed) để xóa
+      paymentsToDelete = allPayments;
+      console.log(`📋 Tìm thấy ${paymentsToDelete.length} payment(s) cho order ${orderId}`);
+    } catch (paymentFetchErr) {
+      console.warn("⚠️ Không thể fetch payments:", paymentFetchErr);
+      // Tiếp tục xóa order dù không fetch được payments
+    }
+    
     // Lấy inventoryId từ order để reset status về "available" sau khi xóa
     const inventoryId = orderToDelete?.inventoryId || orderToDelete?.inventory?.inventoryId || orderToDelete?.inventory?.id;
     
-    if (!window.confirm(`Bạn có chắc chắn muốn xóa đơn hàng "${orderNumber}" không?\n\n⚠️ Lưu ý: Hành động này không thể hoàn tác!`)) {
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa đơn hàng "${orderNumber}" không?\n\n⚠️ Lưu ý: Hành động này sẽ xóa cả các thanh toán liên quan và không thể hoàn tác!`)) {
       return;
     }
     
     try {
+      // Xóa các payment liên quan trước để tránh foreign key constraint violation
+      if (paymentsToDelete.length > 0) {
+        console.log(`🗑️ Đang xóa ${paymentsToDelete.length} payment(s) liên quan...`);
+        for (const payment of paymentsToDelete) {
+          try {
+            const paymentId = payment.paymentId || payment.id;
+            if (paymentId) {
+              await customerPaymentAPI.deletePayment(paymentId);
+              console.log(`✅ Đã xóa payment ${paymentId}`);
+            }
+          } catch (paymentDeleteErr) {
+            console.error(`❌ Lỗi khi xóa payment ${payment.paymentId || payment.id}:`, paymentDeleteErr);
+            // Tiếp tục xóa các payment khác
+          }
+        }
+      }
+      
       // Xóa đơn hàng
       await orderAPI.deleteOrder(orderId);
+      
+      // Đánh dấu ID này là đã xóa
+      setDeletedOrderIds(prev => new Set([...prev, String(orderId)]));
       
       // Nếu có inventoryId, reset status về "available"
       if (inventoryId) {
@@ -246,21 +325,30 @@ export default function Order() {
         }
       }
       
-      alert(`✅ Xóa đơn hàng "${orderNumber}" thành công!${inventoryId ? '\n\n✅ Đã giải phóng xe về trạng thái "available".' : ''}`);
-      
       // Đóng popup chi tiết nếu đang mở
       if (showDetail && selectedOrder && (selectedOrder.orderId || selectedOrder.id) === orderId) {
         setShowDetail(false);
         setSelectedOrder(null);
       }
       
-      // Xóa khỏi state ngay lập tức
-      setOrder(prev => prev.filter(o => (o.orderId || o.id) !== orderId));
+      // Xóa khỏi state ngay lập tức thay vì fetchAll để tránh hiển thị lại
+      setOrder(prev => {
+        const filtered = prev.filter(o => {
+          const oid = o.orderId || o.id;
+          const shouldKeep = String(oid) !== String(orderId);
+          if (!shouldKeep) {
+            console.log("🗑️ Removing order from state:", oid);
+          }
+          return shouldKeep;
+        });
+        console.log("📊 Orders after deletion:", filtered.length, "remaining");
+        return filtered;
+      });
       
-      // Fetch lại orders và inventories sau khi xóa (để cập nhật danh sách xe có thể chọn)
+      alert(`✅ Xóa đơn hàng "${orderNumber}" thành công!${inventoryId ? '\n\n✅ Đã giải phóng xe về trạng thái "available".' : ''}`);
+      
+      // Fetch lại inventories sau khi xóa (để cập nhật danh sách xe có thể chọn)
       setTimeout(() => {
-        fetchOrder();
-        // Fetch lại inventories để xe đã được giải phóng có thể chọn lại
         fetchData();
       }, 500);
     } catch (err) {
@@ -521,6 +609,7 @@ export default function Order() {
     // Mặc định finalPrice = totalPrice (chưa giảm giá)
     const finalPrice = totalPrice;
     const discountAmount = 0;
+    const discountPercentage = 0;
     
     setQuotationFormData({
       variantId: variantId ? String(variantId) : "",
@@ -528,6 +617,7 @@ export default function Order() {
       totalPrice: totalPrice > 0 ? String(totalPrice) : "",
       finalPrice: finalPrice > 0 ? String(finalPrice) : "",
       discountAmount: String(discountAmount),
+      discountPercentage: String(discountPercentage),
       validityDays: 7,
       notes: order.notes || "",
     });
@@ -535,8 +625,13 @@ export default function Order() {
     setShowQuotationForm(true);
   };
 
-  // Tính discountAmount tự động
+  // Tính discountAmount tự động từ finalPrice (chỉ khi không có discountPercentage)
   useEffect(() => {
+    // Nếu user đã nhập discountPercentage, không tự động tính từ finalPrice
+    if (quotationFormData.discountPercentage && parseFloat(quotationFormData.discountPercentage) > 0) {
+      return;
+    }
+    
     if (quotationFormData.totalPrice && quotationFormData.finalPrice) {
       const total = parseFloat(quotationFormData.totalPrice) || 0;
       const final = parseFloat(quotationFormData.finalPrice) || 0;
@@ -552,7 +647,7 @@ export default function Order() {
         setQuotationFormData(prev => ({ ...prev, discountAmount: "" }));
       }
     }
-  }, [quotationFormData.totalPrice, quotationFormData.finalPrice]);
+  }, [quotationFormData.totalPrice, quotationFormData.finalPrice, quotationFormData.discountPercentage]);
 
   // Tạo báo giá từ order
   const handleCreateQuotation = async (e) => {
@@ -957,9 +1052,23 @@ export default function Order() {
                           <FaFileInvoice />
                         </button>
                       )}
-                      <button className="icon-btn delete" onClick={() => handleDelete(orderId)} title="Xóa">
-                        <FaTrash />
-                      </button>
+                      {/* Chỉ hiển thị nút xóa khi đơn hàng có trạng thái "cancelled" */}
+                      {(() => {
+                        const orderStatus = (o.status || "").toLowerCase().trim();
+                        const isCancelled = orderStatus === "cancelled" || 
+                                          orderStatus === "đã hủy" || 
+                                          orderStatus === "hủy" ||
+                                          orderStatus === "canceled";
+                        return isCancelled && (
+                          <button 
+                            className="icon-btn delete" 
+                            onClick={() => handleDelete(orderId)} 
+                            title="Xóa đơn hàng đã hủy"
+                          >
+                            <FaTrash />
+                          </button>
+                        );
+                      })()}
                     </td>
                   </tr>
                 );
@@ -978,354 +1087,374 @@ export default function Order() {
       {/* Popup thêm đơn hàng */}
       {showPopup && (
         <div className="popup-overlay" onClick={() => setShowPopup(false)}>
-          <div className="popup-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "700px", maxHeight: "90vh", overflowY: "auto" }}>
+          <div className="popup-box" onClick={(e) => e.stopPropagation()}>
             <h2>Thêm đơn hàng mới</h2>
-            <div style={{ 
-              marginBottom: "15px", 
-              padding: "12px", 
-              backgroundColor: "#e0f2fe", 
-              borderRadius: "6px",
-              border: "1px solid #7dd3fc"
-            }}>
-              <strong style={{ color: "#0369a1" }}>📋 Luồng chính:</strong>
-              <p style={{ margin: "5px 0 0 0", fontSize: "14px", color: "#0c4a6e" }}>
-                1️⃣ Tạo Order từ khách hàng (bước này) → 2️⃣ Tạo Quotation từ Order → 3️⃣ Gửi báo giá → 4️⃣ Khách accept
-              </p>
-            </div>
-            {error && <div style={{ color: "red", marginBottom: "10px" }}>{error}</div>}
             <form onSubmit={handleSubmit}>
-              <div style={{ marginBottom: "15px" }}>
-                <label>Tạo từ *</label>
-                <select
-                  value={formData.createFrom}
-                  onChange={(e) => setFormData({ ...formData, createFrom: e.target.value, quotationId: "", customerId: "", inventoryId: "", quantity: 1, totalAmount: "" })}
-                  required
-                >
-                  <option value="customer">Từ khách hàng (Luồng chính) ✅</option>
-                  <option value="quotation">Từ báo giá (Luồng phụ)</option>
-                </select>
-                <small style={{ color: "#666", fontSize: "12px", display: "block", marginTop: "5px" }}>
-                  💡 <strong>Luồng chính:</strong> Tạo Order từ khách hàng trước, sau đó tạo Quotation từ Order đó
-                </small>
+              <div className="info-box">
+                <strong>📋 Luồng chính:</strong>
+                <p>
+                  1️⃣ Tạo Order từ khách hàng (bước này) → 2️⃣ Tạo Quotation từ Order → 3️⃣ Gửi báo giá → 4️⃣ Khách accept
+                </p>
+              </div>
+              {error && <div className="error-message">{error}</div>}
+              
+              {/* Section: Loại tạo đơn hàng */}
+              <div className="form-section">
+                <div className="form-section-title">Loại tạo đơn hàng</div>
+                <div className="form-grid">
+                  <div className="form-field-full">
+                    <label>Tạo từ *</label>
+                    <select
+                      value={formData.createFrom}
+                      onChange={(e) => setFormData({ ...formData, createFrom: e.target.value, quotationId: "", customerId: "", inventoryId: "", quantity: 1, totalAmount: "" })}
+                      required
+                    >
+                      <option value="customer">Từ khách hàng (Luồng chính) ✅</option>
+                      <option value="quotation">Từ báo giá (Luồng phụ)</option>
+                    </select>
+                    <small>
+                      💡 <strong>Luồng chính:</strong> Tạo Order từ khách hàng trước, sau đó tạo Quotation từ Order đó
+                    </small>
+                  </div>
+                </div>
               </div>
 
+              {/* Section: Thông tin khách hàng và xe */}
               {formData.createFrom === "quotation" ? (
-                <div style={{ marginBottom: "15px" }}>
-                  <label>Báo giá *</label>
-                  <select
-                    value={formData.quotationId}
-                    onChange={(e) => setFormData({ ...formData, quotationId: e.target.value })}
-                    required
-                  >
-                    <option value="">-- Chọn báo giá --</option>
-                    {quotations
-                      .filter(q => q.status === "ACCEPTED" || q.status === "accepted" || q.status === "SENT" || q.status === "sent")
-                      .map(q => (
-                        <option key={q.quotationId || q.id} value={q.quotationId || q.id}>
-                          {q.quotationNumber || q.quotationId} - {getCustomerName(q.customer)} - {formatPrice(q.finalPrice || q.totalAmount)}
-                        </option>
-                      ))}
-                  </select>
+                <div className="form-section">
+                  <div className="form-section-title">Thông tin báo giá</div>
+                  <div className="form-grid">
+                    <div className="form-field-full">
+                      <label>Báo giá *</label>
+                      <select
+                        value={formData.quotationId}
+                        onChange={(e) => setFormData({ ...formData, quotationId: e.target.value })}
+                        required
+                      >
+                        <option value="">-- Chọn báo giá --</option>
+                        {quotations
+                          .filter(q => q.status === "ACCEPTED" || q.status === "accepted" || q.status === "SENT" || q.status === "sent")
+                          .map(q => (
+                            <option key={q.quotationId || q.id} value={q.quotationId || q.id}>
+                              {q.quotationNumber || q.quotationId} - {getCustomerName(q.customer)} - {formatPrice(q.finalPrice || q.totalAmount)}
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+                  </div>
                 </div>
               ) : (
-                <>
-                  <div style={{ marginBottom: "15px" }}>
-                    <label>Khách hàng *</label>
-                    <select
-                      value={formData.customerId}
-                      onChange={(e) => setFormData({ ...formData, customerId: e.target.value })}
-                      required
-                      style={{ width: "100%", padding: "8px" }}
-                    >
-                      <option value="">-- Chọn khách hàng --</option>
-                      {customers && customers.length > 0 ? (
-                        customers.map(c => {
-                          const customerId = c.customerId || c.id;
-                          return (
-                            <option key={customerId} value={customerId}>
-                              {getCustomerName(c)}
-                            </option>
-                          );
-                        })
-                      ) : (
-                        <option value="" disabled>Không có khách hàng nào</option>
+                <div className="form-section">
+                  <div className="form-section-title">Thông tin khách hàng và xe</div>
+                  <div className="form-grid">
+                    <div className="form-field-full">
+                      <label>Khách hàng *</label>
+                      <select
+                        value={formData.customerId}
+                        onChange={(e) => setFormData({ ...formData, customerId: e.target.value })}
+                        required
+                      >
+                        <option value="">-- Chọn khách hàng --</option>
+                        {customers && customers.length > 0 ? (
+                          customers.map(c => {
+                            const customerId = c.customerId || c.id;
+                            return (
+                              <option key={customerId} value={customerId}>
+                                {getCustomerName(c)}
+                              </option>
+                            );
+                          })
+                        ) : (
+                          <option value="" disabled>Không có khách hàng nào</option>
+                        )}
+                      </select>
+                      {customers && customers.length === 0 && (
+                        <small style={{ color: "#ff6b6b" }}>
+                          ⚠️ Không có khách hàng nào. Vui lòng tạo khách hàng trước.
+                        </small>
                       )}
-                    </select>
-                    {customers && customers.length === 0 && (
-                      <small style={{ color: "#ff6b6b", display: "block", marginTop: "5px" }}>
-                        ⚠️ Không có khách hàng nào. Vui lòng tạo khách hàng trước.
-                      </small>
-                    )}
-                  </div>
+                    </div>
 
-                  <div style={{ marginBottom: "15px" }}>
-                    <label>Xe từ kho (tùy chọn)</label>
-                    <select
-                      value={formData.inventoryId}
-                      onChange={(e) => {
-                        const selectedInventoryId = e.target.value;
-                        const selectedInventory = inventories.find(inv => (inv.inventoryId || inv.id) === selectedInventoryId);
-                        
-                        // Tự động tính tổng tiền từ giá xe và số lượng
-                        if (selectedInventory) {
-                          const price = parseFloat(selectedInventory.sellingPrice) || parseFloat(selectedInventory.costPrice) || parseFloat(selectedInventory.price) || 0;
-                          const quantity = parseFloat(formData.quantity) || 1;
-                          const totalPrice = price * quantity;
+                    <div className="form-field-full">
+                      <label>Xe từ kho (tùy chọn)</label>
+                      <select
+                        value={formData.inventoryId}
+                        onChange={(e) => {
+                          const selectedInventoryId = e.target.value;
+                          const selectedInventory = inventories.find(inv => (inv.inventoryId || inv.id) === selectedInventoryId);
                           
-                          console.log("💰 Tính tổng tiền:", {
-                            inventory: selectedInventory,
-                            sellingPrice: selectedInventory.sellingPrice,
-                            costPrice: selectedInventory.costPrice,
-                            price: selectedInventory.price,
-                            parsedPrice: price,
-                            quantity: quantity,
-                            totalPrice: totalPrice
-                          });
-                          
-                          setFormData({ 
-                            ...formData, 
-                            inventoryId: selectedInventoryId,
-                            totalAmount: totalPrice > 0 ? String(totalPrice) : ""
-                          });
-                        } else {
-                          setFormData({ 
-                            ...formData, 
-                            inventoryId: "",
-                            totalAmount: ""
-                          });
-                        }
-                      }}
-                      style={{ width: "100%", padding: "8px" }}
-                    >
-                      <option value="">-- Chọn xe từ kho --</option>
-                      {inventories && inventories.length > 0 ? (
-                        inventories.map(inv => {
-                          const inventoryId = inv.inventoryId || inv.id;
-                          const variantName = inv.variant?.variantName || inv.variantName || "N/A";
-                          const colorName = inv.color?.colorName || inv.colorName || "N/A";
-                          const price = inv.sellingPrice || inv.costPrice || 0;
-                          return (
-                            <option key={inventoryId} value={inventoryId}>
-                              {variantName} - {colorName} - {formatPrice(price)}
-                            </option>
-                          );
-                        })
-                      ) : (
-                        <option value="" disabled>Không có xe nào trong kho</option>
-                      )}
-                    </select>
-                    {inventories && inventories.length === 0 && (
-                      <small style={{ color: "#ff6b6b", display: "block", marginTop: "5px" }}>
-                        ⚠️ Không có xe nào trong kho.
-                      </small>
-                    )}
-                    {formData.inventoryId && (
-                      <small style={{ color: "#16a34a", fontSize: "12px", display: "block", marginTop: "5px" }}>
-                        ✅ Đã chọn xe, giá sẽ tự động điền vào tổng tiền
-                      </small>
-                    )}
-                  </div>
-
-                  <div style={{ marginBottom: "15px" }}>
-                    <label>Số lượng xe *</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={formData.quantity}
-                      onChange={(e) => {
-                        const quantity = parseInt(e.target.value) || 1;
-                        
-                        // LUÔN tính lại tổng tiền dựa trên giá xe đã chọn và số lượng mới
-                        if (formData.inventoryId) {
-                          const selectedInventory = inventories.find(inv => (inv.inventoryId || inv.id) === formData.inventoryId);
+                          // Tự động tính tổng tiền từ giá xe và số lượng
                           if (selectedInventory) {
                             const price = parseFloat(selectedInventory.sellingPrice) || parseFloat(selectedInventory.costPrice) || parseFloat(selectedInventory.price) || 0;
+                            const quantity = parseFloat(formData.quantity) || 1;
                             const totalPrice = price * quantity;
                             
-                            console.log("💰 Tính lại tổng tiền (thay đổi số lượng):", {
-                              price: price,
+                            console.log("💰 Tính tổng tiền:", {
+                              inventory: selectedInventory,
+                              sellingPrice: selectedInventory.sellingPrice,
+                              costPrice: selectedInventory.costPrice,
+                              price: selectedInventory.price,
+                              parsedPrice: price,
                               quantity: quantity,
-                              totalPrice: totalPrice,
-                              oldTotalAmount: formData.totalAmount
+                              totalPrice: totalPrice
                             });
                             
                             setFormData({ 
                               ...formData, 
-                              quantity: quantity,
+                              inventoryId: selectedInventoryId,
                               totalAmount: totalPrice > 0 ? String(totalPrice) : ""
                             });
                           } else {
+                            setFormData({ 
+                              ...formData, 
+                              inventoryId: "",
+                              totalAmount: ""
+                            });
+                          }
+                        }}
+                      >
+                        <option value="">-- Chọn xe từ kho --</option>
+                        {inventories && inventories.length > 0 ? (
+                          inventories.map(inv => {
+                            const inventoryId = inv.inventoryId || inv.id;
+                            const variantName = inv.variant?.variantName || inv.variantName || "N/A";
+                            const colorName = inv.color?.colorName || inv.colorName || "N/A";
+                            const price = inv.sellingPrice || inv.costPrice || 0;
+                            return (
+                              <option key={inventoryId} value={inventoryId}>
+                                {variantName} - {colorName} - {formatPrice(price)}
+                              </option>
+                            );
+                          })
+                        ) : (
+                          <option value="" disabled>Không có xe nào trong kho</option>
+                        )}
+                      </select>
+                      {inventories && inventories.length === 0 && (
+                        <small style={{ color: "#ff6b6b" }}>
+                          ⚠️ Không có xe nào trong kho.
+                        </small>
+                      )}
+                      {formData.inventoryId && (
+                        <small style={{ color: "#16a34a" }}>
+                          ✅ Đã chọn xe, giá sẽ tự động điền vào tổng tiền
+                        </small>
+                      )}
+                    </div>
+
+                    <div>
+                      <label>Số lượng xe *</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={formData.quantity}
+                        onChange={(e) => {
+                          const quantity = parseInt(e.target.value) || 1;
+                          
+                          // LUÔN tính lại tổng tiền dựa trên giá xe đã chọn và số lượng mới
+                          if (formData.inventoryId) {
+                            const selectedInventory = inventories.find(inv => (inv.inventoryId || inv.id) === formData.inventoryId);
+                            if (selectedInventory) {
+                              const price = parseFloat(selectedInventory.sellingPrice) || parseFloat(selectedInventory.costPrice) || parseFloat(selectedInventory.price) || 0;
+                              const totalPrice = price * quantity;
+                              
+                              console.log("💰 Tính lại tổng tiền (thay đổi số lượng):", {
+                                price: price,
+                                quantity: quantity,
+                                totalPrice: totalPrice,
+                                oldTotalAmount: formData.totalAmount
+                              });
+                              
+                              setFormData({ 
+                                ...formData, 
+                                quantity: quantity,
+                                totalAmount: totalPrice > 0 ? String(totalPrice) : ""
+                              });
+                            } else {
+                              setFormData({ ...formData, quantity: quantity });
+                            }
+                          } else {
+                            // Nếu chưa chọn xe, vẫn cho phép thay đổi số lượng nhưng không tính totalAmount
                             setFormData({ ...formData, quantity: quantity });
                           }
-                        } else {
-                          // Nếu chưa chọn xe, vẫn cho phép thay đổi số lượng nhưng không tính totalAmount
-                          setFormData({ ...formData, quantity: quantity });
-                        }
-                      }}
-                      required
-                      style={{ width: "100%", padding: "8px" }}
-                      placeholder="Nhập số lượng xe"
-                    />
-                    <small style={{ color: "#666", fontSize: "12px", display: "block", marginTop: "5px" }}>
-                      💡 Số lượng xe cần đặt (tối thiểu 1 xe). Tổng tiền sẽ tự động tính = Giá xe × Số lượng
-                    </small>
+                        }}
+                        required
+                        placeholder="Nhập số lượng xe"
+                      />
+                      <small>
+                        💡 Số lượng xe cần đặt (tối thiểu 1 xe). Tổng tiền sẽ tự động tính = Giá xe × Số lượng
+                      </small>
+                    </div>
                   </div>
-                </>
+                </div>
               )}
 
-              <div style={{ marginBottom: "15px" }}>
-                <label>Ngày đặt hàng *</label>
-                <input
-                  type="date"
-                  value={formData.orderDate}
-                  onChange={(e) => setFormData({ ...formData, orderDate: e.target.value })}
-                  required
-                />
+              {/* Section: Thông tin đơn hàng */}
+              <div className="form-section">
+                <div className="form-section-title">Thông tin đơn hàng</div>
+                <div className="form-grid">
+                  <div>
+                    <label>Ngày đặt hàng *</label>
+                    <input
+                      type="date"
+                      value={formData.orderDate}
+                      onChange={(e) => setFormData({ ...formData, orderDate: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label>Loại đơn hàng</label>
+                    <select
+                      value={formData.orderType}
+                      onChange={(e) => setFormData({ ...formData, orderType: e.target.value })}
+                    >
+                      <option value="RETAIL">Bán lẻ</option>
+                      <option value="WHOLESALE">Bán buôn</option>
+                      <option value="DEMO">Demo</option>
+                      <option value="TEST_DRIVE">Lái thử</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label>Trạng thái thanh toán</label>
+                    <select
+                      value={formData.paymentStatus}
+                      onChange={(e) => setFormData({ ...formData, paymentStatus: e.target.value })}
+                    >
+                      <option value="PENDING">Chờ thanh toán</option>
+                      <option value="PARTIAL">Thanh toán một phần</option>
+                      <option value="PAID">Đã thanh toán</option>
+                      <option value="OVERDUE">Quá hạn</option>
+                      <option value="REFUNDED">Đã hoàn tiền</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label>Trạng thái giao hàng</label>
+                    <select
+                      value={formData.deliveryStatus}
+                      onChange={(e) => setFormData({ ...formData, deliveryStatus: e.target.value })}
+                    >
+                      <option value="PENDING">Chờ giao hàng</option>
+                      <option value="SCHEDULED">Đã lên lịch</option>
+                      <option value="IN_TRANSIT">Đang vận chuyển</option>
+                      <option value="DELIVERED">Đã giao</option>
+                      <option value="CANCELLED">Đã hủy</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label>Trạng thái đơn hàng</label>
+                    <select
+                      value={formData.status}
+                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    >
+                      <option value="pending">Chờ xử lý</option>
+                      <option value="quoted">Đã báo giá</option>
+                      <option value="confirmed">Đã xác nhận</option>
+                      <option value="paid">Đã thanh toán</option>
+                      <option value="delivered">Đã giao</option>
+                      <option value="completed">Hoàn thành</option>
+                      <option value="rejected">Từ chối</option>
+                      <option value="cancelled">Đã hủy</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label>Phương thức thanh toán</label>
+                    <select
+                      value={formData.paymentMethod}
+                      onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
+                    >
+                      <option value="cash">Tiền mặt</option>
+                      <option value="bank_transfer">Chuyển khoản</option>
+                      <option value="credit_card">Thẻ tín dụng</option>
+                      <option value="installment">Trả góp</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label>Ngày giao hàng</label>
+                    <input
+                      type="date"
+                      value={formData.deliveryDate}
+                      onChange={(e) => setFormData({ ...formData, deliveryDate: e.target.value })}
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div style={{ marginBottom: "15px" }}>
-                <label>Loại đơn hàng</label>
-                <select
-                  value={formData.orderType}
-                  onChange={(e) => setFormData({ ...formData, orderType: e.target.value })}
-                >
-                  <option value="RETAIL">Bán lẻ</option>
-                  <option value="WHOLESALE">Bán buôn</option>
-                  <option value="DEMO">Demo</option>
-                  <option value="TEST_DRIVE">Lái thử</option>
-                </select>
+              {/* Section: Tổng tiền */}
+              <div className="form-section">
+                <div className="form-section-title">Tổng tiền</div>
+                <div className="form-grid">
+                  <div className="form-field-full">
+                    <label>Tổng tiền (VNĐ) *</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      value={formData.totalAmount}
+                      onChange={(e) => {
+                        // Nếu đã chọn xe từ kho, vẫn cho phép chỉnh sửa nhưng sẽ bị ghi đè khi quantity thay đổi
+                        setFormData({ 
+                          ...formData, 
+                          totalAmount: e.target.value
+                        });
+                      }}
+                      placeholder={formData.inventoryId ? "Tự động tính từ giá xe × số lượng" : "Nhập tổng tiền đặt xe"}
+                      required
+                      className={formData.inventoryId ? "auto-calculated" : ""}
+                      title={formData.inventoryId ? "Tổng tiền sẽ tự động tính lại khi số lượng thay đổi" : ""}
+                    />
+                    {formData.inventoryId && formData.totalAmount && (() => {
+                      const selectedInventory = inventories.find(inv => (inv.inventoryId || inv.id) === formData.inventoryId);
+                      if (!selectedInventory) return null;
+                      
+                      const unitPrice = parseFloat(selectedInventory.sellingPrice) || parseFloat(selectedInventory.costPrice) || parseFloat(selectedInventory.price) || 0;
+                      const quantity = parseFloat(formData.quantity) || 1;
+                      const total = parseFloat(formData.totalAmount) || 0;
+                      
+                      return (
+                        <small style={{ color: "#16a34a" }}>
+                          ✅ Tổng tiền = Giá xe ({formatPrice(unitPrice)}) × Số lượng ({quantity} xe) = {formatPrice(total)}
+                        </small>
+                      );
+                    })()}
+                    {!formData.inventoryId && (
+                      <small>
+                        💡 Tổng số tiền khách hàng cần thanh toán (hoặc chọn xe từ kho để tự động tính)
+                      </small>
+                    )}
+                  </div>
+                </div>
               </div>
 
-              <div style={{ marginBottom: "15px" }}>
-                <label>Trạng thái thanh toán</label>
-                <select
-                  value={formData.paymentStatus}
-                  onChange={(e) => setFormData({ ...formData, paymentStatus: e.target.value })}
-                >
-                  <option value="PENDING">Chờ thanh toán</option>
-                  <option value="PARTIAL">Thanh toán một phần</option>
-                  <option value="PAID">Đã thanh toán</option>
-                  <option value="OVERDUE">Quá hạn</option>
-                  <option value="REFUNDED">Đã hoàn tiền</option>
-                </select>
-              </div>
+              {/* Section: Ghi chú */}
+              <div className="form-section">
+                <div className="form-section-title">Ghi chú và yêu cầu</div>
+                <div className="form-grid">
+                  <div className="form-field-full">
+                    <label>Ghi chú</label>
+                    <textarea
+                      value={formData.notes}
+                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                      rows="3"
+                      placeholder="Nhập ghi chú cho đơn hàng..."
+                    />
+                  </div>
 
-              <div style={{ marginBottom: "15px" }}>
-                <label>Trạng thái giao hàng</label>
-                <select
-                  value={formData.deliveryStatus}
-                  onChange={(e) => setFormData({ ...formData, deliveryStatus: e.target.value })}
-                >
-                  <option value="PENDING">Chờ giao hàng</option>
-                  <option value="SCHEDULED">Đã lên lịch</option>
-                  <option value="IN_TRANSIT">Đang vận chuyển</option>
-                  <option value="DELIVERED">Đã giao</option>
-                  <option value="CANCELLED">Đã hủy</option>
-                </select>
-              </div>
-
-              <div style={{ marginBottom: "15px" }}>
-                <label>Trạng thái đơn hàng</label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                >
-                  <option value="pending">Chờ xử lý</option>
-                  <option value="quoted">Đã báo giá</option>
-                  <option value="confirmed">Đã xác nhận</option>
-                  <option value="paid">Đã thanh toán</option>
-                  <option value="delivered">Đã giao</option>
-                  <option value="completed">Hoàn thành</option>
-                  <option value="rejected">Từ chối</option>
-                  <option value="cancelled">Đã hủy</option>
-                </select>
-              </div>
-
-              <div style={{ marginBottom: "15px" }}>
-                <label>Tổng tiền (VNĐ) *</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  value={formData.totalAmount}
-                  onChange={(e) => {
-                    // Nếu đã chọn xe từ kho, vẫn cho phép chỉnh sửa nhưng sẽ bị ghi đè khi quantity thay đổi
-                    setFormData({ 
-                      ...formData, 
-                      totalAmount: e.target.value
-                    });
-                  }}
-                  placeholder={formData.inventoryId ? "Tự động tính từ giá xe × số lượng" : "Nhập tổng tiền đặt xe"}
-                  required
-                  style={{ 
-                    width: "100%", 
-                    padding: "8px",
-                    backgroundColor: formData.inventoryId ? "#f0fdf4" : "white",
-                    fontWeight: formData.inventoryId ? "bold" : "normal",
-                    color: formData.inventoryId ? "#16a34a" : "#000"
-                  }}
-                  readOnly={formData.inventoryId ? false : false}
-                  title={formData.inventoryId ? "Tổng tiền sẽ tự động tính lại khi số lượng thay đổi" : ""}
-                />
-                {formData.inventoryId && formData.totalAmount && (() => {
-                  const selectedInventory = inventories.find(inv => (inv.inventoryId || inv.id) === formData.inventoryId);
-                  if (!selectedInventory) return null;
-                  
-                  const unitPrice = parseFloat(selectedInventory.sellingPrice) || parseFloat(selectedInventory.costPrice) || parseFloat(selectedInventory.price) || 0;
-                  const quantity = parseFloat(formData.quantity) || 1;
-                  const total = parseFloat(formData.totalAmount) || 0;
-                  
-                  return (
-                    <small style={{ color: "#16a34a", fontSize: "12px", display: "block", marginTop: "5px" }}>
-                      ✅ Tổng tiền = Giá xe ({formatPrice(unitPrice)}) × Số lượng ({quantity} xe) = {formatPrice(total)}
-                    </small>
-                  );
-                })()}
-                {!formData.inventoryId && (
-                <small style={{ color: "#666", fontSize: "12px", display: "block", marginTop: "5px" }}>
-                    💡 Tổng số tiền khách hàng cần thanh toán (hoặc chọn xe từ kho để tự động tính)
-                </small>
-                )}
-              </div>
-
-              <div style={{ marginBottom: "15px" }}>
-                <label>Phương thức thanh toán</label>
-                <select
-                  value={formData.paymentMethod}
-                  onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
-                >
-                  <option value="cash">Tiền mặt</option>
-                  <option value="bank_transfer">Chuyển khoản</option>
-                  <option value="credit_card">Thẻ tín dụng</option>
-                  <option value="installment">Trả góp</option>
-                </select>
-              </div>
-
-              <div style={{ marginBottom: "15px" }}>
-                <label>Ngày giao hàng</label>
-                <input
-                  type="date"
-                  value={formData.deliveryDate}
-                  onChange={(e) => setFormData({ ...formData, deliveryDate: e.target.value })}
-                />
-              </div>
-
-              <div style={{ marginBottom: "15px" }}>
-                <label>Ghi chú</label>
-                <textarea
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  rows="3"
-                />
-              </div>
-
-              <div style={{ marginBottom: "15px" }}>
-                <label>Yêu cầu đặc biệt</label>
-                <textarea
-                  value={formData.specialRequests}
-                  onChange={(e) => setFormData({ ...formData, specialRequests: e.target.value })}
-                  rows="2"
-                />
+                  <div className="form-field-full">
+                    <label>Yêu cầu đặc biệt</label>
+                    <textarea
+                      value={formData.specialRequests}
+                      onChange={(e) => setFormData({ ...formData, specialRequests: e.target.value })}
+                      rows="2"
+                      placeholder="Nhập yêu cầu đặc biệt của khách hàng..."
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className="form-actions">
@@ -1637,6 +1766,11 @@ export default function Order() {
                   <b>Giảm giá:</b>{" "}
                   <span style={{ fontWeight: "500", color: "#dc2626" }}>
                     {quotationFormData.discountAmount ? parseFloat(quotationFormData.discountAmount).toLocaleString('vi-VN') : '0'} ₫
+                    {quotationFormData.discountPercentage && parseFloat(quotationFormData.discountPercentage) > 0 && (
+                      <span style={{ marginLeft: "8px", fontSize: "14px", color: "#666" }}>
+                        ({quotationFormData.discountPercentage}%)
+                      </span>
+                    )}
                   </span>
                 </div>
               </div>
@@ -1650,6 +1784,35 @@ export default function Order() {
               <input type="hidden" value={quotationFormData.totalPrice} />
               <input type="hidden" value={quotationFormData.finalPrice} />
               <input type="hidden" value={quotationFormData.discountAmount} />
+
+              <div style={{ marginBottom: "15px" }}>
+                <label>Phần trăm giảm giá (%)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  value={quotationFormData.discountPercentage}
+                  onChange={(e) => {
+                    const discountPercent = parseFloat(e.target.value) || 0;
+                    const total = parseFloat(quotationFormData.totalPrice) || 0;
+                    const discountAmount = (total * discountPercent) / 100;
+                    const finalPrice = total - discountAmount;
+                    
+                    setQuotationFormData({
+                      ...quotationFormData,
+                      discountPercentage: e.target.value,
+                      discountAmount: discountAmount.toFixed(2),
+                      finalPrice: finalPrice.toFixed(2)
+                    });
+                  }}
+                  placeholder="Ví dụ: 5 (giảm 5%)"
+                  style={{ width: "100%", padding: "8px" }}
+                />
+                <small style={{ color: "#666", fontSize: "12px", display: "block", marginTop: "5px" }}>
+                  💡 Nhập phần trăm giảm giá (0-100%). Số tiền giảm và giá cuối cùng sẽ tự động tính.
+                </small>
+              </div>
 
               <div style={{ marginBottom: "15px" }}>
                 <label>Số ngày hiệu lực *</label>

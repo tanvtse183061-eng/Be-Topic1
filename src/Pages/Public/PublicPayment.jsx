@@ -57,8 +57,10 @@ export default function PublicPayment() {
       let orderData = res.data?.data || res.data || res;
       console.log("📋 Order data from API:", JSON.stringify(orderData, null, 2));
       
-      // Nếu không có customer data nhưng có customerId, fetch customer riêng
-      if (!orderData.customer && orderData.customerId) {
+      // Ưu tiên sử dụng thông tin từ API response nếu có
+      // Backend đã trả về customerName, customerEmail, thuongHieu, dongXe, mauSac
+      // Nếu không có customer object nhưng có customerId, fetch customer riêng
+      if (!orderData.customer && orderData.customerId && !orderData.customerName) {
         try {
           console.log("🔄 Fetching customer data separately...");
           // Thử dùng publicCustomerAPI.getCustomer nếu có, nếu không thì dùng publicOrderAPI
@@ -82,6 +84,22 @@ export default function PublicPayment() {
         } catch (customerErr) {
           console.error("❌ Lỗi khi fetch customer:", customerErr);
         }
+      } else if (orderData.customerName || orderData.customerEmail) {
+        // Nếu API đã trả về customerName/customerEmail, tạo customer object từ đó
+        if (!orderData.customer) {
+          orderData.customer = {};
+        }
+        if (orderData.customerName && !orderData.customer.firstName && !orderData.customer.lastName) {
+          const nameParts = orderData.customerName.trim().split(/\s+/);
+          if (nameParts.length > 0) {
+            orderData.customer.lastName = nameParts[nameParts.length - 1];
+            orderData.customer.firstName = nameParts.slice(0, -1).join(" ") || nameParts[0];
+          }
+        }
+        if (orderData.customerEmail && !orderData.customer.email) {
+          orderData.customer.email = orderData.customerEmail;
+        }
+        console.log("✅ Customer info từ API response:", orderData.customer);
       }
       
       // Nếu không có inventory data nhưng có inventoryId, fetch inventory riêng
@@ -105,8 +123,54 @@ export default function PublicPayment() {
         }
       }
       
+      // Ưu tiên sử dụng thông tin từ API response (thuongHieu, dongXe, mauSac)
+      // Nếu API đã trả về các thông tin này, tạo variant và color objects từ đó
+      if (orderData.thuongHieu || orderData.dongXe || orderData.mauSac) {
+        console.log("✅ Sử dụng thông tin từ API response:", {
+          thuongHieu: orderData.thuongHieu,
+          dongXe: orderData.dongXe,
+          mauSac: orderData.mauSac
+        });
+        
+        // Tạo variant object nếu chưa có
+        if (!orderData.inventory) {
+          orderData.inventory = {};
+        }
+        if (!orderData.inventory.variant) {
+          orderData.inventory.variant = {};
+        }
+        if (!orderData.inventory.variant.model) {
+          orderData.inventory.variant.model = {};
+        }
+        if (!orderData.inventory.variant.model.brand) {
+          orderData.inventory.variant.model.brand = {};
+        }
+        
+        // Gán thông tin từ API response
+        if (orderData.thuongHieu) {
+          orderData.inventory.variant.model.brand.brandName = orderData.thuongHieu;
+        }
+        if (orderData.dongXe) {
+          // Ưu tiên gán vào modelName, fallback về variantName
+          if (!orderData.inventory.variant.model.modelName) {
+            orderData.inventory.variant.model.modelName = orderData.dongXe;
+          }
+          if (!orderData.inventory.variant.variantName) {
+            orderData.inventory.variant.variantName = orderData.dongXe;
+          }
+        }
+        
+        // Tạo color object nếu chưa có
+        if (!orderData.inventory.color) {
+          orderData.inventory.color = {};
+        }
+        if (orderData.mauSac) {
+          orderData.inventory.color.colorName = orderData.mauSac;
+        }
+      }
+      
       // Nếu có inventory nhưng variant không đầy đủ (chỉ có ID), fetch variant riêng
-      if (orderData.inventory) {
+      if (orderData.inventory && !orderData.thuongHieu && !orderData.dongXe) {
         const inventory = orderData.inventory;
         const variantId = inventory.variantId || inventory.variant?.variantId || inventory.variant?.id;
         
@@ -137,7 +201,7 @@ export default function PublicPayment() {
         
         // Nếu có colorId nhưng color không đầy đủ, fetch color riêng
         const colorId = inventory.colorId || inventory.color?.colorId || inventory.color?.id;
-        if (colorId && !inventory.color?.colorName) {
+        if (colorId && !inventory.color?.colorName && !orderData.mauSac) {
           try {
             console.log("🔄 Fetching color data separately...");
             const colorsRes = await publicVehicleAPI.getColors();
@@ -351,14 +415,33 @@ export default function PublicPayment() {
   const canPay = status === "confirmed";
   const totalAmount = order.totalAmount || order.total_amount || order.quotation?.finalPrice || order.quotation?.final_price || 0;
 
+  // Ưu tiên sử dụng thông tin từ API response (customerName, customerEmail, thuongHieu, dongXe, mauSac)
   const customer = order.customer || {};
+  const customerName = order.customerName || 
+                      `${customer.firstName || customer.first_name || ""} ${customer.lastName || customer.last_name || ""}`.trim() || "—";
+  const customerEmail = order.customerEmail || customer.email || "—";
+  
   const inventory = order.inventory || {};
   const variant = inventory?.variant || order.quotation?.variant || {};
   const color = inventory?.color || order.quotation?.color || {};
   const brand = variant?.model?.brand || variant?.brand || {};
-  const brandName = brand?.brandName || brand?.brand_name || brand?.name || "—";
-  const variantName = variant?.variantName || variant?.variant_name || variant?.name || "—";
-  const colorName = color?.colorName || color?.color_name || color?.name || "—";
+  
+  // Ưu tiên sử dụng từ API response
+  const brandName = order.thuongHieu || 
+                    brand?.brandName || 
+                    brand?.brand_name || 
+                    brand?.name || "—";
+  const variantName = order.dongXe || 
+                     variant?.variantName || 
+                     variant?.variant_name || 
+                     variant?.name || 
+                     variant?.model?.modelName ||
+                     variant?.model?.model_name ||
+                     "—";
+  const colorName = order.mauSac || 
+                    color?.colorName || 
+                    color?.color_name || 
+                    color?.name || "—";
 
   // Nếu phát hiện redirect, hiển thị warning
   if (redirectDetected) {
@@ -460,26 +543,26 @@ export default function PublicPayment() {
             <h3>Thông tin đơn hàng</h3>
             <div className="info-row">
               <div className="info-item">
-                <label>Khách hàng:</label>
-                <span>{`${customer.firstName || customer.first_name || ""} ${customer.lastName || customer.last_name || ""}`.trim() || "—"}</span>
+                <label>KHÁCH HÀNG:</label>
+                <span>{customerName}</span>
               </div>
               <div className="info-item">
-                <label>Email:</label>
-                <span>{customer.email || "—"}</span>
+                <label>EMAIL:</label>
+                <span>{customerEmail}</span>
               </div>
             </div>
 
             <div className="info-row">
               <div className="info-item">
-                <label>Thương hiệu:</label>
+                <label>THƯƠNG HIỆU:</label>
                 <span>{brandName}</span>
               </div>
               <div className="info-item">
-                <label>Dòng xe:</label>
+                <label>DÒNG XE:</label>
                 <span>{variantName}</span>
               </div>
               <div className="info-item">
-                <label>Màu sắc:</label>
+                <label>MÀU SẮC:</label>
                 <span>{colorName}</span>
               </div>
             </div>

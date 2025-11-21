@@ -1,6 +1,6 @@
 import { FaSearch, FaEye, FaCalendarAlt, FaTruck, FaCheckCircle, FaClock } from "react-icons/fa";
 import { useEffect, useState } from "react";
-import { appointmentAPI, orderAPI, vehicleDeliveryAPI, customerAPI } from "../../services/API";
+import { appointmentAPI, orderAPI, vehicleDeliveryAPI, customerAPI, vehicleAPI, publicVehicleAPI } from "../../services/API";
 import "./Customer.css"; // dùng lại style có sẵn
 
 export default function DeliveryTracking() {
@@ -31,21 +31,127 @@ export default function DeliveryTracking() {
         appointmentsData.map(async (appointment) => {
           let enriched = { ...appointment };
           
+          console.log("🔍 Processing appointment:", {
+            appointmentId: appointment.appointmentId || appointment.id,
+            orderId: appointment.orderId,
+            hasOrder: !!appointment.order,
+            customerName: appointment.customerName,
+            deliveryAddress: appointment.deliveryAddress || appointment.location
+          });
+          
           // Fetch order nếu có orderId
           if (appointment.orderId && !appointment.order) {
+            console.log(`🔄 Fetching order for appointment ${appointment.appointmentId || appointment.id}, orderId: ${appointment.orderId}`);
             try {
               const orderRes = await orderAPI.getOrder(appointment.orderId);
               const orderData = orderRes.data?.data || orderRes.data || orderRes;
+              console.log(`✅ Order data fetched for appointment ${appointment.appointmentId || appointment.id}:`, {
+                orderNumber: orderData.orderNumber,
+                orderId: orderData.orderId,
+                customerId: orderData.customerId,
+                hasCustomer: !!orderData.customer
+              });
               enriched.order = orderData;
               
-              // Fetch customer nếu cần
+              // Fetch customer nếu cần - đảm bảo fetch đúng từ CustomerDTO
               if (orderData.customerId && !orderData.customer) {
                 try {
                   const customerRes = await customerAPI.getCustomer(orderData.customerId);
                   const customerData = customerRes.data?.data || customerRes.data || customerRes;
+                  console.log("✅ Customer data fetched in list:", customerData);
                   enriched.order = { ...orderData, customer: customerData };
                 } catch (err) {
                   console.error(`❌ Lỗi fetch customer:`, err);
+                }
+              }
+              
+              // Nếu customer chỉ có ID, fetch lại
+              if (orderData.customer && orderData.customer.customerId && !orderData.customer.firstName && !orderData.customer.email) {
+                try {
+                  const customerRes = await customerAPI.getCustomer(orderData.customer.customerId);
+                  const customerData = customerRes.data?.data || customerRes.data || customerRes;
+                  console.log("✅ Customer data re-fetched in list:", customerData);
+                  enriched.order = { ...orderData, customer: customerData };
+                } catch (err) {
+                  console.error(`❌ Lỗi re-fetch customer:`, err);
+                }
+              }
+              
+              // Fetch variant nếu order có inventory nhưng variant không đầy đủ
+              if (orderData.inventory && (!orderData.inventory.variant || !orderData.inventory.variant.model) && (orderData.inventory.variantId || orderData.inventory.variant?.variantId)) {
+                try {
+                  const variantId = orderData.inventory.variantId || orderData.inventory.variant?.variantId || orderData.inventory.variant?.id;
+                  if (variantId) {
+                    try {
+                      const variantRes = await vehicleAPI.getVariant(variantId);
+                      const variantData = variantRes.data?.data || variantRes.data || variantRes;
+                      if (variantData) {
+                        enriched.order = {
+                          ...enriched.order,
+                          inventory: {
+                            ...orderData.inventory,
+                            variant: variantData
+                          }
+                        };
+                      }
+                    } catch (directErr) {
+                      const variantRes = await publicVehicleAPI.getVariants();
+                      const allVariants = Array.isArray(variantRes.data?.data) ? variantRes.data.data :
+                                        Array.isArray(variantRes.data) ? variantRes.data :
+                                        Array.isArray(variantRes) ? variantRes : [];
+                      const variantData = allVariants.find(v => (v.variantId || v.id) == variantId);
+                      if (variantData) {
+                        enriched.order = {
+                          ...enriched.order,
+                          inventory: {
+                            ...orderData.inventory,
+                            variant: variantData
+                          }
+                        };
+                      }
+                    }
+                  }
+                } catch (variantErr) {
+                  console.error(`❌ Lỗi fetch variant:`, variantErr);
+                }
+              }
+              
+              // Tương tự cho quotation variant
+              if (orderData.quotation && (!orderData.quotation.variant || !orderData.quotation.variant.model) && (orderData.quotation.variantId || orderData.quotation.variant?.variantId)) {
+                try {
+                  const variantId = orderData.quotation.variantId || orderData.quotation.variant?.variantId || orderData.quotation.variant?.id;
+                  if (variantId) {
+                    try {
+                      const variantRes = await vehicleAPI.getVariant(variantId);
+                      const variantData = variantRes.data?.data || variantRes.data || variantRes;
+                      if (variantData) {
+                        enriched.order = {
+                          ...enriched.order,
+                          quotation: {
+                            ...orderData.quotation,
+                            variant: variantData
+                          }
+                        };
+                      }
+                    } catch (directErr) {
+                      const variantRes = await publicVehicleAPI.getVariants();
+                      const allVariants = Array.isArray(variantRes.data?.data) ? variantRes.data.data :
+                                        Array.isArray(variantRes.data) ? variantRes.data :
+                                        Array.isArray(variantRes) ? variantRes : [];
+                      const variantData = allVariants.find(v => (v.variantId || v.id) == variantId);
+                      if (variantData) {
+                        enriched.order = {
+                          ...enriched.order,
+                          quotation: {
+                            ...orderData.quotation,
+                            variant: variantData
+                          }
+                        };
+                      }
+                    }
+                  }
+                } catch (variantErr) {
+                  console.error(`❌ Lỗi fetch quotation variant:`, variantErr);
                 }
               }
             } catch (err) {
@@ -54,17 +160,29 @@ export default function DeliveryTracking() {
           }
           
           // Fetch delivery nếu có (từ orderId)
-          if (appointment.orderId) {
+          if (appointment.orderId || enriched.order?.orderId) {
+            const orderIdToUse = appointment.orderId || enriched.order?.orderId;
             try {
-              const deliveryRes = await vehicleDeliveryAPI.getDeliveriesByOrder(appointment.orderId);
+              const deliveryRes = await vehicleDeliveryAPI.getDeliveriesByOrder(orderIdToUse);
               const deliveriesData = deliveryRes.data?.data || deliveryRes.data || [];
               if (deliveriesData.length > 0) {
                 enriched.delivery = deliveriesData[0]; // Lấy delivery đầu tiên
               }
             } catch (err) {
-              console.warn(`⚠️ Không tìm thấy delivery cho order ${appointment.orderId}:`, err);
+              console.warn(`⚠️ Không tìm thấy delivery cho order ${orderIdToUse}:`, err);
             }
           }
+          
+          // Log kết quả cuối cùng
+          console.log(`✅ Enriched appointment ${enriched.appointmentId || enriched.id}:`, {
+            hasOrder: !!enriched.order,
+            orderNumber: enriched.order?.orderNumber,
+            hasCustomer: !!enriched.order?.customer,
+            customerName: enriched.order?.customer?.firstName && enriched.order?.customer?.lastName
+              ? `${enriched.order.customer.firstName} ${enriched.order.customer.lastName}`
+              : enriched.customerName || "—",
+            deliveryAddress: enriched.deliveryAddress || enriched.location || "—"
+          });
           
           return enriched;
         })
@@ -99,11 +217,111 @@ export default function DeliveryTracking() {
         const orderData = orderRes.data?.data || orderRes.data || orderRes;
         enriched.order = orderData;
         
-        // Fetch customer
+        // Fetch customer - đảm bảo fetch đúng từ CustomerDTO
         if (orderData.customerId && !orderData.customer) {
-          const customerRes = await customerAPI.getCustomer(orderData.customerId);
-          const customerData = customerRes.data?.data || customerRes.data || customerRes;
-          enriched.order = { ...orderData, customer: customerData };
+          try {
+            const customerRes = await customerAPI.getCustomer(orderData.customerId);
+            const customerData = customerRes.data?.data || customerRes.data || customerRes;
+            console.log("✅ Customer data fetched:", customerData);
+            enriched.order = { ...orderData, customer: customerData };
+          } catch (customerErr) {
+            console.error("❌ Lỗi khi fetch customer:", customerErr);
+          }
+        }
+        
+        // Nếu customer chỉ có ID, fetch lại
+        if (orderData.customer && orderData.customer.customerId && !orderData.customer.firstName && !orderData.customer.email) {
+          try {
+            const customerRes = await customerAPI.getCustomer(orderData.customer.customerId);
+            const customerData = customerRes.data?.data || customerRes.data || customerRes;
+            console.log("✅ Customer data re-fetched:", customerData);
+            enriched.order = { ...orderData, customer: customerData };
+          } catch (customerErr) {
+            console.error("❌ Lỗi khi re-fetch customer:", customerErr);
+          }
+        }
+        
+        // Fetch variant nếu order có inventory hoặc quotation nhưng variant không đầy đủ
+        if (orderData.inventory && (!orderData.inventory.variant || !orderData.inventory.variant.model) && (orderData.inventory.variantId || orderData.inventory.variant?.variantId)) {
+          try {
+            const variantId = orderData.inventory.variantId || orderData.inventory.variant?.variantId || orderData.inventory.variant?.id;
+            if (variantId) {
+              try {
+                const variantRes = await vehicleAPI.getVariant(variantId);
+                const variantData = variantRes.data?.data || variantRes.data || variantRes;
+                if (variantData) {
+                  console.log("✅ Variant data fetched for order:", variantData);
+                  enriched.order = {
+                    ...enriched.order,
+                    inventory: {
+                      ...orderData.inventory,
+                      variant: variantData
+                    }
+                  };
+                }
+              } catch (directErr) {
+                // Fallback: tìm trong danh sách variants
+                const variantRes = await publicVehicleAPI.getVariants();
+                const allVariants = Array.isArray(variantRes.data?.data) ? variantRes.data.data :
+                                  Array.isArray(variantRes.data) ? variantRes.data :
+                                  Array.isArray(variantRes) ? variantRes : [];
+                const variantData = allVariants.find(v => (v.variantId || v.id) == variantId);
+                if (variantData) {
+                  console.log("✅ Variant data found in list:", variantData);
+                  enriched.order = {
+                    ...enriched.order,
+                    inventory: {
+                      ...orderData.inventory,
+                      variant: variantData
+                    }
+                  };
+                }
+              }
+            }
+          } catch (variantErr) {
+            console.error("❌ Lỗi khi fetch variant:", variantErr);
+          }
+        }
+        
+        // Tương tự cho quotation variant
+        if (orderData.quotation && (!orderData.quotation.variant || !orderData.quotation.variant.model) && (orderData.quotation.variantId || orderData.quotation.variant?.variantId)) {
+          try {
+            const variantId = orderData.quotation.variantId || orderData.quotation.variant?.variantId || orderData.quotation.variant?.id;
+            if (variantId) {
+              try {
+                const variantRes = await vehicleAPI.getVariant(variantId);
+                const variantData = variantRes.data?.data || variantRes.data || variantRes;
+                if (variantData) {
+                  console.log("✅ Quotation variant data fetched:", variantData);
+                  enriched.order = {
+                    ...enriched.order,
+                    quotation: {
+                      ...orderData.quotation,
+                      variant: variantData
+                    }
+                  };
+                }
+              } catch (directErr) {
+                const variantRes = await publicVehicleAPI.getVariants();
+                const allVariants = Array.isArray(variantRes.data?.data) ? variantRes.data.data :
+                                  Array.isArray(variantRes.data) ? variantRes.data :
+                                  Array.isArray(variantRes) ? variantRes : [];
+                const variantData = allVariants.find(v => (v.variantId || v.id) == variantId);
+                if (variantData) {
+                  console.log("✅ Quotation variant data found in list:", variantData);
+                  enriched.order = {
+                    ...enriched.order,
+                    quotation: {
+                      ...orderData.quotation,
+                      variant: variantData
+                    }
+                  };
+                }
+              }
+            }
+          } catch (variantErr) {
+            console.error("❌ Lỗi khi fetch quotation variant:", variantErr);
+          }
         }
       }
       
@@ -219,9 +437,31 @@ export default function DeliveryTracking() {
             <tbody>
               {filteredAppointments.map((a) => {
                 const customer = a.order?.customer || {};
-                const customerName = a.customerName || 
-                  `${customer.firstName || customer.first_name || ""} ${customer.lastName || customer.last_name || ""}`.trim() || "—";
-                const orderNumber = a.order?.orderNumber || a.order?.orderId || "—";
+                // Lấy customer name từ nhiều nguồn, ưu tiên firstName + lastName từ CustomerDTO
+                let customerName = a.customerName;
+                if (!customerName && customer.firstName && customer.lastName) {
+                  customerName = `${customer.firstName} ${customer.lastName}`.trim();
+                } else if (!customerName) {
+                  customerName = customer.firstName || customer.first_name || customer.lastName || customer.last_name || "";
+                }
+                customerName = customerName || "—";
+                
+                // Lấy order number từ nhiều nguồn
+                const orderNumber = a.order?.orderNumber || a.order?.orderId || a.orderId || "—";
+                // Lấy delivery address từ nhiều nguồn
+                const deliveryAddress = a.deliveryAddress || a.location || a.order?.deliveryAddress || "—";
+                
+                // Debug log để kiểm tra
+                if (customerName === "—" || orderNumber === "—") {
+                  console.log("⚠️ Appointment missing data:", {
+                    appointmentId: a.appointmentId || a.id,
+                    customerName,
+                    orderNumber,
+                    hasOrder: !!a.order,
+                    hasCustomer: !!a.order?.customer,
+                    orderId: a.orderId
+                  });
+                }
                 const deliveryStatus = a.delivery?.status || a.delivery?.deliveryStatus || "";
                 const hasDelivery = !!a.delivery;
                 
@@ -239,7 +479,7 @@ export default function DeliveryTracking() {
                         {formatDate(a.appointmentDate)}
                       </span>
                     </td>
-                    <td>{a.deliveryAddress || a.location || "—"}</td>
+                    <td>{deliveryAddress}</td>
                     <td>
                       <span className={`status-badge ${getStatusBadge(a.status)}`}>
                         {getStatusIcon(a.status)}
@@ -285,14 +525,19 @@ export default function DeliveryTracking() {
       {showDetail && (enrichedAppointment || selectedAppointment) && (() => {
         const appointment = enrichedAppointment || selectedAppointment;
         const customer = appointment.order?.customer || {};
+        // Lấy customer name từ nhiều nguồn
         const customerName = appointment.customerName || 
-          `${customer.firstName || customer.first_name || ""} ${customer.lastName || customer.last_name || ""}`.trim() || "—";
+          (customer.firstName && customer.lastName 
+            ? `${customer.firstName} ${customer.lastName}`.trim()
+            : customer.firstName || customer.first_name || customer.lastName || customer.last_name || "") || "—";
         const order = appointment.order || {};
         const delivery = appointment.delivery || {};
         const variant = order.inventory?.variant || order.quotation?.variant || {};
-        const brand = variant?.model?.brand || variant?.brand || {};
+        const model = variant?.model || {};
+        const brand = model?.brand || variant?.brand || {};
         const brandName = brand?.brandName || brand?.brand_name || brand?.name || "—";
-        const variantName = variant?.variantName || variant?.variant_name || variant?.name || "—";
+        const variantName = variant?.variantName || variant?.variant_name || variant?.name || 
+                          model?.modelName || model?.model_name || model?.name || "—";
         
         return (
           <div className="popup-overlay">
@@ -338,7 +583,11 @@ export default function DeliveryTracking() {
                   <div className="detail-grid">
                     <div className="detail-item">
                       <span className="detail-label">Họ tên</span>
-                      <span className="detail-value">{customerName}</span>
+                      <span className="detail-value">
+                        {customer.firstName && customer.lastName 
+                          ? `${customer.firstName} ${customer.lastName}`.trim()
+                          : customerName || "—"}
+                      </span>
                     </div>
                     <div className="detail-item">
                       <span className="detail-label">Email</span>
@@ -346,7 +595,7 @@ export default function DeliveryTracking() {
                     </div>
                     <div className="detail-item">
                       <span className="detail-label">Điện thoại</span>
-                      <span className="detail-value">{customer.phone || customer.phoneNumber || appointment.customerPhone || "—"}</span>
+                      <span className="detail-value">{customer.phone || appointment.customerPhone || "—"}</span>
                     </div>
                   </div>
                 </div>

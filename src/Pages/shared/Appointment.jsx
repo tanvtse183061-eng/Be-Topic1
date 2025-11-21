@@ -1,5 +1,5 @@
 import '../Admin/Order.css';
-import { FaSearch, FaEye, FaCheckCircle, FaTimesCircle, FaClock, FaSpinner, FaExclamationCircle } from "react-icons/fa";
+import { FaSearch, FaEye, FaCheckCircle, FaTimesCircle, FaClock, FaSpinner, FaExclamationCircle, FaTrash } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { appointmentAPI } from "../../services/API";
 
@@ -141,6 +141,45 @@ export default function Appointment() {
       }
       
       alert(`❌ Hủy lịch hẹn thất bại!\n\n${errorMsg}\n\nVui lòng kiểm tra lại hoặc liên hệ hỗ trợ.`);
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  // Xóa lịch hẹn (chỉ cho phép xóa khi đã cancelled)
+  const handleDelete = async (appointmentId) => {
+    if (!appointmentId) {
+      alert("❌ Không tìm thấy mã lịch hẹn!");
+      return;
+    }
+    
+    if (!window.confirm("Bạn có chắc chắn muốn xóa lịch hẹn đã hủy này không?\n\n⚠️ Lưu ý: Hành động này không thể hoàn tác!")) {
+      return;
+    }
+    
+    try {
+      setProcessing(appointmentId);
+      const idToSend = String(appointmentId).trim();
+      console.log("🗑️ Xóa lịch hẹn với ID:", idToSend);
+      
+      await appointmentAPI.deleteAppointment(idToSend);
+      
+      console.log("✅ Xóa lịch hẹn thành công!");
+      alert("✅ Xóa lịch hẹn thành công!");
+      await fetchAppointments();
+      
+      // Đóng popup nếu đang xem chi tiết appointment này
+      if (showDetail && selectedAppointment && selectedAppointment.appointmentId === appointmentId) {
+        setShowDetail(false);
+        setSelectedAppointment(null);
+      }
+    } catch (err) {
+      console.error("❌ Lỗi khi xóa:", err);
+      const errorMsg = err.response?.data?.error || 
+                      err.response?.data?.message || 
+                      err.message || 
+                      "Không thể xóa lịch hẹn!";
+      alert(`❌ Xóa lịch hẹn thất bại!\n\n${errorMsg}`);
     } finally {
       setProcessing(null);
     }
@@ -328,6 +367,23 @@ export default function Appointment() {
                           </button>
                         ) : null;
                       })()}
+                      {(() => {
+                        const status = (a.status || "").toLowerCase();
+                        const isCancelled = status === "cancelled" || 
+                                          status === "đã hủy" || 
+                                          status === "hủy" ||
+                                          status === "canceled";
+                        return isCancelled ? (
+                          <button 
+                            className="icon-btn delete" 
+                            onClick={() => handleDelete(a.appointmentId)}
+                            disabled={processing === a.appointmentId}
+                            title="Xóa lịch hẹn đã hủy"
+                          >
+                            {processing === a.appointmentId ? <FaSpinner className="spinner-small" /> : <FaTrash />}
+                          </button>
+                        ) : null;
+                      })()}
                     </td>
                   </tr>
                 ))}
@@ -421,6 +477,10 @@ export default function Appointment() {
                 const canConfirm = status === "scheduled";
                 const canComplete = status === "confirmed";
                 const canCancel = status !== "cancelled" && status !== "completed";
+                const isCancelled = status === "cancelled" || 
+                                  status === "đã hủy" || 
+                                  status === "hủy" ||
+                                  status === "canceled";
                 
                 return (
                   <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
@@ -482,6 +542,27 @@ export default function Appointment() {
                         ) : (
                           <>
                             <FaTimesCircle style={{ marginRight: "5px" }} /> Hủy
+                          </>
+                        )}
+                      </button>
+                    )}
+                    {isCancelled && (
+                      <button 
+                        className="btn-secondary" 
+                        onClick={() => {
+                          handleDelete(selectedAppointment.appointmentId);
+                          setShowDetail(false);
+                        }}
+                        disabled={processing === selectedAppointment.appointmentId}
+                        style={{ background: "#991b1b", borderColor: "#991b1b", color: "white" }}
+                      >
+                        {processing === selectedAppointment.appointmentId ? (
+                          <>
+                            <FaSpinner className="spinner-small" /> Đang xử lý...
+                          </>
+                        ) : (
+                          <>
+                            <FaTrash style={{ marginRight: "5px" }} /> Xóa
                           </>
                         )}
                       </button>

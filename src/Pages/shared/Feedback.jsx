@@ -1,4 +1,4 @@
-import '../Admin/Order.css';
+import './Feedback.css';
 import { FaSearch, FaEye, FaCheckCircle, FaTimesCircle, FaSpinner, FaExclamationCircle, FaReply } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { feedbackAPI } from "../../services/API";
@@ -20,7 +20,12 @@ export default function Feedback() {
       setLoading(true);
       setError(null);
       const res = await feedbackAPI.getFeedbacks();
-      setFeedbacks(res.data || []);
+      const feedbacksData = res.data || [];
+      console.log("📋 Feedback data from API:", feedbacksData);
+      if (feedbacksData.length > 0) {
+        console.log("📋 Sample feedback structure:", feedbacksData[0]);
+      }
+      setFeedbacks(feedbacksData);
     } catch (err) {
       console.error("Lỗi khi lấy phản hồi:", err);
       setError("Không thể tải danh sách phản hồi. Vui lòng thử lại sau.");
@@ -124,6 +129,52 @@ export default function Feedback() {
     return '★'.repeat(rating) + '☆'.repeat(5 - rating) + ` (${rating}/5)`;
   };
 
+  // Helper function để lấy thông tin khách hàng từ nhiều nguồn
+  const getCustomerInfo = (feedback) => {
+    if (!feedback) {
+      return { name: 'N/A', email: 'N/A', phone: 'N/A' };
+    }
+
+    // Ưu tiên 1: Lấy từ các field chính
+    let name = feedback.customerName || feedback.name || '';
+    let email = feedback.customerEmail || feedback.email || '';
+    let phone = feedback.customerPhone || feedback.phone || '';
+
+    // Ưu tiên 2: Nếu không có, thử parse từ message hoặc các field khác
+    if (!name || !email || !phone) {
+      // Kiểm tra trong message nếu có format "info: name (email, phone)"
+      const message = feedback.message || '';
+      const infoMatch = message.match(/info:\s*([^(]+)\s*\(([^,]+),\s*([^)]+)\)/i);
+      if (infoMatch) {
+        if (!name) name = infoMatch[1].trim();
+        if (!email) email = infoMatch[2].trim();
+        if (!phone) phone = infoMatch[3].trim();
+      }
+    }
+
+    // Ưu tiên 3: Kiểm tra các field alternative
+    if (!name) name = feedback.customer?.customerName || feedback.customer?.name || '';
+    if (!email) email = feedback.customer?.customerEmail || feedback.customer?.email || '';
+    if (!phone) phone = feedback.customer?.customerPhone || feedback.customer?.phone || '';
+
+    // Debug log để xem cấu trúc dữ liệu
+    if (!name || name === 'N/A') {
+      console.log("⚠️ Không tìm thấy tên khách hàng trong feedback:", {
+        feedbackId: feedback.feedbackId,
+        customerName: feedback.customerName,
+        name: feedback.name,
+        customer: feedback.customer,
+        fullFeedback: feedback
+      });
+    }
+
+    return {
+      name: name || 'N/A',
+      email: email || 'N/A',
+      phone: phone || 'N/A'
+    };
+  };
+
   return (
     <div className="customer">
       <div className="title-customer">
@@ -178,14 +229,16 @@ export default function Feedback() {
                 </tr>
               </thead>
               <tbody>
-                {filteredFeedbacks.map((f) => (
+                {filteredFeedbacks.map((f) => {
+                  const customerInfo = getCustomerInfo(f);
+                  return (
                   <tr key={f.feedbackId}>
                     <td>{f.subject || 'Không có tiêu đề'}</td>
                     <td>
                       <div className="customer-info">
-                        <span className="customer-name">{f.customerName || 'N/A'}</span>
-                        {f.customerEmail && (
-                          <span className="customer-email">{f.customerEmail}</span>
+                        <span className="customer-name">{customerInfo.name}</span>
+                        {customerInfo.email !== 'N/A' && (
+                          <span className="customer-email">{customerInfo.email}</span>
                         )}
                       </div>
                     </td>
@@ -230,7 +283,8 @@ export default function Feedback() {
                       )}
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           ) : (
@@ -285,20 +339,25 @@ export default function Feedback() {
 
               <div className="detail-section">
                 <h3>Thông tin khách hàng</h3>
+                {(() => {
+                  const customerInfo = getCustomerInfo(selectedFeedback);
+                  return (
                 <div className="detail-grid">
                   <div className="detail-item">
                     <span className="detail-label">Họ tên</span>
-                    <span className="detail-value">{selectedFeedback.customerName || 'N/A'}</span>
+                        <span className="detail-value">{customerInfo.name}</span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">Email</span>
-                    <span className="detail-value">{selectedFeedback.customerEmail || 'N/A'}</span>
+                        <span className="detail-value">{customerInfo.email}</span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">Điện thoại</span>
-                    <span className="detail-value">{selectedFeedback.customerPhone || 'N/A'}</span>
+                        <span className="detail-value">{customerInfo.phone}</span>
                   </div>
                 </div>
+                  );
+                })()}
               </div>
 
               <div className="detail-section">

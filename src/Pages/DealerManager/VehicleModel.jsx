@@ -69,7 +69,7 @@ export default function VehicleModel() {
     return () => clearTimeout(delay);
   }, [searchTerm]);
 
-  const handleOpenAdd = () => {
+  const _handleOpenAdd = () => {
     setIsEdit(false);
     setSelectedModel(null);
     setFormData({
@@ -177,9 +177,6 @@ export default function VehicleModel() {
       if (isEdit && selectedModel) {
         await vehicleAPI.updateModel(selectedModel.modelId, payload);
         alert("✅ Cập nhật dòng xe thành công!");
-      } else {
-        await vehicleAPI.createModel(payload);
-        alert("✅ Thêm dòng xe thành công!");
       }
       setShowPopup(false);
       fetchModels();
@@ -197,7 +194,6 @@ export default function VehicleModel() {
 
       <div className="title2-customer">
         <h2>Danh sách dòng xe</h2>
-        <h3 onClick={handleOpenAdd}><FaPlus /> Thêm dòng xe</h3>
       </div>
 
       <div className="title3-customer">
@@ -228,7 +224,7 @@ export default function VehicleModel() {
               models.map((m) => (
                 <tr key={m.modelId}>
                   <td>{m.modelName}</td>
-                  <td>{m.brand?.brandName || "—"}</td>
+                  <td>{m.brand?.brandName || (m.brandId ? brands.find(b => b.brandId === m.brandId)?.brandName : null) || "—"}</td>
                   <td>{m.description || "—"}</td>
                   <td>{m.modelYear || m.year || "—"}</td>
                   <td>
@@ -243,8 +239,6 @@ export default function VehicleModel() {
                   </td>
                   <td className="action-buttons">
                     <button onClick={() => handleView(m)} className="icon-btn view"><FaEye /></button>
-                    <button onClick={() => handleEdit(m)} className="icon-btn edit"><FaPen /></button>
-                    <button onClick={() => handleDelete(m.modelId)} className="icon-btn delete"><FaTrash /></button>
                   </td>
                 </tr>
               ))
@@ -255,11 +249,11 @@ export default function VehicleModel() {
         </table>
       </div>
 
-      {/* Popup thêm/sửa */}
-      {showPopup && (
+      {/* Popup sửa (chỉ cho phép sửa, không cho tạo mới) */}
+      {showPopup && isEdit && (
         <div className="popup-overlay" onClick={(e) => { if (e.target.className === 'popup-overlay') setShowPopup(false); }}>
           <div className="popup-box">
-            <h2>{isEdit ? "Sửa dòng xe" : "Thêm dòng xe"}</h2>
+            <h2>Sửa dòng xe</h2>
             <form onSubmit={handleSubmit}>
               <div className="form-grid">
                 <input

@@ -253,7 +253,7 @@ export default function VehicleVariant() {
                     <span style={{ display: "none", fontSize: "10px", color: "#999" }}>—</span>
                   </td>
                   <td>{v.variantName}</td>
-                  <td>{v.model?.modelName ?? "—"}</td>
+                  <td>{v.model?.modelName || (v.model?.modelId || v.modelId ? models.find(m => m.modelId === (v.model?.modelId || v.modelId))?.modelName : null) || "—"}</td>
                   <td>{v.topSpeed ?? "—"} km/h</td>
                   <td>{v.batteryCapacity ?? "—"} kWh</td>
                   <td>{v.priceBase}</td>
