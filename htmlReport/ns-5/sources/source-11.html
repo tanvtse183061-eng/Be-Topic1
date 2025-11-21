@@ -1,0 +1,277 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > InventoryTurnoverReport</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.evdealer.entity</a>
+</div>
+
+<h1>Coverage Summary for Class: InventoryTurnoverReport (com.evdealer.entity)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">InventoryTurnoverReport</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/27)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/27)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">InventoryTurnoverReport$HibernateInstantiator$KhZYO3uK</td>
+  </tr>
+  <tr>
+    <td class="name">InventoryTurnoverReport$HibernateProxy$mUPe7PLX</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/27)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/27)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.evdealer.entity;
+&nbsp;
+&nbsp;import jakarta.persistence.*;
+&nbsp;import org.hibernate.annotations.Immutable;
+&nbsp;import java.math.BigDecimal;
+&nbsp;import java.time.LocalDate;
+&nbsp;
+&nbsp;@Entity
+&nbsp;@Table(name = &quot;inventory_turnover_report&quot;)
+&nbsp;@Immutable
+&nbsp;public class InventoryTurnoverReport {
+&nbsp;    
+&nbsp;    @Id
+&nbsp;    @Column(name = &quot;brand_name&quot;)
+&nbsp;    private String brandName;
+&nbsp;    
+&nbsp;    @Column(name = &quot;model_name&quot;)
+&nbsp;    private String modelName;
+&nbsp;    
+&nbsp;    @Column(name = &quot;variant_name&quot;)
+&nbsp;    private String variantName;
+&nbsp;    
+&nbsp;    @Column(name = &quot;color_name&quot;)
+&nbsp;    private String colorName;
+&nbsp;    
+&nbsp;    @Column(name = &quot;total_inventory&quot;)
+&nbsp;    private Long totalInventory;
+&nbsp;    
+&nbsp;    @Column(name = &quot;available_count&quot;)
+&nbsp;    private Long availableCount;
+&nbsp;    
+&nbsp;    @Column(name = &quot;sold_count&quot;)
+&nbsp;    private Long soldCount;
+&nbsp;    
+&nbsp;    @Column(name = &quot;reserved_count&quot;)
+&nbsp;    private Long reservedCount;
+&nbsp;    
+&nbsp;    @Column(name = &quot;avg_cost_price&quot;)
+&nbsp;    private BigDecimal avgCostPrice;
+&nbsp;    
+&nbsp;    @Column(name = &quot;avg_selling_price&quot;)
+&nbsp;    private BigDecimal avgSellingPrice;
+&nbsp;    
+&nbsp;    @Column(name = &quot;avg_profit_margin&quot;)
+&nbsp;    private BigDecimal avgProfitMargin;
+&nbsp;    
+&nbsp;    @Column(name = &quot;first_arrival&quot;)
+&nbsp;    private LocalDate firstArrival;
+&nbsp;    
+&nbsp;    @Column(name = &quot;last_arrival&quot;)
+&nbsp;    private LocalDate lastArrival;
+&nbsp;    
+&nbsp;    // Constructors
+<b class="nc">&nbsp;    public InventoryTurnoverReport() {}</b>
+&nbsp;    
+&nbsp;    // Getters and Setters
+&nbsp;    public String getBrandName() {
+<b class="nc">&nbsp;        return brandName;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setBrandName(String brandName) {
+<b class="nc">&nbsp;        this.brandName = brandName;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public String getModelName() {
+<b class="nc">&nbsp;        return modelName;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setModelName(String modelName) {
+<b class="nc">&nbsp;        this.modelName = modelName;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public String getVariantName() {
+<b class="nc">&nbsp;        return variantName;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setVariantName(String variantName) {
+<b class="nc">&nbsp;        this.variantName = variantName;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public String getColorName() {
+<b class="nc">&nbsp;        return colorName;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setColorName(String colorName) {
+<b class="nc">&nbsp;        this.colorName = colorName;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public Long getTotalInventory() {
+<b class="nc">&nbsp;        return totalInventory;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setTotalInventory(Long totalInventory) {
+<b class="nc">&nbsp;        this.totalInventory = totalInventory;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public Long getAvailableCount() {
+<b class="nc">&nbsp;        return availableCount;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setAvailableCount(Long availableCount) {
+<b class="nc">&nbsp;        this.availableCount = availableCount;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public Long getSoldCount() {
+<b class="nc">&nbsp;        return soldCount;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setSoldCount(Long soldCount) {
+<b class="nc">&nbsp;        this.soldCount = soldCount;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public Long getReservedCount() {
+<b class="nc">&nbsp;        return reservedCount;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setReservedCount(Long reservedCount) {
+<b class="nc">&nbsp;        this.reservedCount = reservedCount;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public BigDecimal getAvgCostPrice() {
+<b class="nc">&nbsp;        return avgCostPrice;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setAvgCostPrice(BigDecimal avgCostPrice) {
+<b class="nc">&nbsp;        this.avgCostPrice = avgCostPrice;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public BigDecimal getAvgSellingPrice() {
+<b class="nc">&nbsp;        return avgSellingPrice;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setAvgSellingPrice(BigDecimal avgSellingPrice) {
+<b class="nc">&nbsp;        this.avgSellingPrice = avgSellingPrice;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public BigDecimal getAvgProfitMargin() {
+<b class="nc">&nbsp;        return avgProfitMargin;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setAvgProfitMargin(BigDecimal avgProfitMargin) {
+<b class="nc">&nbsp;        this.avgProfitMargin = avgProfitMargin;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public LocalDate getFirstArrival() {
+<b class="nc">&nbsp;        return firstArrival;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setFirstArrival(LocalDate firstArrival) {
+<b class="nc">&nbsp;        this.firstArrival = firstArrival;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public LocalDate getLastArrival() {
+<b class="nc">&nbsp;        return lastArrival;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setLastArrival(LocalDate lastArrival) {
+<b class="nc">&nbsp;        this.lastArrival = lastArrival;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-10-15 18:40</div>
+</div>
+</body>
+</html>

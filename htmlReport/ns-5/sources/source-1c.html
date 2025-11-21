@@ -1,0 +1,203 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > VehicleColor</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.evdealer.entity</a>
+</div>
+
+<h1>Coverage Summary for Class: VehicleColor (com.evdealer.entity)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">VehicleColor</td>
+<td class="coverageStat">
+  <span class="percent">
+    7.1%
+  </span>
+  <span class="absValue">
+    (1/14)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    16.7%
+  </span>
+  <span class="absValue">
+    (3/18)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">VehicleColor$HibernateInstantiator$JgDdEvDS</td>
+  </tr>
+  <tr>
+    <td class="name">VehicleColor$HibernateProxy$CQGBrFFE</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    7.1%
+  </span>
+  <span class="absValue">
+    (1/14)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    16.7%
+  </span>
+  <span class="absValue">
+    (3/18)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.evdealer.entity;
+&nbsp;
+&nbsp;import jakarta.persistence.*;
+&nbsp;
+&nbsp;@Entity
+&nbsp;@Table(name = &quot;vehicle_colors&quot;)
+&nbsp;public class VehicleColor {
+&nbsp;    
+&nbsp;    @Id
+&nbsp;    @GeneratedValue(strategy = GenerationType.IDENTITY)
+&nbsp;    @Column(name = &quot;color_id&quot;)
+&nbsp;    private Integer colorId;
+&nbsp;    
+&nbsp;    @Column(name = &quot;color_name&quot;, nullable = false, length = 100)
+&nbsp;    private String colorName;
+&nbsp;    
+&nbsp;    @Column(name = &quot;color_code&quot;, length = 20)
+&nbsp;    private String colorCode;
+&nbsp;    
+&nbsp;    @Column(name = &quot;color_swatch_url&quot;, length = 500)
+&nbsp;    private String colorSwatchUrl;
+&nbsp;    
+&nbsp;    @Column(name = &quot;color_swatch_path&quot;, length = 500)
+&nbsp;    private String colorSwatchPath;
+&nbsp;    
+<b class="fc">&nbsp;    @Column(name = &quot;is_active&quot;, nullable = false)</b>
+<b class="fc">&nbsp;    private Boolean isActive = true;</b>
+&nbsp;    
+&nbsp;    // Constructors
+<b class="fc">&nbsp;    public VehicleColor() {}</b>
+&nbsp;    
+<b class="nc">&nbsp;    public VehicleColor(String colorName, String colorCode) {</b>
+<b class="nc">&nbsp;        this.colorName = colorName;</b>
+<b class="nc">&nbsp;        this.colorCode = colorCode;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    // Getters and Setters
+&nbsp;    public Integer getColorId() {
+<b class="nc">&nbsp;        return colorId;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setColorId(Integer colorId) {
+<b class="nc">&nbsp;        this.colorId = colorId;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public String getColorName() {
+<b class="nc">&nbsp;        return colorName;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setColorName(String colorName) {
+<b class="nc">&nbsp;        this.colorName = colorName;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public String getColorCode() {
+<b class="nc">&nbsp;        return colorCode;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setColorCode(String colorCode) {
+<b class="nc">&nbsp;        this.colorCode = colorCode;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public String getColorSwatchUrl() {
+<b class="nc">&nbsp;        return colorSwatchUrl;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setColorSwatchUrl(String colorSwatchUrl) {
+<b class="nc">&nbsp;        this.colorSwatchUrl = colorSwatchUrl;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public String getColorSwatchPath() {
+<b class="nc">&nbsp;        return colorSwatchPath;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setColorSwatchPath(String colorSwatchPath) {
+<b class="nc">&nbsp;        this.colorSwatchPath = colorSwatchPath;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public Boolean getIsActive() {
+<b class="nc">&nbsp;        return isActive;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setIsActive(Boolean isActive) {
+<b class="nc">&nbsp;        this.isActive = isActive;</b>
+&nbsp;    }
+&nbsp;}
+&nbsp;
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-10-15 18:40</div>
+</div>
+</body>
+</html>

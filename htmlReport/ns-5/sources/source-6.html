@@ -1,0 +1,270 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > DealerDiscountPolicy</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.evdealer.entity</a>
+</div>
+
+<h1>Coverage Summary for Class: DealerDiscountPolicy (com.evdealer.entity)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">DealerDiscountPolicy</td>
+<td class="coverageStat">
+  <span class="percent">
+    4.2%
+  </span>
+  <span class="absValue">
+    (1/24)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    6.9%
+  </span>
+  <span class="absValue">
+    (2/29)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">DealerDiscountPolicy$HibernateInstantiator$r11DMQJT</td>
+  </tr>
+  <tr>
+    <td class="name">DealerDiscountPolicy$HibernateProxy$C9M2vVCi</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    4.2%
+  </span>
+  <span class="absValue">
+    (1/24)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    6.9%
+  </span>
+  <span class="absValue">
+    (2/29)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.evdealer.entity;
+&nbsp;
+&nbsp;import jakarta.persistence.*;
+&nbsp;import org.hibernate.annotations.CreationTimestamp;
+&nbsp;import org.hibernate.annotations.UpdateTimestamp;
+&nbsp;
+&nbsp;import java.math.BigDecimal;
+&nbsp;import java.time.LocalDate;
+&nbsp;import java.time.LocalDateTime;
+&nbsp;import java.util.UUID;
+&nbsp;
+&nbsp;@Entity
+&nbsp;@Table(name = &quot;dealer_discount_policies&quot;)
+&nbsp;public class DealerDiscountPolicy {
+&nbsp;    
+&nbsp;    @Id
+&nbsp;    @GeneratedValue(strategy = GenerationType.UUID)
+&nbsp;    @Column(name = &quot;policy_id&quot;)
+&nbsp;    private UUID policyId;
+&nbsp;    
+&nbsp;    @ManyToOne(fetch = FetchType.EAGER)
+&nbsp;    @JoinColumn(name = &quot;variant_id&quot;, nullable = false)
+&nbsp;    private VehicleVariant variant;
+&nbsp;    
+&nbsp;    @Column(name = &quot;policy_name&quot;, nullable = false, length = 255)
+&nbsp;    private String policyName;
+&nbsp;    
+&nbsp;    @Column(name = &quot;description&quot;, columnDefinition = &quot;TEXT&quot;)
+&nbsp;    private String description;
+&nbsp;    
+&nbsp;    @Column(name = &quot;discount_percent&quot;, precision = 5, scale = 2)
+&nbsp;    private BigDecimal discountPercent;
+&nbsp;    
+&nbsp;    @Column(name = &quot;discount_amount&quot;, precision = 12, scale = 2)
+&nbsp;    private BigDecimal discountAmount;
+&nbsp;    
+&nbsp;    @Column(name = &quot;start_date&quot;, nullable = false)
+&nbsp;    private LocalDate startDate;
+&nbsp;    
+&nbsp;    @Column(name = &quot;end_date&quot;, nullable = false)
+&nbsp;    private LocalDate endDate;
+&nbsp;    
+<b class="fc">&nbsp;    @Column(name = &quot;status&quot;, length = 50, nullable = false)</b>
+&nbsp;    private String status = &quot;active&quot;;
+&nbsp;    
+&nbsp;    @CreationTimestamp
+&nbsp;    @Column(name = &quot;created_at&quot;, nullable = false, updatable = false)
+&nbsp;    private LocalDateTime createdAt;
+&nbsp;    
+&nbsp;    @UpdateTimestamp
+&nbsp;    @Column(name = &quot;updated_at&quot;, nullable = false)
+&nbsp;    private LocalDateTime updatedAt;
+&nbsp;    
+&nbsp;    // Constructors
+<b class="fc">&nbsp;    public DealerDiscountPolicy() {}</b>
+&nbsp;    
+<b class="nc">&nbsp;    public DealerDiscountPolicy(VehicleVariant variant, String policyName, LocalDate startDate, LocalDate endDate) {</b>
+<b class="nc">&nbsp;        this.variant = variant;</b>
+<b class="nc">&nbsp;        this.policyName = policyName;</b>
+<b class="nc">&nbsp;        this.startDate = startDate;</b>
+<b class="nc">&nbsp;        this.endDate = endDate;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    // Getters and Setters
+&nbsp;    public UUID getPolicyId() {
+<b class="nc">&nbsp;        return policyId;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setPolicyId(UUID policyId) {
+<b class="nc">&nbsp;        this.policyId = policyId;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public VehicleVariant getVariant() {
+<b class="nc">&nbsp;        return variant;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setVariant(VehicleVariant variant) {
+<b class="nc">&nbsp;        this.variant = variant;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public String getPolicyName() {
+<b class="nc">&nbsp;        return policyName;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setPolicyName(String policyName) {
+<b class="nc">&nbsp;        this.policyName = policyName;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public String getDescription() {
+<b class="nc">&nbsp;        return description;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setDescription(String description) {
+<b class="nc">&nbsp;        this.description = description;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public BigDecimal getDiscountPercent() {
+<b class="nc">&nbsp;        return discountPercent;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setDiscountPercent(BigDecimal discountPercent) {
+<b class="nc">&nbsp;        this.discountPercent = discountPercent;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public BigDecimal getDiscountAmount() {
+<b class="nc">&nbsp;        return discountAmount;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setDiscountAmount(BigDecimal discountAmount) {
+<b class="nc">&nbsp;        this.discountAmount = discountAmount;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public LocalDate getStartDate() {
+<b class="nc">&nbsp;        return startDate;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setStartDate(LocalDate startDate) {
+<b class="nc">&nbsp;        this.startDate = startDate;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public LocalDate getEndDate() {
+<b class="nc">&nbsp;        return endDate;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setEndDate(LocalDate endDate) {
+<b class="nc">&nbsp;        this.endDate = endDate;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public String getStatus() {
+<b class="nc">&nbsp;        return status;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setStatus(String status) {
+<b class="nc">&nbsp;        this.status = status;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public LocalDateTime getCreatedAt() {
+<b class="nc">&nbsp;        return createdAt;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setCreatedAt(LocalDateTime createdAt) {
+<b class="nc">&nbsp;        this.createdAt = createdAt;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public LocalDateTime getUpdatedAt() {
+<b class="nc">&nbsp;        return updatedAt;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setUpdatedAt(LocalDateTime updatedAt) {
+<b class="nc">&nbsp;        this.updatedAt = updatedAt;</b>
+&nbsp;    }
+&nbsp;}
+&nbsp;
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-10-15 18:40</div>
+</div>
+</body>
+</html>

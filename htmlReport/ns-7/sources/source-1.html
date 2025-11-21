@@ -1,0 +1,219 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > JwtUtil</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.evdealer.util</a>
+</div>
+
+<h1>Coverage Summary for Class: JwtUtil (com.evdealer.util)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">JwtUtil</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    6.7%
+  </span>
+  <span class="absValue">
+    (1/15)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    2.8%
+  </span>
+  <span class="absValue">
+    (1/36)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.evdealer.util;
+&nbsp;
+&nbsp;import io.jsonwebtoken.*;
+&nbsp;import io.jsonwebtoken.security.Keys;
+&nbsp;import org.springframework.beans.factory.annotation.Value;
+&nbsp;import org.springframework.security.core.userdetails.UserDetails;
+&nbsp;import org.springframework.stereotype.Component;
+&nbsp;
+&nbsp;import javax.crypto.SecretKey;
+&nbsp;import java.util.Date;
+&nbsp;import java.util.HashMap;
+&nbsp;import java.util.Map;
+&nbsp;import java.util.function.Function;
+&nbsp;
+&nbsp;@Component
+<b class="fc">&nbsp;public class JwtUtil {</b>
+&nbsp;    
+&nbsp;    @Value(&quot;${jwt.secret:mySecretKey123456789012345678901234567890}&quot;)
+&nbsp;    private String secret;
+&nbsp;    
+&nbsp;    @Value(&quot;${jwt.expiration:3600}&quot;)
+&nbsp;    private Long expiration;
+&nbsp;    
+&nbsp;    private SecretKey getSigningKey() {
+<b class="nc">&nbsp;        return Keys.hmacShaKeyFor(secret.getBytes());</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public String extractUsername(String token) {
+<b class="nc">&nbsp;        return extractClaim(token, Claims::getSubject);</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public Date extractExpiration(String token) {
+<b class="nc">&nbsp;        return extractClaim(token, Claims::getExpiration);</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public &lt;T&gt; T extractClaim(String token, Function&lt;Claims, T&gt; claimsResolver) {
+<b class="nc">&nbsp;        final Claims claims = extractAllClaims(token);</b>
+<b class="nc">&nbsp;        return claimsResolver.apply(claims);</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    private Claims extractAllClaims(String token) {
+<b class="nc">&nbsp;        return Jwts.parserBuilder()</b>
+<b class="nc">&nbsp;                .setSigningKey(getSigningKey())</b>
+<b class="nc">&nbsp;                .build()</b>
+<b class="nc">&nbsp;                .parseClaimsJws(token)</b>
+<b class="nc">&nbsp;                .getBody();</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    private Boolean isTokenExpired(String token) {
+<b class="nc">&nbsp;        return extractExpiration(token).before(new Date());</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public String generateToken(UserDetails userDetails) {
+<b class="nc">&nbsp;        Map&lt;String, Object&gt; claims = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;        return createToken(claims, userDetails.getUsername());</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public String generateToken(String username, String role, String userId) {
+<b class="nc">&nbsp;        Map&lt;String, Object&gt; claims = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;        claims.put(&quot;role&quot;, role);</b>
+<b class="nc">&nbsp;        claims.put(&quot;userId&quot;, userId);</b>
+<b class="nc">&nbsp;        return createToken(claims, username);</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    private String createToken(Map&lt;String, Object&gt; claims, String subject) {
+<b class="nc">&nbsp;        return Jwts.builder()</b>
+<b class="nc">&nbsp;                .setClaims(claims)</b>
+<b class="nc">&nbsp;                .setSubject(subject)</b>
+<b class="nc">&nbsp;                .setIssuedAt(new Date(System.currentTimeMillis()))</b>
+<b class="nc">&nbsp;                .setExpiration(new Date(System.currentTimeMillis() + expiration * 1000))</b>
+<b class="nc">&nbsp;                .signWith(getSigningKey(), SignatureAlgorithm.HS256)</b>
+<b class="nc">&nbsp;                .compact();</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public Boolean validateToken(String token, UserDetails userDetails) {
+<b class="nc">&nbsp;        final String username = extractUsername(token);</b>
+<b class="nc">&nbsp;        return (username.equals(userDetails.getUsername()) &amp;&amp; !isTokenExpired(token));</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public Boolean validateToken(String token) {
+&nbsp;        try {
+<b class="nc">&nbsp;            Jwts.parserBuilder()</b>
+<b class="nc">&nbsp;                .setSigningKey(getSigningKey())</b>
+<b class="nc">&nbsp;                .build()</b>
+<b class="nc">&nbsp;                .parseClaimsJws(token);</b>
+<b class="nc">&nbsp;            return true;</b>
+&nbsp;        } catch (JwtException | IllegalArgumentException e) {
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;    
+&nbsp;    public String getRoleFromToken(String token) {
+<b class="nc">&nbsp;        return extractClaim(token, claims -&gt; claims.get(&quot;role&quot;, String.class));</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public String getUserIdFromToken(String token) {
+<b class="nc">&nbsp;        return extractClaim(token, claims -&gt; claims.get(&quot;userId&quot;, String.class));</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public Long getExpirationTime() {
+<b class="nc">&nbsp;        return expiration;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-10-15 18:40</div>
+</div>
+</body>
+</html>

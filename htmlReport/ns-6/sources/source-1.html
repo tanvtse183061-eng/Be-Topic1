@@ -1,0 +1,275 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > UserService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.evdealer.service</a>
+</div>
+
+<h1>Coverage Summary for Class: UserService (com.evdealer.service)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">UserService</td>
+<td class="coverageStat">
+  <span class="percent">
+    6.2%
+  </span>
+  <span class="absValue">
+    (1/16)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/18)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    4%
+  </span>
+  <span class="absValue">
+    (2/50)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">UserService$$SpringCGLIB$$0</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    6.2%
+  </span>
+  <span class="absValue">
+    (1/16)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/18)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    4%
+  </span>
+  <span class="absValue">
+    (2/50)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.evdealer.service;
+&nbsp;
+&nbsp;import com.evdealer.entity.User;
+&nbsp;import com.evdealer.entity.UserRole;
+&nbsp;import com.evdealer.repository.UserRepository;
+&nbsp;import com.evdealer.repository.UserRoleRepository;
+&nbsp;import org.springframework.beans.factory.annotation.Autowired;
+&nbsp;import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;import org.springframework.transaction.annotation.Transactional;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Optional;
+&nbsp;import java.util.UUID;
+&nbsp;
+&nbsp;@Service
+&nbsp;@Transactional
+<b class="fc">&nbsp;public class UserService {</b>
+&nbsp;    
+&nbsp;    @Autowired
+&nbsp;    private UserRepository userRepository;
+&nbsp;    
+&nbsp;    @Autowired
+&nbsp;    private UserRoleRepository userRoleRepository;
+&nbsp;    
+<b class="fc">&nbsp;    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();</b>
+&nbsp;    
+&nbsp;    public List&lt;User&gt; getAllUsers() {
+&nbsp;        try {
+<b class="nc">&nbsp;            return userRepository.findAll();</b>
+&nbsp;        } catch (Exception e) {
+&nbsp;            // Return empty list if there&#39;s an issue
+<b class="nc">&nbsp;            return new java.util.ArrayList&lt;&gt;();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;    
+&nbsp;    public List&lt;User&gt; getActiveUsers() {
+<b class="nc">&nbsp;        return userRepository.findByIsActiveTrue();</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public Optional&lt;User&gt; getUserById(UUID userId) {
+<b class="nc">&nbsp;        return userRepository.findById(userId);</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public Optional&lt;User&gt; getUserByUsername(String username) {
+<b class="nc">&nbsp;        return userRepository.findByUsername(username);</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public Optional&lt;User&gt; getUserByEmail(String email) {
+<b class="nc">&nbsp;        return userRepository.findByEmail(email);</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public List&lt;User&gt; getUsersByRole(String roleName) {
+<b class="nc">&nbsp;        return userRepository.findByRoleName(roleName);</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public List&lt;User&gt; searchUsersByName(String name) {
+<b class="nc">&nbsp;        return userRepository.findByNameContaining(name);</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public User createUser(User user) {
+<b class="nc">&nbsp;        if (userRepository.existsByUsername(user.getUsername())) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Username already exists: &quot; + user.getUsername());</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (userRepository.existsByEmail(user.getEmail())) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Email already exists: &quot; + user.getEmail());</b>
+&nbsp;        }
+&nbsp;        
+&nbsp;        // Hash password before saving
+<b class="nc">&nbsp;        if (user.getPasswordHash() != null &amp;&amp; !user.getPasswordHash().startsWith(&quot;$2a$&quot;)) {</b>
+&nbsp;            // Only hash if it&#39;s not already hashed (doesn&#39;t start with BCrypt prefix)
+<b class="nc">&nbsp;            user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));</b>
+&nbsp;        }
+&nbsp;        
+<b class="nc">&nbsp;        return userRepository.save(user);</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public User updateUser(UUID userId, User userDetails) {
+<b class="nc">&nbsp;        User user = userRepository.findById(userId)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new RuntimeException(&quot;User not found with id: &quot; + userId));</b>
+&nbsp;        
+&nbsp;        // Check for duplicate username (excluding current user)
+<b class="nc">&nbsp;        if (!user.getUsername().equals(userDetails.getUsername()) &amp;&amp; </b>
+<b class="nc">&nbsp;            userRepository.existsByUsername(userDetails.getUsername())) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Username already exists: &quot; + userDetails.getUsername());</b>
+&nbsp;        }
+&nbsp;        
+&nbsp;        // Check for duplicate email (excluding current user)
+<b class="nc">&nbsp;        if (!user.getEmail().equals(userDetails.getEmail()) &amp;&amp; </b>
+<b class="nc">&nbsp;            userRepository.existsByEmail(userDetails.getEmail())) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Email already exists: &quot; + userDetails.getEmail());</b>
+&nbsp;        }
+&nbsp;        
+<b class="nc">&nbsp;        user.setUsername(userDetails.getUsername());</b>
+<b class="nc">&nbsp;        user.setEmail(userDetails.getEmail());</b>
+<b class="nc">&nbsp;        user.setFirstName(userDetails.getFirstName());</b>
+<b class="nc">&nbsp;        user.setLastName(userDetails.getLastName());</b>
+<b class="nc">&nbsp;        user.setPhone(userDetails.getPhone());</b>
+<b class="nc">&nbsp;        user.setAddress(userDetails.getAddress());</b>
+<b class="nc">&nbsp;        user.setDateOfBirth(userDetails.getDateOfBirth());</b>
+<b class="nc">&nbsp;        user.setProfileImageUrl(userDetails.getProfileImageUrl());</b>
+<b class="nc">&nbsp;        user.setProfileImagePath(userDetails.getProfileImagePath());</b>
+<b class="nc">&nbsp;        user.setRole(userDetails.getRole());</b>
+<b class="nc">&nbsp;        user.setIsActive(userDetails.getIsActive());</b>
+&nbsp;        
+<b class="nc">&nbsp;        return userRepository.save(user);</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void deleteUser(UUID userId) {
+<b class="nc">&nbsp;        User user = userRepository.findById(userId)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new RuntimeException(&quot;User not found with id: &quot; + userId));</b>
+<b class="nc">&nbsp;        userRepository.delete(user);</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void deactivateUser(UUID userId) {
+<b class="nc">&nbsp;        User user = userRepository.findById(userId)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new RuntimeException(&quot;User not found with id: &quot; + userId));</b>
+<b class="nc">&nbsp;        user.setIsActive(false);</b>
+<b class="nc">&nbsp;        userRepository.save(user);</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public List&lt;UserRole&gt; getAllRoles() {
+<b class="nc">&nbsp;        return userRoleRepository.findAll();</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public Optional&lt;UserRole&gt; getRoleById(Integer roleId) {
+<b class="nc">&nbsp;        return userRoleRepository.findById(roleId);</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public Optional&lt;UserRole&gt; getRoleByName(String roleName) {
+<b class="nc">&nbsp;        return userRoleRepository.findByRoleName(roleName);</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public UserRole createRole(UserRole role) {
+<b class="nc">&nbsp;        if (userRoleRepository.existsByRoleName(role.getRoleName())) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Role already exists: &quot; + role.getRoleName());</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return userRoleRepository.save(role);</b>
+&nbsp;    }
+&nbsp;}
+&nbsp;
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-10-15 18:40</div>
+</div>
+</body>
+</html>

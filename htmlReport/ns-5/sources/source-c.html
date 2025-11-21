@@ -1,0 +1,266 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > DealerPerformanceReport</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.evdealer.entity</a>
+</div>
+
+<h1>Coverage Summary for Class: DealerPerformanceReport (com.evdealer.entity)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">DealerPerformanceReport</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/25)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/25)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">DealerPerformanceReport$HibernateInstantiator$6IULabES</td>
+  </tr>
+  <tr>
+    <td class="name">DealerPerformanceReport$HibernateProxy$XSPXluSd</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/25)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/25)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.evdealer.entity;
+&nbsp;
+&nbsp;import jakarta.persistence.*;
+&nbsp;import org.hibernate.annotations.Immutable;
+&nbsp;import java.math.BigDecimal;
+&nbsp;import java.util.UUID;
+&nbsp;
+&nbsp;@Entity
+&nbsp;@Table(name = &quot;dealer_performance_report&quot;)
+&nbsp;@Immutable
+&nbsp;public class DealerPerformanceReport {
+&nbsp;    
+&nbsp;    @Id
+&nbsp;    @Column(name = &quot;target_id&quot;)
+&nbsp;    private UUID targetId;
+&nbsp;    
+&nbsp;    @Column(name = &quot;target_year&quot;)
+&nbsp;    private Integer targetYear;
+&nbsp;    
+&nbsp;    @Column(name = &quot;target_month&quot;)
+&nbsp;    private Integer targetMonth;
+&nbsp;    
+&nbsp;    @Column(name = &quot;target_type&quot;)
+&nbsp;    private String targetType;
+&nbsp;    
+&nbsp;    @Column(name = &quot;target_amount&quot;)
+&nbsp;    private BigDecimal targetAmount;
+&nbsp;    
+&nbsp;    @Column(name = &quot;target_quantity&quot;)
+&nbsp;    private Integer targetQuantity;
+&nbsp;    
+&nbsp;    @Column(name = &quot;achieved_amount&quot;)
+&nbsp;    private BigDecimal achievedAmount;
+&nbsp;    
+&nbsp;    @Column(name = &quot;achieved_quantity&quot;)
+&nbsp;    private Integer achievedQuantity;
+&nbsp;    
+&nbsp;    @Column(name = &quot;achievement_rate&quot;)
+&nbsp;    private BigDecimal achievementRate;
+&nbsp;    
+&nbsp;    @Column(name = &quot;performance_level&quot;)
+&nbsp;    private String performanceLevel;
+&nbsp;    
+&nbsp;    @Column(name = &quot;target_status&quot;)
+&nbsp;    private String targetStatus;
+&nbsp;    
+&nbsp;    @Column(name = &quot;notes&quot;)
+&nbsp;    private String notes;
+&nbsp;    
+&nbsp;    // Constructors
+<b class="nc">&nbsp;    public DealerPerformanceReport() {}</b>
+&nbsp;    
+&nbsp;    // Getters and Setters
+&nbsp;    public UUID getTargetId() {
+<b class="nc">&nbsp;        return targetId;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setTargetId(UUID targetId) {
+<b class="nc">&nbsp;        this.targetId = targetId;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public Integer getTargetYear() {
+<b class="nc">&nbsp;        return targetYear;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setTargetYear(Integer targetYear) {
+<b class="nc">&nbsp;        this.targetYear = targetYear;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public Integer getTargetMonth() {
+<b class="nc">&nbsp;        return targetMonth;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setTargetMonth(Integer targetMonth) {
+<b class="nc">&nbsp;        this.targetMonth = targetMonth;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public String getTargetType() {
+<b class="nc">&nbsp;        return targetType;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setTargetType(String targetType) {
+<b class="nc">&nbsp;        this.targetType = targetType;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public BigDecimal getTargetAmount() {
+<b class="nc">&nbsp;        return targetAmount;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setTargetAmount(BigDecimal targetAmount) {
+<b class="nc">&nbsp;        this.targetAmount = targetAmount;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public Integer getTargetQuantity() {
+<b class="nc">&nbsp;        return targetQuantity;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setTargetQuantity(Integer targetQuantity) {
+<b class="nc">&nbsp;        this.targetQuantity = targetQuantity;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public BigDecimal getAchievedAmount() {
+<b class="nc">&nbsp;        return achievedAmount;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setAchievedAmount(BigDecimal achievedAmount) {
+<b class="nc">&nbsp;        this.achievedAmount = achievedAmount;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public Integer getAchievedQuantity() {
+<b class="nc">&nbsp;        return achievedQuantity;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setAchievedQuantity(Integer achievedQuantity) {
+<b class="nc">&nbsp;        this.achievedQuantity = achievedQuantity;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public BigDecimal getAchievementRate() {
+<b class="nc">&nbsp;        return achievementRate;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setAchievementRate(BigDecimal achievementRate) {
+<b class="nc">&nbsp;        this.achievementRate = achievementRate;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public String getPerformanceLevel() {
+<b class="nc">&nbsp;        return performanceLevel;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setPerformanceLevel(String performanceLevel) {
+<b class="nc">&nbsp;        this.performanceLevel = performanceLevel;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public String getTargetStatus() {
+<b class="nc">&nbsp;        return targetStatus;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setTargetStatus(String targetStatus) {
+<b class="nc">&nbsp;        this.targetStatus = targetStatus;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public String getNotes() {
+<b class="nc">&nbsp;        return notes;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setNotes(String notes) {
+<b class="nc">&nbsp;        this.notes = notes;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-10-15 18:40</div>
+</div>
+</body>
+</html>

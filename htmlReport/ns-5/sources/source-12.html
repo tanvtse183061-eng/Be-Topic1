@@ -1,0 +1,232 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > MonthlySalesSummary</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.evdealer.entity</a>
+</div>
+
+<h1>Coverage Summary for Class: MonthlySalesSummary (com.evdealer.entity)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">MonthlySalesSummary</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/19)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/19)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">MonthlySalesSummary$HibernateInstantiator$lUYa6VH2</td>
+  </tr>
+  <tr>
+    <td class="name">MonthlySalesSummary$HibernateProxy$ITUUhOVY</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/19)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/19)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.evdealer.entity;
+&nbsp;
+&nbsp;import jakarta.persistence.*;
+&nbsp;import org.hibernate.annotations.Immutable;
+&nbsp;import java.math.BigDecimal;
+&nbsp;
+&nbsp;@Entity
+&nbsp;@Table(name = &quot;monthly_sales_summary&quot;)
+&nbsp;@Immutable
+&nbsp;public class MonthlySalesSummary {
+&nbsp;    
+&nbsp;    @Id
+&nbsp;    @Column(name = &quot;sales_year&quot;)
+&nbsp;    private BigDecimal salesYear;
+&nbsp;    
+&nbsp;    @Column(name = &quot;sales_month&quot;)
+&nbsp;    private BigDecimal salesMonth;
+&nbsp;    
+&nbsp;    @Column(name = &quot;total_orders&quot;)
+&nbsp;    private Long totalOrders;
+&nbsp;    
+&nbsp;    @Column(name = &quot;total_revenue&quot;)
+&nbsp;    private BigDecimal totalRevenue;
+&nbsp;    
+&nbsp;    @Column(name = &quot;total_deposits&quot;)
+&nbsp;    private BigDecimal totalDeposits;
+&nbsp;    
+&nbsp;    @Column(name = &quot;total_balance&quot;)
+&nbsp;    private BigDecimal totalBalance;
+&nbsp;    
+&nbsp;    @Column(name = &quot;cash_orders&quot;)
+&nbsp;    private Long cashOrders;
+&nbsp;    
+&nbsp;    @Column(name = &quot;installment_orders&quot;)
+&nbsp;    private Long installmentOrders;
+&nbsp;    
+&nbsp;    @Column(name = &quot;avg_order_value&quot;)
+&nbsp;    private BigDecimal avgOrderValue;
+&nbsp;    
+&nbsp;    // Constructors
+<b class="nc">&nbsp;    public MonthlySalesSummary() {}</b>
+&nbsp;    
+&nbsp;    // Getters and Setters
+&nbsp;    public BigDecimal getSalesYear() {
+<b class="nc">&nbsp;        return salesYear;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setSalesYear(BigDecimal salesYear) {
+<b class="nc">&nbsp;        this.salesYear = salesYear;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public BigDecimal getSalesMonth() {
+<b class="nc">&nbsp;        return salesMonth;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setSalesMonth(BigDecimal salesMonth) {
+<b class="nc">&nbsp;        this.salesMonth = salesMonth;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public Long getTotalOrders() {
+<b class="nc">&nbsp;        return totalOrders;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setTotalOrders(Long totalOrders) {
+<b class="nc">&nbsp;        this.totalOrders = totalOrders;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public BigDecimal getTotalRevenue() {
+<b class="nc">&nbsp;        return totalRevenue;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setTotalRevenue(BigDecimal totalRevenue) {
+<b class="nc">&nbsp;        this.totalRevenue = totalRevenue;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public BigDecimal getTotalDeposits() {
+<b class="nc">&nbsp;        return totalDeposits;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setTotalDeposits(BigDecimal totalDeposits) {
+<b class="nc">&nbsp;        this.totalDeposits = totalDeposits;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public BigDecimal getTotalBalance() {
+<b class="nc">&nbsp;        return totalBalance;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setTotalBalance(BigDecimal totalBalance) {
+<b class="nc">&nbsp;        this.totalBalance = totalBalance;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public Long getCashOrders() {
+<b class="nc">&nbsp;        return cashOrders;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setCashOrders(Long cashOrders) {
+<b class="nc">&nbsp;        this.cashOrders = cashOrders;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public Long getInstallmentOrders() {
+<b class="nc">&nbsp;        return installmentOrders;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setInstallmentOrders(Long installmentOrders) {
+<b class="nc">&nbsp;        this.installmentOrders = installmentOrders;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public BigDecimal getAvgOrderValue() {
+<b class="nc">&nbsp;        return avgOrderValue;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setAvgOrderValue(BigDecimal avgOrderValue) {
+<b class="nc">&nbsp;        this.avgOrderValue = avgOrderValue;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-10-15 18:40</div>
+</div>
+</body>
+</html>

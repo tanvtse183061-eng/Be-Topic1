@@ -1,0 +1,245 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > CustomerDebtReport</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.evdealer.entity</a>
+</div>
+
+<h1>Coverage Summary for Class: CustomerDebtReport (com.evdealer.entity)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">CustomerDebtReport</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/21)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/21)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">CustomerDebtReport$HibernateInstantiator$a2YiHxtw</td>
+  </tr>
+  <tr>
+    <td class="name">CustomerDebtReport$HibernateProxy$dsR16ew8</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/21)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/21)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.evdealer.entity;
+&nbsp;
+&nbsp;import jakarta.persistence.*;
+&nbsp;import org.hibernate.annotations.Immutable;
+&nbsp;import java.math.BigDecimal;
+&nbsp;import java.time.LocalDate;
+&nbsp;import java.util.UUID;
+&nbsp;
+&nbsp;@Entity
+&nbsp;@Table(name = &quot;customer_debt_report&quot;)
+&nbsp;@Immutable
+&nbsp;public class CustomerDebtReport {
+&nbsp;    
+&nbsp;    @Id
+&nbsp;    @Column(name = &quot;customer_id&quot;)
+&nbsp;    private UUID customerId;
+&nbsp;    
+&nbsp;    @Column(name = &quot;customer_name&quot;)
+&nbsp;    private String customerName;
+&nbsp;    
+&nbsp;    @Column(name = &quot;email&quot;)
+&nbsp;    private String email;
+&nbsp;    
+&nbsp;    @Column(name = &quot;phone&quot;)
+&nbsp;    private String phone;
+&nbsp;    
+&nbsp;    @Column(name = &quot;total_orders&quot;)
+&nbsp;    private Long totalOrders;
+&nbsp;    
+&nbsp;    @Column(name = &quot;total_purchases&quot;)
+&nbsp;    private BigDecimal totalPurchases;
+&nbsp;    
+&nbsp;    @Column(name = &quot;outstanding_balance&quot;)
+&nbsp;    private BigDecimal outstandingBalance;
+&nbsp;    
+&nbsp;    @Column(name = &quot;active_installments&quot;)
+&nbsp;    private Long activeInstallments;
+&nbsp;    
+&nbsp;    @Column(name = &quot;total_loan_amount&quot;)
+&nbsp;    private BigDecimal totalLoanAmount;
+&nbsp;    
+&nbsp;    @Column(name = &quot;last_order_date&quot;)
+&nbsp;    private LocalDate lastOrderDate;
+&nbsp;    
+&nbsp;    // Constructors
+<b class="nc">&nbsp;    public CustomerDebtReport() {}</b>
+&nbsp;    
+&nbsp;    // Getters and Setters
+&nbsp;    public UUID getCustomerId() {
+<b class="nc">&nbsp;        return customerId;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setCustomerId(UUID customerId) {
+<b class="nc">&nbsp;        this.customerId = customerId;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public String getCustomerName() {
+<b class="nc">&nbsp;        return customerName;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setCustomerName(String customerName) {
+<b class="nc">&nbsp;        this.customerName = customerName;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public String getEmail() {
+<b class="nc">&nbsp;        return email;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setEmail(String email) {
+<b class="nc">&nbsp;        this.email = email;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public String getPhone() {
+<b class="nc">&nbsp;        return phone;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setPhone(String phone) {
+<b class="nc">&nbsp;        this.phone = phone;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public Long getTotalOrders() {
+<b class="nc">&nbsp;        return totalOrders;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setTotalOrders(Long totalOrders) {
+<b class="nc">&nbsp;        this.totalOrders = totalOrders;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public BigDecimal getTotalPurchases() {
+<b class="nc">&nbsp;        return totalPurchases;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setTotalPurchases(BigDecimal totalPurchases) {
+<b class="nc">&nbsp;        this.totalPurchases = totalPurchases;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public BigDecimal getOutstandingBalance() {
+<b class="nc">&nbsp;        return outstandingBalance;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setOutstandingBalance(BigDecimal outstandingBalance) {
+<b class="nc">&nbsp;        this.outstandingBalance = outstandingBalance;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public Long getActiveInstallments() {
+<b class="nc">&nbsp;        return activeInstallments;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setActiveInstallments(Long activeInstallments) {
+<b class="nc">&nbsp;        this.activeInstallments = activeInstallments;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public BigDecimal getTotalLoanAmount() {
+<b class="nc">&nbsp;        return totalLoanAmount;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setTotalLoanAmount(BigDecimal totalLoanAmount) {
+<b class="nc">&nbsp;        this.totalLoanAmount = totalLoanAmount;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public LocalDate getLastOrderDate() {
+<b class="nc">&nbsp;        return lastOrderDate;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setLastOrderDate(LocalDate lastOrderDate) {
+<b class="nc">&nbsp;        this.lastOrderDate = lastOrderDate;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-10-15 18:40</div>
+</div>
+</body>
+</html>

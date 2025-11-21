@@ -1,0 +1,322 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > Quotation</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.evdealer.entity</a>
+</div>
+
+<h1>Coverage Summary for Class: Quotation (com.evdealer.entity)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Quotation</td>
+<td class="coverageStat">
+  <span class="percent">
+    3.1%
+  </span>
+  <span class="absValue">
+    (1/32)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    11.4%
+  </span>
+  <span class="absValue">
+    (5/44)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">Quotation$HibernateInstantiator$lFXGJ3NG</td>
+  </tr>
+  <tr>
+    <td class="name">Quotation$HibernateProxy$JEUBwV0t</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    3.1%
+  </span>
+  <span class="absValue">
+    (1/32)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    11.4%
+  </span>
+  <span class="absValue">
+    (5/44)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.evdealer.entity;
+&nbsp;
+&nbsp;import jakarta.persistence.*;
+&nbsp;import org.hibernate.annotations.CreationTimestamp;
+&nbsp;import org.hibernate.annotations.UpdateTimestamp;
+&nbsp;
+&nbsp;import java.math.BigDecimal;
+&nbsp;import java.time.LocalDate;
+&nbsp;import java.time.LocalDateTime;
+&nbsp;import java.util.UUID;
+&nbsp;
+&nbsp;@Entity
+&nbsp;@Table(name = &quot;quotations&quot;)
+&nbsp;public class Quotation {
+&nbsp;    
+&nbsp;    @Id
+&nbsp;    @GeneratedValue(strategy = GenerationType.UUID)
+&nbsp;    @Column(name = &quot;quotation_id&quot;)
+&nbsp;    private UUID quotationId;
+&nbsp;    
+&nbsp;    @Column(name = &quot;quotation_number&quot;, nullable = false, unique = true, length = 100)
+&nbsp;    private String quotationNumber;
+&nbsp;    
+&nbsp;    @ManyToOne(fetch = FetchType.EAGER)
+&nbsp;    @JoinColumn(name = &quot;customer_id&quot;, nullable = true)
+&nbsp;    private Customer customer;
+&nbsp;    
+&nbsp;    
+&nbsp;    @ManyToOne(fetch = FetchType.EAGER)
+&nbsp;    @JoinColumn(name = &quot;user_id&quot;, nullable = true)
+&nbsp;    private User user;
+&nbsp;    
+&nbsp;    @ManyToOne(fetch = FetchType.EAGER)
+&nbsp;    @JoinColumn(name = &quot;variant_id&quot;, nullable = true)
+&nbsp;    private VehicleVariant variant;
+&nbsp;    
+&nbsp;    @ManyToOne(fetch = FetchType.EAGER)
+&nbsp;    @JoinColumn(name = &quot;color_id&quot;, nullable = true)
+&nbsp;    private VehicleColor color;
+&nbsp;    
+&nbsp;    @Column(name = &quot;quotation_date&quot;, nullable = false)
+&nbsp;    private LocalDate quotationDate;
+&nbsp;    
+&nbsp;    @Column(name = &quot;total_price&quot;, nullable = false, precision = 12, scale = 2)
+&nbsp;    private BigDecimal totalPrice;
+&nbsp;    
+<b class="fc">&nbsp;    @Column(name = &quot;discount_amount&quot;, precision = 12, scale = 2)</b>
+&nbsp;    private BigDecimal discountAmount = BigDecimal.ZERO;
+&nbsp;    
+&nbsp;    @Column(name = &quot;final_price&quot;, nullable = false, precision = 12, scale = 2)
+&nbsp;    private BigDecimal finalPrice;
+&nbsp;    
+<b class="fc">&nbsp;    @Column(name = &quot;validity_days&quot;)</b>
+<b class="fc">&nbsp;    private Integer validityDays = 7;</b>
+&nbsp;    
+<b class="fc">&nbsp;    @Column(name = &quot;status&quot;, length = 50, nullable = false)</b>
+&nbsp;    private String status = &quot;pending&quot;;
+&nbsp;    
+&nbsp;    @Column(name = &quot;notes&quot;, columnDefinition = &quot;TEXT&quot;)
+&nbsp;    private String notes;
+&nbsp;    
+&nbsp;    @CreationTimestamp
+&nbsp;    @Column(name = &quot;created_at&quot;, nullable = false, updatable = false)
+&nbsp;    private LocalDateTime createdAt;
+&nbsp;    
+&nbsp;    @UpdateTimestamp
+&nbsp;    @Column(name = &quot;updated_at&quot;, nullable = false)
+&nbsp;    private LocalDateTime updatedAt;
+&nbsp;    
+&nbsp;    // Constructors
+<b class="fc">&nbsp;    public Quotation() {}</b>
+&nbsp;    
+<b class="nc">&nbsp;    public Quotation(String quotationNumber, Customer customer, User user, VehicleVariant variant, VehicleColor color, LocalDate quotationDate, BigDecimal totalPrice, BigDecimal finalPrice) {</b>
+<b class="nc">&nbsp;        this.quotationNumber = quotationNumber;</b>
+<b class="nc">&nbsp;        this.customer = customer;</b>
+<b class="nc">&nbsp;        this.user = user;</b>
+<b class="nc">&nbsp;        this.variant = variant;</b>
+<b class="nc">&nbsp;        this.color = color;</b>
+<b class="nc">&nbsp;        this.quotationDate = quotationDate;</b>
+<b class="nc">&nbsp;        this.totalPrice = totalPrice;</b>
+<b class="nc">&nbsp;        this.finalPrice = finalPrice;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    // Getters and Setters
+&nbsp;    public UUID getQuotationId() {
+<b class="nc">&nbsp;        return quotationId;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setQuotationId(UUID quotationId) {
+<b class="nc">&nbsp;        this.quotationId = quotationId;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public String getQuotationNumber() {
+<b class="nc">&nbsp;        return quotationNumber;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setQuotationNumber(String quotationNumber) {
+<b class="nc">&nbsp;        this.quotationNumber = quotationNumber;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public Customer getCustomer() {
+<b class="nc">&nbsp;        return customer;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setCustomer(Customer customer) {
+<b class="nc">&nbsp;        this.customer = customer;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    
+&nbsp;    public User getUser() {
+<b class="nc">&nbsp;        return user;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setUser(User user) {
+<b class="nc">&nbsp;        this.user = user;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public VehicleVariant getVariant() {
+<b class="nc">&nbsp;        return variant;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setVariant(VehicleVariant variant) {
+<b class="nc">&nbsp;        this.variant = variant;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public VehicleColor getColor() {
+<b class="nc">&nbsp;        return color;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setColor(VehicleColor color) {
+<b class="nc">&nbsp;        this.color = color;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public LocalDate getQuotationDate() {
+<b class="nc">&nbsp;        return quotationDate;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setQuotationDate(LocalDate quotationDate) {
+<b class="nc">&nbsp;        this.quotationDate = quotationDate;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public BigDecimal getTotalPrice() {
+<b class="nc">&nbsp;        return totalPrice;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setTotalPrice(BigDecimal totalPrice) {
+<b class="nc">&nbsp;        this.totalPrice = totalPrice;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public BigDecimal getDiscountAmount() {
+<b class="nc">&nbsp;        return discountAmount;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setDiscountAmount(BigDecimal discountAmount) {
+<b class="nc">&nbsp;        this.discountAmount = discountAmount;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public BigDecimal getFinalPrice() {
+<b class="nc">&nbsp;        return finalPrice;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setFinalPrice(BigDecimal finalPrice) {
+<b class="nc">&nbsp;        this.finalPrice = finalPrice;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public Integer getValidityDays() {
+<b class="nc">&nbsp;        return validityDays;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setValidityDays(Integer validityDays) {
+<b class="nc">&nbsp;        this.validityDays = validityDays;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public String getStatus() {
+<b class="nc">&nbsp;        return status;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setStatus(String status) {
+<b class="nc">&nbsp;        this.status = status;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public String getNotes() {
+<b class="nc">&nbsp;        return notes;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setNotes(String notes) {
+<b class="nc">&nbsp;        this.notes = notes;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public LocalDateTime getCreatedAt() {
+<b class="nc">&nbsp;        return createdAt;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setCreatedAt(LocalDateTime createdAt) {
+<b class="nc">&nbsp;        this.createdAt = createdAt;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public LocalDateTime getUpdatedAt() {
+<b class="nc">&nbsp;        return updatedAt;</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    public void setUpdatedAt(LocalDateTime updatedAt) {
+<b class="nc">&nbsp;        this.updatedAt = updatedAt;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-10-15 18:40</div>
+</div>
+</body>
+</html>
