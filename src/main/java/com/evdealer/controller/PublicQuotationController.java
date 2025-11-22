@@ -33,6 +33,40 @@ public class PublicQuotationController {
                         response.put("quotationId", quotation.getQuotationId());
                         response.put("quotationNumber", quotation.getQuotationNumber());
                         response.put("customerId", quotation.getCustomer() != null ? quotation.getCustomer().getCustomerId() : null);
+                        
+                        // Variant information (with nested model and brand)
+                        if (quotation.getVariant() != null) {
+                            var variant = quotation.getVariant();
+                            response.put("variantId", variant.getVariantId());
+                            response.put("variantName", variant.getVariantName());
+                            
+                            // Model information
+                            if (variant.getModel() != null) {
+                                var model = variant.getModel();
+                                response.put("modelId", model.getModelId());
+                                response.put("modelName", model.getModelName());
+                                
+                                // Brand information
+                                if (model.getBrand() != null) {
+                                    var brand = model.getBrand();
+                                    response.put("brandId", brand.getBrandId());
+                                    response.put("brandName", brand.getBrandName()); // "thuongHieu"
+                                }
+                            }
+                        } else {
+                            response.put("variantId", null);
+                        }
+                        
+                        // Color information
+                        if (quotation.getColor() != null) {
+                            var color = quotation.getColor();
+                            response.put("colorId", color.getColorId());
+                            response.put("colorName", color.getColorName());
+                            response.put("colorCode", color.getColorCode());
+                        } else {
+                            response.put("colorId", null);
+                        }
+                        
                         response.put("totalPrice", quotation.getTotalPrice());
                         response.put("discountAmount", quotation.getDiscountAmount());
                         response.put("finalPrice", quotation.getFinalPrice());

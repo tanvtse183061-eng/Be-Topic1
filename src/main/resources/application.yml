@@ -6,7 +6,7 @@ spring:
     name: ev-dealer-management
   
   datasource:
-    url: jdbc:postgresql://localhost:5432/ev_dealer_management
+    url: jdbc:postgresql://localhost:5432/ev_db
     username: postgres
     password: 171104
     driver-class-name: org.postgresql.Driver

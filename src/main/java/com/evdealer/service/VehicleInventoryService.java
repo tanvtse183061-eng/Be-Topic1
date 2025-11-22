@@ -37,14 +37,33 @@ public class VehicleInventoryService {
     @Autowired
     private com.evdealer.repository.WarehouseRepository warehouseRepository;
     
+    @Autowired
+    private com.evdealer.repository.VehicleDeliveryRepository vehicleDeliveryRepository;
+    
+    @Autowired
+    private com.evdealer.repository.OrderRepository orderRepository;
+    
     @PersistenceContext
     private EntityManager entityManager;
     
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public List<VehicleInventory> getAllVehicleInventory() {
         try {
-            // Use simple findAll to avoid query issues
-            List<VehicleInventory> result = vehicleInventoryRepository.findAll();
+            // Clear persistence context before query to ensure fresh data from database
+            entityManager.clear();
+            
+            // Try to use findAllWithRelationships first for better performance
+            List<VehicleInventory> result;
+            try {
+                result = vehicleInventoryRepository.findAllWithRelationships();
+                System.out.println("[VehicleInventoryService] getAllVehicleInventory: Used findAllWithRelationships, found " + result.size() + " inventory items");
+            } catch (Exception e) {
+                // Fallback to simple findAll if there's an issue with relationships query
+                System.out.println("[VehicleInventoryService] WARNING: findAllWithRelationships failed, using findAll: " + e.getMessage());
+                result = vehicleInventoryRepository.findAll();
+                System.out.println("[VehicleInventoryService] getAllVehicleInventory: Used findAll, found " + result.size() + " inventory items");
+            }
+            
             // Fix any enum issues in the result
             for (VehicleInventory inv : result) {
                 try {
@@ -68,6 +87,8 @@ public class VehicleInventoryService {
             }
             return result;
         } catch (Exception e) {
+            System.err.println("[VehicleInventoryService] ERROR in getAllVehicleInventory: " + e.getMessage());
+            e.printStackTrace();
             // Log error and return empty list
             return new java.util.ArrayList<>();
         }
@@ -344,10 +365,108 @@ public class VehicleInventoryService {
                 .orElse(savedInventory);
     }
     
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void deleteVehicleInventory(UUID inventoryId) {
-        VehicleInventory inventory = vehicleInventoryRepository.findById(inventoryId)
-                .orElseThrow(() -> new RuntimeException("Vehicle inventory not found with id: " + inventoryId));
-        vehicleInventoryRepository.delete(inventory);
+        // Log delete attempt
+        System.out.println("[VehicleInventoryService] ========== DELETE INVENTORY START ==========");
+        System.out.println("[VehicleInventoryService] Attempting to delete inventory: " + inventoryId);
+        
+        try {
+            // Step 1: Find inventory
+            VehicleInventory inventory = vehicleInventoryRepository.findById(inventoryId)
+                    .orElseThrow(() -> {
+                        System.out.println("[VehicleInventoryService] ERROR: Inventory not found: " + inventoryId);
+                        return new RuntimeException("Vehicle inventory not found with id: " + inventoryId);
+                    });
+            
+            String vin = inventory.getVin();
+            System.out.println("[VehicleInventoryService] Found inventory to delete:");
+            System.out.println("  - Inventory ID: " + inventoryId);
+            System.out.println("  - VIN: " + vin);
+            System.out.println("  - Status: " + (inventory.getStatus() != null ? inventory.getStatus().getValue() : "null"));
+            
+            // Step 2: Clear foreign key references in orders (CRITICAL - this was causing the error)
+            try {
+                System.out.println("[VehicleInventoryService] Step 2: Clearing inventory_id references in orders...");
+                orderRepository.clearInventoryReference(inventoryId);
+                entityManager.flush();
+                System.out.println("[VehicleInventoryService] ✓ Cleared orders references");
+            } catch (Exception e) {
+                System.err.println("[VehicleInventoryService] ERROR: Failed to clear orders references: " + e.getMessage());
+                e.printStackTrace();
+                throw new RuntimeException("Failed to clear orders references: " + e.getMessage(), e);
+            }
+            
+            // Step 3: Clear foreign key references in vehicle_deliveries
+            try {
+                System.out.println("[VehicleInventoryService] Step 3: Clearing inventory_id references in vehicle_deliveries...");
+                vehicleDeliveryRepository.clearInventoryReference(inventoryId);
+                entityManager.flush();
+                System.out.println("[VehicleInventoryService] ✓ Cleared vehicle_deliveries references");
+            } catch (Exception e) {
+                System.err.println("[VehicleInventoryService] WARNING: Failed to clear vehicle_deliveries references: " + e.getMessage());
+                // Continue with delete anyway
+            }
+            
+            // Step 4: Clear reservations in vehicle_inventory
+            try {
+                System.out.println("[VehicleInventoryService] Step 4: Clearing reservations (reserved_for_customer, reserved_for_dealer)...");
+                vehicleInventoryRepository.clearAllReservations(inventoryId);
+                entityManager.flush();
+                System.out.println("[VehicleInventoryService] ✓ Cleared reservations");
+            } catch (Exception e) {
+                System.err.println("[VehicleInventoryService] WARNING: Failed to clear reservations: " + e.getMessage());
+                // Continue with delete anyway
+            }
+            
+            // Step 5: Reload inventory to ensure it's in sync with database
+            inventory = vehicleInventoryRepository.findById(inventoryId)
+                    .orElseThrow(() -> new RuntimeException("Inventory disappeared before delete: " + inventoryId));
+            
+            // Step 6: Delete inventory
+            System.out.println("[VehicleInventoryService] Step 6: Deleting inventory record...");
+            vehicleInventoryRepository.delete(inventory);
+            entityManager.flush();
+            entityManager.clear();
+            System.out.println("[VehicleInventoryService] ✓ Delete executed and flushed");
+            
+            // Step 7: Verify deletion
+            System.out.println("[VehicleInventoryService] Step 7: Verifying deletion...");
+            Optional<VehicleInventory> deletedInventory = vehicleInventoryRepository.findById(inventoryId);
+            if (deletedInventory.isPresent()) {
+                System.err.println("[VehicleInventoryService] ❌ ERROR: Inventory still exists after delete: " + inventoryId);
+                System.err.println("[VehicleInventoryService] Attempting force delete with native query...");
+                
+                // Try force delete with native query
+                try {
+                    entityManager.createNativeQuery("DELETE FROM vehicle_inventory WHERE inventory_id = :inventoryId")
+                            .setParameter("inventoryId", inventoryId)
+                            .executeUpdate();
+                    entityManager.flush();
+                    entityManager.clear();
+                    
+                    // Verify again
+                    Optional<VehicleInventory> stillExists = vehicleInventoryRepository.findById(inventoryId);
+                    if (stillExists.isPresent()) {
+                        throw new RuntimeException("Failed to delete inventory even with native query: " + inventoryId);
+                    } else {
+                        System.out.println("[VehicleInventoryService] ✓ Force delete succeeded");
+                    }
+                } catch (Exception e) {
+                    System.err.println("[VehicleInventoryService] ❌ CRITICAL: Force delete also failed: " + e.getMessage());
+                    e.printStackTrace();
+                    throw new RuntimeException("Failed to delete vehicle inventory: " + e.getMessage(), e);
+                }
+            } else {
+                System.out.println("[VehicleInventoryService] ✓ Verification passed - inventory successfully deleted");
+                System.out.println("[VehicleInventoryService] ========== DELETE INVENTORY SUCCESS ==========");
+            }
+            
+        } catch (Exception e) {
+            System.err.println("[VehicleInventoryService] ❌ ERROR during delete operation: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
     }
     
     public VehicleInventory updateInventoryStatus(UUID inventoryId, String status) {

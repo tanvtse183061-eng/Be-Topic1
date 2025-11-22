@@ -56,5 +56,9 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
     // Query đơn giản không load relationships - để tránh lỗi khi customer null
     @Query("SELECT a FROM Appointment a")
     List<Appointment> findAllSimple();
+    
+    // Query to find appointment by ID with variant, model, and brand relationships
+    @Query("SELECT DISTINCT a FROM Appointment a LEFT JOIN FETCH a.customer LEFT JOIN FETCH a.staff LEFT JOIN FETCH a.variant v LEFT JOIN FETCH v.model m LEFT JOIN FETCH m.brand WHERE a.appointmentId = :appointmentId")
+    java.util.Optional<Appointment> findByIdWithRelationships(@Param("appointmentId") UUID appointmentId);
 }
 

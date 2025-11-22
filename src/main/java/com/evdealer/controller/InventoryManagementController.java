@@ -113,27 +113,51 @@ public class InventoryManagementController {
                 map.put("condition", null);
             }
             
-            // Safely access relationships
+            // Safely access relationships and extract full information
             try {
                 if (inventory.getVariant() != null) {
-                    map.put("variantId", inventory.getVariant().getVariantId());
+                    var variant = inventory.getVariant();
+                    map.put("variantId", variant.getVariantId());
+                    map.put("variantName", variant.getVariantName());
+                    
+                    // Load model if available
+                    if (variant.getModel() != null) {
+                        var model = variant.getModel();
+                        map.put("modelId", model.getModelId());
+                        map.put("modelName", model.getModelName());
+                        
+                        // Load brand if available
+                        if (model.getBrand() != null) {
+                            var brand = model.getBrand();
+                            map.put("brandId", brand.getBrandId());
+                            map.put("brandName", brand.getBrandName());
+                        }
+                    }
                 }
             } catch (Exception e) {
                 // Relationship not loaded or other error, skip
+                System.err.println("[InventoryManagementController] Error mapping variant: " + e.getMessage());
             }
             try {
                 if (inventory.getColor() != null) {
-                    map.put("colorId", inventory.getColor().getColorId());
+                    var color = inventory.getColor();
+                    map.put("colorId", color.getColorId());
+                    map.put("colorName", color.getColorName());
+                    map.put("colorCode", color.getColorCode());
                 }
             } catch (Exception e) {
                 // Relationship not loaded or other error, skip
+                System.err.println("[InventoryManagementController] Error mapping color: " + e.getMessage());
             }
             try {
                 if (inventory.getWarehouse() != null) {
-                    map.put("warehouseId", inventory.getWarehouse().getWarehouseId());
+                    var warehouse = inventory.getWarehouse();
+                    map.put("warehouseId", warehouse.getWarehouseId());
+                    map.put("warehouseName", warehouse.getWarehouseName());
                 }
             } catch (Exception e) {
                 // Relationship not loaded or other error, skip
+                System.err.println("[InventoryManagementController] Error mapping warehouse: " + e.getMessage());
             }
         } catch (Exception e) {
             try {
@@ -499,6 +523,8 @@ public class InventoryManagementController {
     public ResponseEntity<?> deleteVehicleInventory(
             @PathVariable @Parameter(description = "Inventory ID") UUID inventoryId) {
         try {
+            System.out.println("[InventoryManagementController] Delete request received for inventory: " + inventoryId);
+            
             // Kiểm tra authentication
             if (!securityUtils.getCurrentUser().isPresent()) {
                 Map<String, String> error = new HashMap<>();
@@ -513,15 +539,23 @@ public class InventoryManagementController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
             }
             
+            // Delete inventory (service will handle verification internally)
             vehicleInventoryService.deleteVehicleInventory(inventoryId);
+            
             Map<String, String> response = new HashMap<>();
             response.put("message", "Vehicle inventory deleted successfully");
+            response.put("inventoryId", inventoryId.toString());
+            System.out.println("[InventoryManagementController] Successfully deleted inventory: " + inventoryId);
+            
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
+            System.err.println("[InventoryManagementController] Error deleting inventory: " + e.getMessage());
             Map<String, String> error = new HashMap<>();
             error.put("error", "Failed to delete inventory: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
         } catch (Exception e) {
+            System.err.println("[InventoryManagementController] Unexpected error deleting inventory: " + e.getMessage());
+            e.printStackTrace();
             Map<String, String> error = new HashMap<>();
             error.put("error", "Failed to delete inventory: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);

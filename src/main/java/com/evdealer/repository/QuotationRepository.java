@@ -50,4 +50,8 @@ public interface QuotationRepository extends JpaRepository<Quotation, UUID> {
     
     @Query("SELECT q FROM Quotation q WHERE q.color.colorId = :colorId")
     List<Quotation> findByColorColorId(@Param("colorId") Integer colorId);
+    
+    // Query to find quotation by ID with variant, model, brand, and color relationships loaded
+    @Query("SELECT DISTINCT q FROM Quotation q LEFT JOIN FETCH q.customer LEFT JOIN FETCH q.user LEFT JOIN FETCH q.variant v LEFT JOIN FETCH v.model m LEFT JOIN FETCH m.brand LEFT JOIN FETCH q.color WHERE q.quotationId = :quotationId")
+    Optional<Quotation> findByIdWithRelationships(@Param("quotationId") UUID quotationId);
 }

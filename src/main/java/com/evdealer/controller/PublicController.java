@@ -18,6 +18,7 @@ import com.evdealer.service.VehicleService;
 import com.evdealer.service.VehicleInventoryService;
 import com.evdealer.service.PromotionService;
 import com.evdealer.service.VehicleComparisonService;
+import com.evdealer.util.UrlProcessor;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +49,9 @@ public class PublicController {
     
     @Autowired
     private VehicleComparisonService vehicleComparisonService;
+    
+    @Autowired
+    private UrlProcessor urlProcessor;
     
     // ==================== HOME PAGE ENDPOINTS ====================
     
@@ -432,6 +436,16 @@ public class PublicController {
         dto.setBrandName(b.getBrandName());
         dto.setCountry(b.getCountry());
         dto.setFoundedYear(b.getFoundedYear());
+        // Process URL để đảm bảo normalize và có thể hiển thị trực tiếp
+        String brandLogoUrl = b.getBrandLogoUrl();
+        if (brandLogoUrl != null && !brandLogoUrl.trim().isEmpty()) {
+            // Xử lý URL: extract từ Google redirect, convert Wikipedia, thêm base URL cho relative paths
+            String processedUrl = urlProcessor.processLogoUrl(brandLogoUrl);
+            dto.setBrandLogoUrl(processedUrl);
+        } else {
+            dto.setBrandLogoUrl(null);
+        }
+        dto.setBrandLogoPath(b.getBrandLogoPath());
         return dto;
     }
 
@@ -442,6 +456,16 @@ public class PublicController {
         dto.setModelName(m.getModelName());
         dto.setModelYear(m.getModelYear());
         dto.setVehicleType(m.getVehicleType());
+        // Process URL để đảm bảo normalize và có thể hiển thị trực tiếp
+        String modelImageUrl = m.getModelImageUrl();
+        if (modelImageUrl != null && !modelImageUrl.trim().isEmpty()) {
+            // Xử lý URL: extract từ Google redirect, convert Wikipedia, thêm base URL cho relative paths
+            String processedUrl = urlProcessor.processLogoUrl(modelImageUrl);
+            dto.setModelImageUrl(processedUrl);
+        } else {
+            dto.setModelImageUrl(null);
+        }
+        dto.setModelImagePath(m.getModelImagePath());
         return dto;
     }
 
@@ -452,6 +476,16 @@ public class PublicController {
         dto.setVariantName(v.getVariantName());
         dto.setPriceBase(v.getPriceBase());
         dto.setRangeKm(v.getRangeKm());
+        // Process URL để đảm bảo normalize và có thể hiển thị trực tiếp
+        String variantImageUrl = v.getVariantImageUrl();
+        if (variantImageUrl != null && !variantImageUrl.trim().isEmpty()) {
+            // Xử lý URL: extract từ Google redirect, convert Wikipedia, thêm base URL cho relative paths
+            String processedUrl = urlProcessor.processLogoUrl(variantImageUrl);
+            dto.setVariantImageUrl(processedUrl);
+        } else {
+            dto.setVariantImageUrl(null);
+        }
+        dto.setVariantImagePath(v.getVariantImagePath());
         return dto;
     }
 

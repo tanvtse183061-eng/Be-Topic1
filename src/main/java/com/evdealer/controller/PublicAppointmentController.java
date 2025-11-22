@@ -4,6 +4,7 @@ import com.evdealer.entity.Appointment;
 import com.evdealer.enums.AppointmentType;
 import com.evdealer.enums.AppointmentStatus;
 import com.evdealer.service.AppointmentService;
+import com.evdealer.repository.VehicleVariantRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,9 @@ public class PublicAppointmentController {
     @Autowired
     private AppointmentService appointmentService;
     
+    @Autowired
+    private VehicleVariantRepository vehicleVariantRepository;
+    
     @PostMapping("/test-drive")
     @Operation(summary = "Đặt lịch lái thử", description = "Khách vãng lai có thể đặt lịch lái thử xe")
     public ResponseEntity<?> bookTestDrive(@RequestBody Map<String, Object> request) {
@@ -44,6 +48,17 @@ public class PublicAppointmentController {
             appointment.setAppointmentDate(appointmentDate);
             appointment.setStatus(AppointmentStatus.SCHEDULED);
             appointment.setNotes(notes);
+            
+            // Set variant if variantId is provided
+            var variantForResponse = (com.evdealer.entity.VehicleVariant) null;
+            if (variantId != null) {
+                // Fetch variant with model and brand relationships loaded
+                variantForResponse = vehicleVariantRepository.findByIdWithModel(variantId).orElse(null);
+                if (variantForResponse != null) {
+                    appointment.setVariant(variantForResponse);
+                }
+            }
+            
             appointment.setNotes((appointment.getNotes() != null ? appointment.getNotes() + "\n" : "") + 
                                 "Customer: " + customerName + " (" + customerEmail + ", " + customerPhone + "), Variant ID: " + variantId);
             
@@ -55,6 +70,24 @@ public class PublicAppointmentController {
             response.put("appointmentDate", appointmentDate);
             response.put("customerName", customerName);
             response.put("status", "scheduled");
+            
+            // Add variant and brand information to response (use the fetched variant with relationships)
+            if (variantForResponse != null) {
+                response.put("variantId", variantForResponse.getVariantId());
+                response.put("variantName", variantForResponse.getVariantName());
+                
+                if (variantForResponse.getModel() != null) {
+                    var model = variantForResponse.getModel();
+                    response.put("modelId", model.getModelId());
+                    response.put("modelName", model.getModelName());
+                    
+                    if (model.getBrand() != null) {
+                        var brand = model.getBrand();
+                        response.put("brandId", brand.getBrandId());
+                        response.put("brandName", brand.getBrandName()); // "thuongHieu"
+                    }
+                }
+            }
             
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (Exception e) {
@@ -126,6 +159,39 @@ public class PublicAppointmentController {
                         details.put("notes", appointment.getNotes());
                         details.put("deliveryAddress", "See notes");
                         details.put("createdAt", appointment.getCreatedAt());
+                        
+                        // Add variant and brand information (if available)
+                        Integer variantId = null;
+                        try {
+                            var appointmentVariant = appointment.getVariant();
+                            if (appointmentVariant != null) {
+                                variantId = appointmentVariant.getVariantId();
+                            }
+                        } catch (Exception e) {
+                            // Variant relationship not loaded or lazy loading exception
+                            // Will try to fetch by variantId from variant if we can extract it
+                        }
+                        
+                        // Fetch variant with relationships if variantId is available
+                        // This ensures we have model and brand information loaded
+                        if (variantId != null) {
+                            vehicleVariantRepository.findByIdWithModel(variantId).ifPresent(variant -> {
+                                details.put("variantId", variant.getVariantId());
+                                details.put("variantName", variant.getVariantName());
+                                
+                                if (variant.getModel() != null) {
+                                    var model = variant.getModel();
+                                    details.put("modelId", model.getModelId());
+                                    details.put("modelName", model.getModelName());
+                                    
+                                    if (model.getBrand() != null) {
+                                        var brand = model.getBrand();
+                                        details.put("brandId", brand.getBrandId());
+                                        details.put("brandName", brand.getBrandName()); // "thuongHieu"
+                                    }
+                                }
+                            });
+                        }
                         
                         return ResponseEntity.ok(details);
                     })

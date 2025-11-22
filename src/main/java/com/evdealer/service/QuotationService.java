@@ -108,6 +108,16 @@ public class QuotationService {
     }
     
     public Optional<Quotation> getQuotationById(UUID quotationId) {
+        // Try to fetch with relationships first
+        try {
+            Optional<Quotation> quotation = quotationRepository.findByIdWithRelationships(quotationId);
+            if (quotation.isPresent()) {
+                return quotation;
+            }
+        } catch (Exception e) {
+            System.err.println("[QuotationService] findByIdWithRelationships failed, falling back to findById: " + e.getMessage());
+        }
+        // Fallback to simple findById if relationships query fails
         return quotationRepository.findById(quotationId);
     }
     

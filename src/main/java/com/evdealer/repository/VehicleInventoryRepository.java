@@ -55,6 +55,12 @@ public interface VehicleInventoryRepository extends JpaRepository<VehicleInvento
     @org.springframework.data.jpa.repository.Query(value = "UPDATE vehicle_inventory SET reserved_for_customer = NULL WHERE reserved_for_customer = :customerId", nativeQuery = true)
     void clearReservedForCustomer(@Param("customerId") UUID customerId);
     
+    // Clear all foreign key references before deleting inventory
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
+    @org.springframework.data.jpa.repository.Query(value = "UPDATE vehicle_inventory SET reserved_for_customer = NULL, reserved_for_dealer = NULL WHERE inventory_id = :inventoryId", nativeQuery = true)
+    void clearAllReservations(@Param("inventoryId") UUID inventoryId);
+    
     @Query("SELECT vi FROM VehicleInventory vi WHERE vi.manufacturingDate BETWEEN :startDate AND :endDate")
     List<VehicleInventory> findByManufacturingDateRange(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
     

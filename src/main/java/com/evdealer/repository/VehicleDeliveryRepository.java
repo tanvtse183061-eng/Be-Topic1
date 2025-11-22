@@ -52,4 +52,10 @@ public interface VehicleDeliveryRepository extends JpaRepository<VehicleDelivery
     
     @Query("SELECT vd FROM VehicleDelivery vd WHERE vd.dealerOrder.dealerOrderId = :dealerOrderId")
     List<VehicleDelivery> findByDealerOrderDealerOrderId(@Param("dealerOrderId") UUID dealerOrderId);
+    
+    // Native query to clear inventory_id reference before deleting inventory
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
+    @org.springframework.data.jpa.repository.Query(value = "UPDATE vehicle_deliveries SET inventory_id = NULL WHERE inventory_id = :inventoryId", nativeQuery = true)
+    void clearInventoryReference(@Param("inventoryId") UUID inventoryId);
 }

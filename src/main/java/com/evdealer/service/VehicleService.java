@@ -21,6 +21,7 @@ import com.evdealer.repository.PricingPolicyRepository;
 import com.evdealer.repository.DealerDiscountPolicyRepository;
 import com.evdealer.repository.AppointmentRepository;
 import com.evdealer.repository.TestDriveScheduleRepository;
+import com.evdealer.util.UrlProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,6 +49,9 @@ public class VehicleService {
     
     @Autowired
     private VehicleInventoryRepository vehicleInventoryRepository;
+    
+    @Autowired
+    private UrlProcessor urlProcessor;
     
     @Autowired
     private DealerOrderItemRepository dealerOrderItemRepository;
@@ -121,7 +125,12 @@ public class VehicleService {
         brand.setBrandName(request.getBrandName().trim());
         brand.setCountry(request.getCountry());
         brand.setFoundedYear(request.getFoundedYear());
-        brand.setBrandLogoUrl(request.getBrandLogoUrl());
+        // Process URL để extract từ Google redirect, convert Wikipedia URLs, etc.
+        if (request.getBrandLogoUrl() != null) {
+            brand.setBrandLogoUrl(urlProcessor.processLogoUrl(request.getBrandLogoUrl()));
+        } else {
+            brand.setBrandLogoUrl(null);
+        }
         brand.setBrandLogoPath(request.getBrandLogoPath());
         brand.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
         
@@ -140,7 +149,12 @@ public class VehicleService {
         brand.setBrandName(brandDetails.getBrandName());
         brand.setCountry(brandDetails.getCountry());
         brand.setFoundedYear(brandDetails.getFoundedYear());
-        brand.setBrandLogoUrl(brandDetails.getBrandLogoUrl());
+        // Process URL để extract từ Google redirect, convert Wikipedia URLs, etc.
+        if (brandDetails.getBrandLogoUrl() != null) {
+            brand.setBrandLogoUrl(urlProcessor.processLogoUrl(brandDetails.getBrandLogoUrl()));
+        } else {
+            brand.setBrandLogoUrl(null);
+        }
         brand.setBrandLogoPath(brandDetails.getBrandLogoPath());
         brand.setIsActive(brandDetails.getIsActive());
         
@@ -168,7 +182,9 @@ public class VehicleService {
             brand.setFoundedYear(request.getFoundedYear());
         }
         if (request.getBrandLogoUrl() != null) {
-            brand.setBrandLogoUrl(request.getBrandLogoUrl());
+            // Process URL để extract từ Google redirect, convert Wikipedia URLs, etc.
+            String processedUrl = urlProcessor.processLogoUrl(request.getBrandLogoUrl());
+            brand.setBrandLogoUrl(processedUrl);
         }
         if (request.getBrandLogoPath() != null) {
             brand.setBrandLogoPath(request.getBrandLogoPath());
@@ -475,10 +491,16 @@ public class VehicleService {
         // Set isActive (default to true if not provided)
         variant.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
         
-        // Handle image fields (empty string -> null)
+        // Handle image fields (empty string -> null) và xử lý URL
         if (request.getVariantImageUrl() != null) {
             String imageUrl = request.getVariantImageUrl().trim();
-            variant.setVariantImageUrl(imageUrl.isEmpty() ? null : imageUrl);
+            if (!imageUrl.isEmpty()) {
+                // Process URL để extract từ Google redirect, convert Wikipedia URLs, etc.
+                String processedUrl = urlProcessor.processLogoUrl(imageUrl);
+                variant.setVariantImageUrl(processedUrl);
+            } else {
+                variant.setVariantImageUrl(null);
+            }
         }
         
         if (request.getVariantImagePath() != null) {
@@ -546,10 +568,16 @@ public class VehicleService {
             variant.setIsActive(request.getIsActive());
         }
         
-        // Update image fields if provided (handle empty strings)
+        // Update image fields if provided (handle empty strings) và xử lý URL
         if (request.getVariantImageUrl() != null) {
             String imageUrl = request.getVariantImageUrl().trim();
-            variant.setVariantImageUrl(imageUrl.isEmpty() ? null : imageUrl);
+            if (!imageUrl.isEmpty()) {
+                // Process URL để extract từ Google redirect, convert Wikipedia URLs, etc.
+                String processedUrl = urlProcessor.processLogoUrl(imageUrl);
+                variant.setVariantImageUrl(processedUrl);
+            } else {
+                variant.setVariantImageUrl(null);
+            }
         }
         
         if (request.getVariantImagePath() != null) {
@@ -579,7 +607,12 @@ public class VehicleService {
         variant.setChargingTimeFast(variantDetails.getChargingTimeFast());
         variant.setChargingTimeSlow(variantDetails.getChargingTimeSlow());
         variant.setPriceBase(variantDetails.getPriceBase());
-        variant.setVariantImageUrl(variantDetails.getVariantImageUrl());
+        // Process URL để extract từ Google redirect, convert Wikipedia URLs, etc.
+        if (variantDetails.getVariantImageUrl() != null) {
+            variant.setVariantImageUrl(urlProcessor.processLogoUrl(variantDetails.getVariantImageUrl()));
+        } else {
+            variant.setVariantImageUrl(null);
+        }
         variant.setVariantImagePath(variantDetails.getVariantImagePath());
         variant.setIsActive(variantDetails.getIsActive());
         

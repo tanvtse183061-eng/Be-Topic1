@@ -116,6 +116,12 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
     @org.springframework.data.jpa.repository.Query(value = "DELETE FROM installment_plans WHERE order_id IN (SELECT order_id FROM orders WHERE customer_id = :customerId)", nativeQuery = true)
     void deleteInstallmentPlansByCustomerId(@Param("customerId") UUID customerId);
     
+    // Native query to clear inventory_id reference before deleting inventory
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
+    @org.springframework.data.jpa.repository.Query(value = "UPDATE orders SET inventory_id = NULL WHERE inventory_id = :inventoryId", nativeQuery = true)
+    void clearInventoryReference(@Param("inventoryId") UUID inventoryId);
+    
     // Native query để tìm Orders theo customer_id (tránh lazy loading issues)
     @Query(value = "SELECT * FROM orders WHERE customer_id = :customerId", nativeQuery = true)
     List<Order> findByCustomerIdNative(@Param("customerId") UUID customerId);

@@ -10,6 +10,7 @@ import com.evdealer.dto.VehicleBrandRequest;
 import com.evdealer.dto.VehicleColorRequest;
 import com.evdealer.service.VehicleService;
 import com.evdealer.util.SecurityUtils;
+import com.evdealer.util.UrlProcessor;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,9 @@ public class VehicleController {
     @Autowired
     private SecurityUtils securityUtils;
     
+    @Autowired
+    private UrlProcessor urlProcessor;
+    
     // Helper methods to convert entities to Map
     private Map<String, Object> brandToMap(VehicleBrand brand) {
         Map<String, Object> map = new HashMap<>();
@@ -42,7 +46,18 @@ public class VehicleController {
         map.put("brandName", brand.getBrandName());
         map.put("country", brand.getCountry());
         map.put("foundedYear", brand.getFoundedYear());
-        map.put("brandLogoUrl", brand.getBrandLogoUrl());
+        // Process URL để đảm bảo normalize và có thể hiển thị trực tiếp (cho backward compatibility với dữ liệu cũ)
+        String logoUrl = brand.getBrandLogoUrl();
+        if (logoUrl != null && !logoUrl.trim().isEmpty()) {
+            // Xử lý URL: extract từ Google redirect, convert Wikipedia, thêm base URL cho relative paths
+            String processedUrl = urlProcessor.processLogoUrl(logoUrl);
+            map.put("brandLogoUrl", processedUrl);
+            // Thêm thông tin về URL để frontend biết có thể hiển thị trực tiếp không
+            map.put("brandLogoUrlIsDirect", urlProcessor.isDirectImageUrl(processedUrl));
+        } else {
+            map.put("brandLogoUrl", null);
+            map.put("brandLogoUrlIsDirect", false);
+        }
         map.put("brandLogoPath", brand.getBrandLogoPath());
         map.put("isActive", brand.getIsActive());
         map.put("createdAt", brand.getCreatedAt());
@@ -79,7 +94,18 @@ public class VehicleController {
         map.put("chargingTimeFast", variant.getChargingTimeFast());
         map.put("chargingTimeSlow", variant.getChargingTimeSlow());
         map.put("priceBase", variant.getPriceBase());
-        map.put("variantImageUrl", variant.getVariantImageUrl());
+        // Process URL để đảm bảo normalize và có thể hiển thị trực tiếp
+        String variantImageUrl = variant.getVariantImageUrl();
+        if (variantImageUrl != null && !variantImageUrl.trim().isEmpty()) {
+            // Xử lý URL: extract từ Google redirect, convert Wikipedia, thêm base URL cho relative paths
+            String processedUrl = urlProcessor.processLogoUrl(variantImageUrl);
+            map.put("variantImageUrl", processedUrl);
+            // Thêm thông tin về URL để frontend biết có thể hiển thị trực tiếp không
+            map.put("variantImageUrlIsDirect", urlProcessor.isDirectImageUrl(processedUrl));
+        } else {
+            map.put("variantImageUrl", null);
+            map.put("variantImageUrlIsDirect", false);
+        }
         map.put("variantImagePath", variant.getVariantImagePath());
         map.put("isActive", variant.getIsActive());
         map.put("createdAt", variant.getCreatedAt());
@@ -240,6 +266,72 @@ public class VehicleController {
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", "Failed to update brand: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    @PostMapping("/brands/process-logo-url")
+    @Operation(summary = "Xử lý logo URL (POST)", description = "Normalize logo URL: extract từ Google redirect, convert Wikipedia URLs, thêm base URL cho relative paths")
+    public ResponseEntity<?> processLogoUrlPost(@RequestBody Map<String, String> request) {
+        try {
+            String url = request.get("url");
+            if (url == null || url.trim().isEmpty()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "URL is required");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+            
+            // Get base URL from request or use default
+            String baseUrl = request.get("baseUrl");
+            if (baseUrl == null || baseUrl.trim().isEmpty()) {
+                baseUrl = urlProcessor.getBaseUrl();
+            }
+            
+            String processedUrl = urlProcessor.processLogoUrl(url, baseUrl);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("originalUrl", url);
+            response.put("processedUrl", processedUrl);
+            response.put("isValid", urlProcessor.isValidImageUrl(processedUrl));
+            response.put("isDirectImageUrl", urlProcessor.isDirectImageUrl(processedUrl));
+            response.put("baseUrl", baseUrl);
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Failed to process logo URL: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    @GetMapping("/brands/process-logo-url")
+    @Operation(summary = "Xử lý logo URL (GET)", description = "Normalize logo URL real-time: extract từ Google redirect, convert Wikipedia URLs, thêm base URL cho relative paths. Dùng cho preview trong form.")
+    public ResponseEntity<?> processLogoUrlGet(@RequestParam String url, @RequestParam(required = false) String baseUrl) {
+        try {
+            if (url == null || url.trim().isEmpty()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "URL parameter is required");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+            
+            // Get base URL from request or use default
+            if (baseUrl == null || baseUrl.trim().isEmpty()) {
+                baseUrl = urlProcessor.getBaseUrl();
+            }
+            
+            String processedUrl = urlProcessor.processLogoUrl(url, baseUrl);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("originalUrl", url);
+            response.put("processedUrl", processedUrl);
+            response.put("isValid", urlProcessor.isValidImageUrl(processedUrl));
+            response.put("isDirectImageUrl", urlProcessor.isDirectImageUrl(processedUrl));
+            response.put("baseUrl", baseUrl);
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Failed to process logo URL: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
@@ -629,6 +721,72 @@ public class VehicleController {
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", "Failed to create variant: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    @PostMapping("/variants/process-image-url")
+    @Operation(summary = "Xử lý variant image URL (POST)", description = "Normalize variant image URL: extract từ Google redirect, convert Wikipedia URLs, thêm base URL cho relative paths")
+    public ResponseEntity<?> processVariantImageUrlPost(@RequestBody Map<String, String> request) {
+        try {
+            String url = request.get("url");
+            if (url == null || url.trim().isEmpty()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "URL is required");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+            
+            // Get base URL from request or use default
+            String baseUrl = request.get("baseUrl");
+            if (baseUrl == null || baseUrl.trim().isEmpty()) {
+                baseUrl = urlProcessor.getBaseUrl();
+            }
+            
+            String processedUrl = urlProcessor.processLogoUrl(url, baseUrl);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("originalUrl", url);
+            response.put("processedUrl", processedUrl);
+            response.put("isValid", urlProcessor.isValidImageUrl(processedUrl));
+            response.put("isDirectImageUrl", urlProcessor.isDirectImageUrl(processedUrl));
+            response.put("baseUrl", baseUrl);
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Failed to process variant image URL: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    @GetMapping("/variants/process-image-url")
+    @Operation(summary = "Xử lý variant image URL (GET)", description = "Normalize variant image URL real-time: extract từ Google redirect, convert Wikipedia URLs, thêm base URL cho relative paths. Dùng cho preview trong form.")
+    public ResponseEntity<?> processVariantImageUrlGet(@RequestParam String url, @RequestParam(required = false) String baseUrl) {
+        try {
+            if (url == null || url.trim().isEmpty()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "URL parameter is required");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+            
+            // Get base URL from request or use default
+            if (baseUrl == null || baseUrl.trim().isEmpty()) {
+                baseUrl = urlProcessor.getBaseUrl();
+            }
+            
+            String processedUrl = urlProcessor.processLogoUrl(url, baseUrl);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("originalUrl", url);
+            response.put("processedUrl", processedUrl);
+            response.put("isValid", urlProcessor.isValidImageUrl(processedUrl));
+            response.put("isDirectImageUrl", urlProcessor.isDirectImageUrl(processedUrl));
+            response.put("baseUrl", baseUrl);
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Failed to process variant image URL: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
